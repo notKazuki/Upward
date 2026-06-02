@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/icons";
 import { createClient } from "@/lib/supabase/client";
@@ -9,6 +10,7 @@ export type SessionUser = {
   name: string;
   email: string;
   initials: string;
+  avatarUrl: string | null;
 };
 
 export default function Topbar({
@@ -80,9 +82,20 @@ function ProfileMenu({ user }: { user: SessionUser }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="grid size-9 cursor-pointer place-items-center rounded-full bg-ink text-sm font-semibold text-paper-bright transition-transform duration-200 hover:scale-105"
+        className="size-9 cursor-pointer overflow-hidden rounded-full ring-1 ring-line transition-transform duration-200 hover:scale-105"
       >
-        {user.initials}
+        {user.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={user.avatarUrl}
+            alt=""
+            className="size-full object-cover"
+          />
+        ) : (
+          <span className="grid size-full place-items-center bg-ink text-sm font-semibold text-paper-bright">
+            {user.initials}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -96,7 +109,15 @@ function ProfileMenu({ user }: { user: SessionUser }) {
           </div>
 
           <div className="p-1.5">
-            <MenuItem icon="account" label="Account" />
+            <Link
+              href="/app/account"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-paper"
+            >
+              <Icon name="account" size={18} />
+              Account
+            </Link>
             <MenuItem icon="settings" label="Settings" />
           </div>
 

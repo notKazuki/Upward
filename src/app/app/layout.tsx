@@ -27,7 +27,7 @@ export default async function AppLayout({
   // — in that case we let the user through so the app keeps working.
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("onboarded")
+    .select("onboarded, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
   if (!profileError && !profile?.onboarded) redirect("/onboarding");
@@ -47,6 +47,7 @@ export default async function AppLayout({
         name,
         email,
         initials: initialsFrom(fullName, email),
+        avatarUrl: (profile?.avatar_url as string | null) ?? null,
       }}
     >
       {children}

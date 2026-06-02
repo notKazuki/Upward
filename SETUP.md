@@ -169,6 +169,17 @@ trend chart update live.
 > for "View full stats" and a "Sync · soon" placeholder is shown. The data model
 > is ready to drop in real sync once a key is approved.
 
+## G. Account / profile
+
+Run [`supabase/profile.sql`](supabase/profile.sql) in Supabase → **SQL Editor**
+(adds `username` + `avatar_url` to profiles, a case-insensitive unique index for
+the username exclusivity system, and a public `avatars` storage bucket with
+per-user write policies).
+
+Then open the avatar menu (top-right) → **Account** to set a unique username
+(≤17 chars), upload a profile photo, and turn on **two-factor authentication**
+(authenticator app / TOTP — scan the QR, enter the 6-digit code).
+
 ## Not done yet (later steps)
 
 - **Remaining trackers** — Meal, Supplement, Calendar, Goals still use the
