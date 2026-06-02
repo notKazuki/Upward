@@ -3,52 +3,61 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import type { MealType, Targets } from "@/lib/nutrition";
-
-export type MealActionState = { ok?: boolean; error?: string; ts?: number };
+import type { FoodItem, MealType, Targets } from "@/lib/nutrition";
 
 const VALID: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 
-export async function addMeal(
-  _prev: MealActionState,
-  formData: FormData,
-): Promise<MealActionState> {
+function cleanItems(items: FoodItem[]): FoodItem[] {
+  const n = (v: unknown) => {
+    const x = Math.round(Number(v));
+    return Number.isFinite(x) && x >= 0 ? x : 0;
+  };
+  return (items ?? [])
+    .map((i) => ({
+      name: String(i?.name ?? "").trim().slice(0, 80),
+      calories: n(i?.calories),
+      protein: n(i?.protein),
+      carbs: n(i?.carbs),
+      fat: n(i?.fat),
+    }))
+    .filter((i) => i.name.length > 0)
+    .slice(0, 30);
+}
+
+export async function logMeal(input: {
+  mealType: string;
+  date: string;
+  items: FoodItem[];
+}): Promise<{ ok?: boolean; error?: string }> {
   const supabase = await createClient();
   const user = await currentUser();
   if (!user) return { error: "Your session expired. Please sign in again." };
 
-  const name = String(formData.get("name") ?? "").trim();
-  const meal_type = String(formData.get("meal_type") ?? "") as MealType;
-  const eaten_on = String(formData.get("eaten_on") ?? "");
-  const int = (k: string) => {
-    const n = Math.round(Number(String(formData.get(k) ?? "").trim() || "0"));
-    return Number.isFinite(n) && n >= 0 ? n : 0;
-  };
+  const mealType = input.mealType as MealType;
+  if (!VALID.includes(mealType)) return { error: "Pick a meal type." };
+  if (!input.date) return { error: "Pick a date." };
+  const items = cleanItems(input.items);
+  if (items.length === 0) return { error: "Add at least one item." };
 
-  if (!name) return { error: "Give the meal a name." };
-  if (!VALID.includes(meal_type)) return { error: "Pick a meal type." };
-  if (!eaten_on) return { error: "Pick a date." };
-
-  const { error } = await supabase.from("meals").insert({
+  const rows = items.map((i) => ({
     user_id: user.id,
-    name,
-    meal_type,
-    eaten_on,
-    calories: int("calories"),
-    protein: int("protein"),
-    carbs: int("carbs"),
-    fat: int("fat"),
-  });
+    meal_type: mealType,
+    eaten_on: input.date,
+    name: i.name,
+    calories: i.calories,
+    protein: i.protein,
+    carbs: i.carbs,
+    fat: i.fat,
+  }));
 
+  const { error } = await supabase.from("meals").insert(rows);
   if (error) {
-    return {
-      error: "Couldn't save. Make sure you've run supabase/meals.sql.",
-    };
+    return { error: "Couldn't save. Make sure you've run supabase/meals.sql." };
   }
 
   revalidatePath("/app/meal");
   revalidatePath("/app");
-  return { ok: true, ts: Date.now() };
+  return { ok: true };
 }
 
 export async function deleteMeal(formData: FormData): Promise<void> {
@@ -60,6 +69,41 @@ export async function deleteMeal(formData: FormData): Promise<void> {
   await supabase.from("meals").delete().eq("id", id).eq("user_id", user.id);
   revalidatePath("/app/meal");
   revalidatePath("/app");
+}
+
+export async function saveFavorite(input: {
+  name: string;
+  items: FoodItem[];
+}): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return { error: "Session expired." };
+
+  const name = input.name?.trim().slice(0, 60);
+  if (!name) return { error: "Give the favorite a name." };
+  const items = cleanItems(input.items);
+  if (items.length === 0) return { error: "Add at least one item first." };
+
+  const { error } = await supabase
+    .from("favorites")
+    .insert({ user_id: user.id, name, items });
+  if (error) {
+    return {
+      error: "Couldn't save. Make sure you've run supabase/meal-favorites.sql.",
+    };
+  }
+
+  revalidatePath("/app/meal");
+  return { ok: true };
+}
+
+export async function deleteFavorite(id: string): Promise<void> {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return;
+  if (!id) return;
+  await supabase.from("favorites").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/app/meal");
 }
 
 export async function updateTargets(

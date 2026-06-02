@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import DashboardCard from "@/components/dashboard/card";
-import MealForm from "@/components/meal/meal-form";
+import MealComposer from "@/components/meal/meal-composer";
 import TargetsEditor from "@/components/meal/targets-editor";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
@@ -14,6 +14,7 @@ import {
   suggestTargets,
   sumMeals,
   todayISO,
+  type Favorite,
   type Meal,
   type Targets,
 } from "@/lib/nutrition";
@@ -26,7 +27,7 @@ export default async function MealPage() {
   const user = await currentUser();
   const today = todayISO();
 
-  const [mealsRes, profRes] = await Promise.all([
+  const [mealsRes, profRes, favRes] = await Promise.all([
     supabase
       .from("meals")
       .select("*")
@@ -37,7 +38,13 @@ export default async function MealPage() {
       .select("dob, gender, height_cm, weight_kg, nutrition_targets")
       .eq("id", user!.id)
       .maybeSingle(),
+    supabase
+      .from("favorites")
+      .select("id, name, items")
+      .order("created_at", { ascending: false }),
   ]);
+
+  const favorites = (favRes.error ? [] : (favRes.data ?? [])) as Favorite[];
 
   if (mealsRes.error || profRes.error) {
     return (
@@ -139,7 +146,7 @@ export default async function MealPage() {
 
       <div className="grid gap-5 lg:grid-cols-5">
         <DashboardCard title="Log a meal" className="lg:col-span-2">
-          <MealForm />
+          <MealComposer favorites={favorites} />
         </DashboardCard>
 
         <DashboardCard title="Today" className="lg:col-span-3">

@@ -32,6 +32,34 @@ export type Targets = {
   fat?: number;
 };
 
+/** A single logged item (a component of a meal). */
+export type FoodItem = {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+/** A saved meal or item the user can re-add. */
+export type Favorite = {
+  id: string;
+  name: string;
+  items: FoodItem[];
+};
+
+export function sumItems(items: FoodItem[]) {
+  return items.reduce(
+    (a, m) => ({
+      calories: a.calories + (m.calories || 0),
+      protein: a.protein + (m.protein || 0),
+      carbs: a.carbs + (m.carbs || 0),
+      fat: a.fat + (m.fat || 0),
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+}
+
 export const MACROS: { key: "protein" | "carbs" | "fat"; label: string; color: string }[] = [
   { key: "protein", label: "Protein", color: "#bc572f" },
   { key: "carbs", label: "Carbs", color: "#d4825a" },

@@ -184,10 +184,13 @@ Then open the avatar menu (top-right) → **Account** to set a unique username
 
 Run [`supabase/meals.sql`](supabase/meals.sql) in Supabase → **SQL Editor**
 (adds the `meals` table + RLS and a `nutrition_targets` column on profiles).
-Then open **Meal**: log meals (type, name, calories, protein/carbs/fat), see
-today's totals vs targets, and set daily targets (auto-suggested from your
-onboarding age/sex/height/weight, editable). Nutrition also feeds the dashboard
-summary + a "Calories today" stat.
+Then open **Meal**: build a meal from **multiple items** (search the built-in
+food estimator or add custom items), see a running total, set daily targets
+(auto-suggested from your onboarding age/sex/height/weight, editable), and log.
+Nutrition also feeds the dashboard summary + a "Calories today" stat.
+
+For **favorites** (save a meal/item and re-add it later), also run
+[`supabase/meal-favorites.sql`](supabase/meal-favorites.sql).
 
 ## Not done yet (later steps)
 
