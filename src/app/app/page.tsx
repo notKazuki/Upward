@@ -5,43 +5,29 @@ import Icon, { type IconName } from "@/components/icons";
 import {
   ActivityChart,
   CategoryChart,
-  MacroChart,
-  MoodChart,
+  GamingChart,
 } from "@/components/dashboard/charts-lazy";
 import MiniCalendar from "@/components/dashboard/mini-calendar";
-import MiniGoals from "@/components/dashboard/mini-goals";
-import { generateSummary, stats } from "@/lib/sample-data";
+import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth";
+import {
+  aggregate,
+  statCards,
+  type GameRow,
+  type SessionRow,
+  type WorkoutRow,
+} from "@/lib/dashboard";
+import { buildSummary } from "@/lib/summary";
 
-export const metadata: Metadata = {
-  title: "Dashboard — Upward",
-};
+export const metadata: Metadata = { title: "Dashboard — Upward" };
 
-const statCards: {
-  label: string;
-  value: string;
-  suffix: string;
-  icon: IconName;
-}[] = [
-  { label: "Day streak", value: `${stats.streakDays}`, suffix: "days", icon: "flame" },
-  {
-    label: "Active minutes",
-    value: `${stats.workoutMinutesThisWeek}`,
-    suffix: "this week",
-    icon: "trendUp",
-  },
-  {
-    label: "Supplements",
-    value: `${Math.round(stats.supplementAdherence * 100)}%`,
-    suffix: "adherence",
-    icon: "supplement",
-  },
-  {
-    label: "Goals",
-    value: `${stats.goalsDone}/${stats.goalsTotal}`,
-    suffix: "complete",
-    icon: "goals",
-  },
-];
+function isoDaysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
+}
 
 function OpenLink({ href }: { href: string }) {
   return (
@@ -54,8 +40,45 @@ function OpenLink({ href }: { href: string }) {
   );
 }
 
-export default function DashboardPage() {
-  const summary = generateSummary();
+const METRIC_LABEL: Record<string, string> = {
+  matches: "matches",
+  wins: "wins",
+  hours: "hours",
+};
+
+export default async function DashboardPage() {
+  const user = await currentUser();
+  const supabase = await createClient();
+  const since = isoDaysAgo(56);
+
+  const [wRes, sRes, gRes, pRes] = await Promise.all([
+    supabase
+      .from("workouts")
+      .select("performed_on, category, duration_min")
+      .gte("performed_on", since),
+    supabase
+      .from("game_sessions")
+      .select("game_id, played_on, matches, wins, losses, minutes")
+      .gte("played_on", since),
+    supabase.from("games").select("id, name, goals"),
+    user
+      ? supabase
+          .from("profiles")
+          .select("workout_days")
+          .eq("id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const workouts = (wRes.error ? [] : (wRes.data ?? [])) as WorkoutRow[];
+  const sessions = (sRes.error ? [] : (sRes.data ?? [])) as SessionRow[];
+  const games = (gRes.error ? [] : (gRes.data ?? [])) as GameRow[];
+  const workoutDays =
+    (("data" in pRes ? pRes.data?.workout_days : null) as string[] | null) ?? [];
+
+  const a = aggregate(workouts, sessions, games, workoutDays);
+  const summary = buildSummary(a);
+  const cards = statCards(a);
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
@@ -70,13 +93,10 @@ export default function DashboardPage() {
 
       {/* Stat cards */}
       <div className="u-rise u-d2 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {statCards.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-2xl border border-line bg-card p-5"
-          >
+        {cards.map((s) => (
+          <div key={s.label} className="rounded-2xl border border-line bg-card p-5">
             <div className="flex items-center gap-2 text-faint">
-              <Icon name={s.icon} size={16} />
+              <Icon name={s.icon as IconName} size={16} />
               <span className="text-xs font-semibold uppercase tracking-[0.12em]">
                 {s.label}
               </span>
@@ -103,33 +123,82 @@ export default function DashboardPage() {
           </p>
         </DashboardCard>
 
-        <DashboardCard title="Goals" action={<OpenLink href="/app/goals" />}>
-          <MiniGoals />
+        {/* Goals (real gaming weekly goals) */}
+        <DashboardCard title="Weekly goals" action={<OpenLink href="/app/gaming" />}>
+          {a.goalProgress.length === 0 ? (
+            <div className="flex h-full flex-col justify-center gap-2 py-6 text-center">
+              <p className="text-sm text-muted">
+                No goals set yet. Add weekly targets in a game to track them here.
+              </p>
+              <Link
+                href="/app/gaming"
+                className="text-sm font-medium text-ember transition-colors hover:text-ink"
+              >
+                Set goals →
+              </Link>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {a.goalProgress.slice(0, 5).map((g, i) => (
+                <li key={i}>
+                  <div className="mb-1 flex justify-between text-sm">
+                    <span className="text-ink-soft">
+                      {g.game}{" "}
+                      <span className="text-faint">· {METRIC_LABEL[g.metric]}</span>
+                    </span>
+                    <span className="text-muted">
+                      {g.value}
+                      {g.metric === "hours" ? "h" : ""} / {g.target}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-line">
+                    <div
+                      className="h-full rounded-full bg-ember transition-[width] duration-500"
+                      style={{ width: `${g.pct}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </DashboardCard>
 
+        {/* Activity */}
         <DashboardCard title="Activity · minutes" className="lg:col-span-2">
-          <ActivityChart />
+          {a.hasAny ? (
+            <ActivityChart data={a.perDayMinutes} />
+          ) : (
+            <EmptyChart label="Log a session to see your week take shape." />
+          )}
         </DashboardCard>
 
-        <DashboardCard
-          title="Calendar"
-          action={<OpenLink href="/app/calendar" />}
-        >
-          <MiniCalendar />
+        {/* Calendar */}
+        <DashboardCard title="Calendar" action={<OpenLink href="/app/calendar" />}>
+          <MiniCalendar activeDays={a.activeDaysThisMonth} />
         </DashboardCard>
 
-        <DashboardCard title="Workouts by type">
-          <CategoryChart />
-        </DashboardCard>
+        {/* Workouts by type (only if any) */}
+        {a.hasWorkouts && a.workoutsByCategory.length > 0 && (
+          <DashboardCard title="Workouts by type">
+            <CategoryChart data={a.workoutsByCategory} />
+          </DashboardCard>
+        )}
 
-        <DashboardCard title="Macros · grams">
-          <MacroChart />
-        </DashboardCard>
-
-        <DashboardCard title="Mood · last 7 days">
-          <MoodChart />
-        </DashboardCard>
+        {/* Gaming matches (only if any) */}
+        {a.hasGaming && a.matchesByGame.length > 0 && (
+          <DashboardCard title="Matches by game">
+            <GamingChart data={a.matchesByGame} />
+          </DashboardCard>
+        )}
       </div>
+    </div>
+  );
+}
+
+function EmptyChart({ label }: { label: string }) {
+  return (
+    <div className="flex h-[240px] flex-col items-center justify-center gap-2 text-center">
+      <p className="max-w-xs text-sm text-muted">{label}</p>
     </div>
   );
 }

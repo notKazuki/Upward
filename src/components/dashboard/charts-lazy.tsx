@@ -18,11 +18,7 @@ export const CategoryChart = dynamic(
   () => import("./charts").then((m) => m.CategoryChart),
   { ssr: false, loading: Skeleton },
 );
-export const MacroChart = dynamic(
-  () => import("./charts").then((m) => m.MacroChart),
-  { ssr: false, loading: Skeleton },
-);
-export const MoodChart = dynamic(
-  () => import("./charts").then((m) => m.MoodChart),
+export const GamingChart = dynamic(
+  () => import("./charts").then((m) => m.GamingChart),
   { ssr: false, loading: Skeleton },
 );

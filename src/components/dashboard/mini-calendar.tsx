@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Icon from "@/components/icons";
-import { activeDaysThisMonth } from "@/lib/sample-data";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTHS = [
@@ -10,7 +9,11 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export default function MiniCalendar() {
+export default function MiniCalendar({
+  activeDays = [],
+}: {
+  activeDays?: number[];
+}) {
   const today = new Date();
   const [view, setView] = useState({
     year: today.getFullYear(),
@@ -69,7 +72,7 @@ export default function MiniCalendar() {
         {cells.map((day, i) => {
           if (day === null) return <div key={i} />;
           const isToday = isCurrentMonth && day === today.getDate();
-          const isActive = isCurrentMonth && activeDaysThisMonth.includes(day);
+          const isActive = isCurrentMonth && activeDays.includes(day);
           return (
             <div key={i} className="flex justify-center">
               <div
