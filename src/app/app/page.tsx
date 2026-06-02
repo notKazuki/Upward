@@ -7,7 +7,7 @@ import {
   CategoryChart,
   MacroChart,
   MoodChart,
-} from "@/components/dashboard/charts";
+} from "@/components/dashboard/charts-lazy";
 import MiniCalendar from "@/components/dashboard/mini-calendar";
 import MiniGoals from "@/components/dashboard/mini-goals";
 import { generateSummary, stats } from "@/lib/sample-data";

@@ -5,7 +5,7 @@ import DashboardCard from "@/components/dashboard/card";
 import Icon from "@/components/icons";
 import GoalsEditor from "@/components/gaming/goals-editor";
 import SessionForm from "@/components/gaming/session-form";
-import WinrateChart from "@/components/gaming/winrate-chart";
+import WinrateChart from "@/components/gaming/winrate-chart-lazy";
 import { createClient } from "@/lib/supabase/server";
 import {
   formatDate,
