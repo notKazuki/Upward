@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import DashboardShell from "@/components/dashboard/shell";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth";
 
 function initialsFrom(name: string, email: string): string {
   const source = name.trim() || email;
@@ -18,11 +19,9 @@ export default async function AppLayout({
 }) {
   if (!isSupabaseConfigured) redirect("/signin");
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) redirect("/signin");
+  const supabase = await createClient();
 
   // Gate on onboarding. If the profiles table isn't set up yet the query errors
   // — in that case we let the user through so the app keeps working.

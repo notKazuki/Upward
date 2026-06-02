@@ -5,34 +5,64 @@
  * Warm, editorial, calm. A "dawn / ascent" identity:
  * parchment canvas, soft sunrise glow, deep warm ink, ember accent.
  * ------------------------------------------------------------------ */
+/* Tailwind tokens map to CSS variables so the theme can switch at runtime. */
 @theme inline {
-  /* Surfaces */
-  --color-paper: #f4ede1;
-  --color-paper-bright: #faf5ec;
-  --color-card: #fbf7f0;
+  --color-paper: var(--paper);
+  --color-paper-bright: var(--paper-bright);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-ember-wash: var(--ember-wash);
+  --color-danger: var(--danger);
 
-  /* Ink + text */
-  --color-ink: #221f1a;
-  --color-ink-soft: #423c33;
-  --color-muted: #7c7367;
-  --color-faint: #a89e8f;
-
-  /* Lines + accents */
-  --color-line: #e4dccd;
-  --color-line-strong: #d6cab4;
-  --color-ember: #bc572f;
-  --color-ember-soft: #d4825a;
-  --color-ember-wash: #f0d8c4;
-
-  /* Feedback */
-  --color-danger: #a23a2c;
-
-  /* Type */
   --font-display: var(--font-fraunces);
   --font-sans: var(--font-hanken);
 
-  /* Motion */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Light (default) — warm parchment + ember */
+:root {
+  --paper: #f4ede1;
+  --paper-bright: #faf5ec;
+  --card: #fbf7f0;
+  --ink: #221f1a;
+  --ink-soft: #423c33;
+  --muted: #7c7367;
+  --faint: #a89e8f;
+  --line: #e4dccd;
+  --line-strong: #d6cab4;
+  --ember: #bc572f;
+  --ember-soft: #d4825a;
+  --ember-wash: #f0d8c4;
+  --ember-pale: #e8b48f;
+  --danger: #a23a2c;
+  color-scheme: light;
+}
+
+/* Dark — near-black canvas + violet accent */
+.dark {
+  --paper: #0e0b14;
+  --paper-bright: #181222;
+  --card: #15101f;
+  --ink: #f1ecf9;
+  --ink-soft: #cabfe2;
+  --muted: #9286ad;
+  --faint: #6c6188;
+  --line: #272031;
+  --line-strong: #382f49;
+  --ember: #a78bfa;
+  --ember-soft: #c4b5fd;
+  --ember-wash: #241a38;
+  --ember-pale: #ddd2fb;
+  --danger: #f17a72;
+  color-scheme: dark;
 }
 
 /* ------------------------------------------------------------------ *
@@ -64,6 +94,18 @@ body {
   border-radius: 4px;
 }
 
+/* Smooth the light/dark switch. Element-level transitions (hovers) keep their
+ * own timing thanks to higher specificity. */
+@media (prefers-reduced-motion: no-preference) {
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * Atmosphere — sunrise glow + paper grain
  * ------------------------------------------------------------------ */
@@ -71,15 +113,58 @@ body {
   background:
     radial-gradient(
       60% 50% at 50% 38%,
-      rgba(212, 130, 90, 0.22) 0%,
-      rgba(212, 130, 90, 0.08) 42%,
-      rgba(212, 130, 90, 0) 70%
+      color-mix(in srgb, var(--ember-soft) 22%, transparent) 0%,
+      color-mix(in srgb, var(--ember-soft) 6%, transparent) 42%,
+      transparent 70%
     ),
     radial-gradient(
       80% 60% at 50% 120%,
-      rgba(188, 87, 47, 0.14) 0%,
-      rgba(188, 87, 47, 0) 60%
+      color-mix(in srgb, var(--ember) 14%, transparent) 0%,
+      transparent 60%
     );
+}
+
+/* Animated, theme-aware aurora — subtle moving gradient mesh */
+.u-aurora {
+  position: absolute;
+  inset: -25%;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      38% 38% at 28% 30%,
+      color-mix(in srgb, var(--ember) 24%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      42% 42% at 72% 64%,
+      color-mix(in srgb, var(--ember-soft) 20%, transparent),
+      transparent 72%
+    );
+  filter: blur(48px);
+  animation: u-aurora 20s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.dark .u-aurora {
+  background:
+    radial-gradient(
+      38% 38% at 28% 30%,
+      color-mix(in srgb, var(--ember) 36%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      42% 42% at 72% 64%,
+      color-mix(in srgb, var(--ember-soft) 26%, transparent),
+      transparent 72%
+    );
+}
+
+@keyframes u-aurora {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+  }
 }
 
 /* Subtle film grain via SVG turbulence — adds paper texture / depth */
@@ -91,6 +176,10 @@ body {
   opacity: 0.4;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+.dark .u-grain::after {
+  mix-blend-mode: soft-light;
+  opacity: 0.6;
 }
 
 /* ------------------------------------------------------------------ *

@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
+import ThemeToggle from "@/components/theme-toggle";
+
+// Runs before paint to set the theme class — prevents a flash of the wrong theme.
+const themeScript = `(function(){try{var t=localStorage.getItem('theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
 
 // Display: characterful old-style serif with optical sizing + true italics.
 const fraunces = Fraunces({
@@ -25,7 +29,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f4ede1",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4ede1" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0b14" },
+  ],
 };
 
 export default function RootLayout({
@@ -36,9 +43,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${fraunces.variable} ${hanken.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {children}
+        <ThemeToggle />
+      </body>
     </html>
   );
 }

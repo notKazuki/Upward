@@ -4,6 +4,7 @@ import DashboardCard from "@/components/dashboard/card";
 import WorkoutForm from "@/components/workout/workout-form";
 import SplitChooser from "@/components/workout/split-chooser";
 import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth";
 import {
   dayColor,
   displayDay,
@@ -23,9 +24,7 @@ export default async function WorkoutPage({
 }) {
   const sp = await searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")

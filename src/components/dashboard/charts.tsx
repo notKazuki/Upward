@@ -22,36 +22,30 @@ import {
   weeklyActivity,
   workoutsByCategory,
 } from "@/lib/sample-data";
+import { useThemeColors, type ChartColors } from "@/lib/use-theme-colors";
 
-// Palette (kept in sync with globals.css tokens).
-const C = {
-  ink: "#221f1a",
-  ember: "#bc572f",
-  emberSoft: "#d4825a",
-  emberPale: "#e8b48f",
-  muted: "#7c7367",
-  line: "#e4dccd",
-  paperBright: "#faf5ec",
-};
+function axis(C: ChartColors) {
+  return {
+    tick: { fill: C.muted, fontSize: 12 },
+    tickLine: false,
+    axisLine: false,
+  } as const;
+}
 
-const axisProps = {
-  tick: { fill: C.muted, fontSize: 12 },
-  tickLine: false,
-  axisLine: false,
-} as const;
-
-const tooltipStyle = {
-  contentStyle: {
-    backgroundColor: C.paperBright,
-    border: `1px solid ${C.line}`,
-    borderRadius: 12,
-    fontSize: 12,
-    color: C.ink,
-    boxShadow: "0 8px 24px -12px rgba(34,31,26,0.4)",
-  },
-  labelStyle: { color: C.muted, fontWeight: 600 },
-  cursor: { fill: "rgba(188,87,47,0.06)" },
-} as const;
+function tooltip(C: ChartColors) {
+  return {
+    contentStyle: {
+      backgroundColor: C.card,
+      border: `1px solid ${C.line}`,
+      borderRadius: 12,
+      fontSize: 12,
+      color: C.ink,
+      boxShadow: "0 8px 24px -12px rgba(0,0,0,0.35)",
+    },
+    labelStyle: { color: C.muted, fontWeight: 600 },
+    cursor: { fill: "color-mix(in srgb, currentColor 8%, transparent)" },
+  } as const;
+}
 
 function Frame({ children }: { children: React.ReactElement }) {
   return (
@@ -64,12 +58,10 @@ function Frame({ children }: { children: React.ReactElement }) {
 }
 
 export function ActivityChart() {
+  const C = useThemeColors();
   return (
     <Frame>
-      <AreaChart
-        data={weeklyActivity}
-        margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
-      >
+      <AreaChart data={weeklyActivity} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <defs>
           <linearGradient id="activityFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={C.ember} stopOpacity={0.35} />
@@ -77,9 +69,9 @@ export function ActivityChart() {
           </linearGradient>
         </defs>
         <CartesianGrid stroke={C.line} vertical={false} />
-        <XAxis dataKey="day" {...axisProps} />
-        <YAxis {...axisProps} width={40} />
-        <Tooltip {...tooltipStyle} />
+        <XAxis dataKey="day" {...axis(C)} />
+        <YAxis {...axis(C)} width={40} />
+        <Tooltip {...tooltip(C)} />
         <Area
           type="monotone"
           dataKey="minutes"
@@ -96,22 +88,18 @@ export function ActivityChart() {
 }
 
 export function CategoryChart() {
+  const C = useThemeColors();
+  const palette = [C.ember, C.emberSoft, C.emberPale, C.muted];
   return (
     <Frame>
-      <BarChart
-        data={workoutsByCategory}
-        margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
-      >
+      <BarChart data={workoutsByCategory} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <CartesianGrid stroke={C.line} vertical={false} />
-        <XAxis dataKey="category" {...axisProps} />
-        <YAxis {...axisProps} width={40} />
-        <Tooltip {...tooltipStyle} />
+        <XAxis dataKey="category" {...axis(C)} />
+        <YAxis {...axis(C)} width={40} />
+        <Tooltip {...tooltip(C)} />
         <Bar dataKey="sessions" name="Sessions" radius={[6, 6, 0, 0]}>
           {workoutsByCategory.map((_, i) => (
-            <Cell
-              key={i}
-              fill={[C.ember, C.emberSoft, C.emberPale, C.muted][i % 4]}
-            />
+            <Cell key={i} fill={palette[i % palette.length]} />
           ))}
         </Bar>
       </BarChart>
@@ -120,13 +108,14 @@ export function CategoryChart() {
 }
 
 export function MacroChart() {
+  const C = useThemeColors();
   const colors = [C.ember, C.emberSoft, C.emberPale];
   return (
     <div>
       <div className="h-[200px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Tooltip {...tooltipStyle} />
+            <Tooltip {...tooltip(C)} />
             <Pie
               data={macros}
               dataKey="grams"
@@ -160,16 +149,14 @@ export function MacroChart() {
 }
 
 export function MoodChart() {
+  const C = useThemeColors();
   return (
     <Frame>
-      <LineChart
-        data={moodTrend}
-        margin={{ top: 8, right: 8, left: -28, bottom: 0 }}
-      >
+      <LineChart data={moodTrend} margin={{ top: 8, right: 8, left: -28, bottom: 0 }}>
         <CartesianGrid stroke={C.line} vertical={false} />
-        <XAxis dataKey="day" {...axisProps} />
-        <YAxis domain={[0, 5]} {...axisProps} width={40} />
-        <Tooltip {...tooltipStyle} />
+        <XAxis dataKey="day" {...axis(C)} />
+        <YAxis domain={[0, 5]} {...axis(C)} width={40} />
+        <Tooltip {...tooltip(C)} />
         <Line
           type="monotone"
           dataKey="mood"

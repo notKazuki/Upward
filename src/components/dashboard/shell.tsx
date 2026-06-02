@@ -40,7 +40,7 @@ export default function DashboardShell({
             type="button"
             aria-label="Close menu"
             onClick={() => setMobileOpen(false)}
-            className="absolute inset-0 bg-ink/35 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           />
           <div className="u-anim-drawer absolute inset-y-0 left-0 h-full">
             <Sidebar

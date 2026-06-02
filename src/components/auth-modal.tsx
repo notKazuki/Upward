@@ -100,7 +100,7 @@ export default function AuthModal() {
         aria-label="Close"
         tabIndex={-1}
         onClick={close}
-        className="u-anim-backdrop absolute inset-0 cursor-default bg-ink/35 backdrop-blur-md"
+        className="u-anim-backdrop absolute inset-0 cursor-default bg-black/50 backdrop-blur-md"
       />
 
       {/* dialog */}

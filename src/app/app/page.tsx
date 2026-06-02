@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
-      <div>
+      <div className="u-rise u-d1">
         <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">
           Dashboard
         </h1>
@@ -69,7 +69,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="u-rise u-d2 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.map((s) => (
           <div
             key={s.label}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main grid */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="u-rise u-d3 grid gap-5 lg:grid-cols-3">
         <DashboardCard title="Your week, summarised" className="lg:col-span-2">
           <p className="text-lg leading-relaxed text-ink-soft">
             {summary.map((tok, i) =>

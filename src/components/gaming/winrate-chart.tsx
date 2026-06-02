@@ -9,20 +9,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const C = {
-  ember: "#bc572f",
-  muted: "#7c7367",
-  line: "#e4dccd",
-  paperBright: "#faf5ec",
-  ink: "#221f1a",
-};
+import { useThemeColors } from "@/lib/use-theme-colors";
 
 export default function WinrateChart({
   data,
 }: {
   data: { label: string; winRate: number }[];
 }) {
+  const C = useThemeColors();
   return (
     <div className="h-[220px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -44,7 +38,7 @@ export default function WinrateChart({
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: C.paperBright,
+              backgroundColor: C.card,
               border: `1px solid ${C.line}`,
               borderRadius: 12,
               fontSize: 12,
