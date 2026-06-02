@@ -143,10 +143,17 @@ export default function TwoFactor() {
         </p>
         <div className="flex flex-wrap items-center gap-5">
           {qr && (
-            <div
-              className="rounded-xl bg-white p-3 [&_svg]:block [&_svg]:size-40"
-              dangerouslySetInnerHTML={{ __html: qr }}
-            />
+            <div className="rounded-xl bg-white p-3">
+              {/* Supabase returns qr_code as an SVG data-URI — render as an image. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={qr}
+                alt="Authenticator QR code"
+                width={160}
+                height={160}
+                className="block size-40"
+              />
+            </div>
           )}
           {secret && (
             <div className="text-sm">

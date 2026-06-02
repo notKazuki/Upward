@@ -40,7 +40,7 @@ export default async function AppLayout({
   // — in that case we let the user through so the app keeps working.
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("onboarded, avatar_url")
+    .select("onboarded, avatar_url, username")
     .eq("id", user.id)
     .maybeSingle();
   if (!profileError && !profile?.onboarded) redirect("/onboarding");
@@ -48,7 +48,10 @@ export default async function AppLayout({
   const fullName =
     (user.user_metadata?.full_name as string | undefined)?.trim() ?? "";
   const email = user.email ?? "";
-  const name = fullName ? fullName.split(" ")[0] : email.split("@")[0];
+  const username = (profile?.username as string | undefined) ?? "";
+  // Prefer the chosen username as the display name; fall back to first name.
+  const name =
+    username || (fullName ? fullName.split(" ")[0] : email.split("@")[0]);
 
   const cookieStore = await cookies();
   const initialCollapsed = cookieStore.get("sidebar")?.value === "collapsed";
@@ -59,7 +62,7 @@ export default async function AppLayout({
       user={{
         name,
         email,
-        initials: initialsFrom(fullName, email),
+        initials: initialsFrom(username || fullName, email),
         avatarUrl: (profile?.avatar_url as string | null) ?? null,
       }}
     >
