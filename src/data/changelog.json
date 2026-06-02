@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Calendar",
+    "items": [
+      "Plan your days with typed, checkable plans — workout, meal, gaming, goal, or other.",
+      "Everything you've tracked (workouts, meals, gaming) is overlaid right on the calendar.",
+      "Month view with a day panel to add, time, and tick off plans."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Update log, favorites & hardened security",
     "items": [
       "Added this update log — tap the spark icon by your profile to see what's new.",

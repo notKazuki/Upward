@@ -192,6 +192,13 @@ Nutrition also feeds the dashboard summary + a "Calories today" stat.
 For **favorites** (save a meal/item and re-add it later), also run
 [`supabase/meal-favorites.sql`](supabase/meal-favorites.sql).
 
+## J. Calendar
+
+Run [`supabase/calendar.sql`](supabase/calendar.sql) in Supabase → **SQL
+Editor**. Then open **Calendar**: a month view where you add typed, checkable
+plans (workout/meal/gaming/goal/other) per day, with your tracked workouts,
+meals, and gaming overlaid so it's one view of done + planned.
+
 ## I. Update log → Discord (optional)
 
 The in-app **What's new** log (spark icon by your avatar) reads
