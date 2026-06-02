@@ -15,6 +15,7 @@ import {
   type MealType,
 } from "@/lib/nutrition";
 import { estimate, searchFoods, type Food } from "@/lib/food-db";
+import DateField from "@/components/date-field";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -117,7 +118,7 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Meal type + date */}
+      {/* Meal type */}
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-ink-soft">Meal</span>
         <div className="flex flex-wrap gap-2">
@@ -136,15 +137,13 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
               {mt.label}
             </button>
           ))}
-          <input
-            type="date"
-            value={date}
-            max={TODAY}
-            onChange={(e) => setDate(e.target.value)}
-            aria-label="Date"
-            className="ml-auto rounded-full border border-line bg-paper-bright px-3.5 py-1.5 text-sm text-ink focus:border-ember focus:outline-none"
-          />
         </div>
+      </div>
+
+      {/* Date */}
+      <div className="flex flex-col gap-1.5 sm:max-w-xs">
+        <span className="text-sm font-medium text-ink-soft">Date</span>
+        <DateField value={date} onChange={setDate} max={TODAY} />
       </div>
 
       {/* Favorites */}
@@ -163,6 +162,9 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
                   className="cursor-pointer font-medium text-ink-soft transition-colors hover:text-ember"
                 >
                   {f.name}
+                  {f.items.length > 1 && (
+                    <span className="text-faint"> ·{f.items.length}</span>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -298,8 +300,23 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
             {items.map((it, i) => (
               <li key={i} className="flex items-center justify-between gap-3 text-sm">
                 <span className="min-w-0 truncate text-ink">{it.name}</span>
-                <span className="flex shrink-0 items-center gap-3">
+                <span className="flex shrink-0 items-center gap-2.5">
                   <span className="text-muted">{it.calories} kcal</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      startTransition(() =>
+                        saveFavorite({ name: it.name, items: [it] }).then(() =>
+                          router.refresh(),
+                        ),
+                      )
+                    }
+                    aria-label={`Save ${it.name} as a favorite`}
+                    title="Save item as favorite"
+                    className="grid size-6 cursor-pointer place-items-center rounded-md text-faint transition-colors hover:text-ember"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 17.3l-5.4 3.2 1.4-6.1L3 9.8l6.2-.5L12 3.6l2.8 5.7 6.2.5-4.9 4.6 1.4 6.1z" /></svg>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setItems(items.filter((_, idx) => idx !== i))}
