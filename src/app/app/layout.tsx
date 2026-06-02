@@ -23,6 +23,19 @@ export default async function AppLayout({
   if (!user) redirect("/signin");
   const supabase = await createClient();
 
+  // 2FA gate: if the account has a verified factor but the session is still
+  // AAL1, require the TOTP challenge before anything in the app loads.
+  let needsMfa = false;
+  try {
+    const { data: aal } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    needsMfa =
+      !!aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2";
+  } catch {
+    needsMfa = false;
+  }
+  if (needsMfa) redirect("/auth/mfa");
+
   // Gate on onboarding. If the profiles table isn't set up yet the query errors
   // — in that case we let the user through so the app keeps working.
   const { data: profile, error: profileError } = await supabase
