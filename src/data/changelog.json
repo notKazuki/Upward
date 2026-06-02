@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Smarter targets, workout guides & more foods",
+    "items": [
+      "Meal: choose a goal — lose, maintain, or gain — and your calorie & protein targets adjust to match.",
+      "Workout: every split now has a day-by-day exercise guide with sets, reps, and how to train for strength, size, or tone.",
+      "Added a 'Glute & Lower Focus' routine and ~55 more foods to the estimator."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Calendar",
     "items": [
       "Plan your days with typed, checkable plans — workout, meal, gaming, goal, or other.",

@@ -192,6 +192,11 @@ Nutrition also feeds the dashboard summary + a "Calories today" stat.
 For **favorites** (save a meal/item and re-add it later), also run
 [`supabase/meal-favorites.sql`](supabase/meal-favorites.sql).
 
+For the **weight goal** (lose / maintain / gain, which adjusts your calorie &
+protein suggestion), run
+[`supabase/nutrition-goal.sql`](supabase/nutrition-goal.sql). Until it's run the
+goal selector falls back to "maintain" and the page still works.
+
 ## J. Calendar
 
 Run [`supabase/calendar.sql`](supabase/calendar.sql) in Supabase → **SQL

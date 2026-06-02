@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import DashboardCard from "@/components/dashboard/card";
 import MealComposer from "@/components/meal/meal-composer";
 import TargetsEditor from "@/components/meal/targets-editor";
+import GoalSelector from "@/components/meal/goal-selector";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import type { Gender } from "@/lib/onboarding";
@@ -9,12 +10,12 @@ import {
   effectiveTargets,
   MACROS,
   MEAL_TYPES,
-  mealTypeLabel,
   pct,
   suggestTargets,
   sumMeals,
   todayISO,
   type Favorite,
+  type Goal,
   type Meal,
   type Targets,
 } from "@/lib/nutrition";
@@ -60,14 +61,27 @@ export default async function MealPage() {
     );
   }
 
+  // Goal lives in its own query so a missing column (migration not yet run)
+  // degrades to "maintain" instead of breaking the whole page.
+  const goalRes = await supabase
+    .from("profiles")
+    .select("nutrition_goal")
+    .eq("id", user!.id)
+    .maybeSingle();
+  const goal: Goal =
+    ((goalRes.data?.nutrition_goal as Goal | null) ?? "maintain") || "maintain";
+
   const meals = (mealsRes.data ?? []) as Meal[];
   const profile = profRes.data;
-  const suggested = suggestTargets({
-    dob: (profile?.dob as string | null) ?? null,
-    gender: (profile?.gender as Gender | null) ?? null,
-    height_cm: (profile?.height_cm as number | null) ?? null,
-    weight_kg: (profile?.weight_kg as number | null) ?? null,
-  });
+  const suggested = suggestTargets(
+    {
+      dob: (profile?.dob as string | null) ?? null,
+      gender: (profile?.gender as Gender | null) ?? null,
+      height_cm: (profile?.height_cm as number | null) ?? null,
+      weight_kg: (profile?.weight_kg as number | null) ?? null,
+    },
+    goal,
+  );
   const savedRaw = (profile?.nutrition_targets as Targets | null) ?? null;
   const saved = savedRaw && Object.keys(savedRaw).length > 0 ? savedRaw : null;
   const targets = effectiveTargets(saved, suggested);
@@ -140,8 +154,13 @@ export default async function MealPage() {
         </div>
       </div>
 
-      <DashboardCard title="Daily targets">
-        <TargetsEditor saved={saved} suggested={suggested} />
+      <DashboardCard title="Goal & daily targets">
+        <div className="space-y-5">
+          <GoalSelector goal={goal} />
+          <div className="border-t border-line pt-5">
+            <TargetsEditor saved={saved} suggested={suggested} />
+          </div>
+        </div>
       </DashboardCard>
 
       <div className="grid gap-5 lg:grid-cols-5">

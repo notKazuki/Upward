@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import type { FoodItem, MealType, Targets } from "@/lib/nutrition";
+import type { FoodItem, Goal, MealType, Targets } from "@/lib/nutrition";
+
+const GOALS: Goal[] = ["lose", "maintain", "gain"];
 
 const VALID: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 
@@ -104,6 +106,29 @@ export async function deleteFavorite(id: string): Promise<void> {
   if (!id) return;
   await supabase.from("favorites").delete().eq("id", id).eq("user_id", user.id);
   revalidatePath("/app/meal");
+}
+
+export async function updateGoal(
+  goal: string,
+): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return { error: "Session expired." };
+  if (!GOALS.includes(goal as Goal)) return { error: "Pick a goal." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ nutrition_goal: goal })
+    .eq("id", user.id);
+
+  if (error) {
+    return {
+      error: "Couldn't save. Make sure you've run supabase/nutrition-goal.sql.",
+    };
+  }
+  revalidatePath("/app/meal");
+  revalidatePath("/app");
+  return { ok: true };
 }
 
 export async function updateTargets(

@@ -23,6 +23,11 @@ export const SPLIT_PRESETS: { id: string; name: string; days: string[] }[] = [
     name: "Bro Split",
     days: ["Chest", "Back", "Shoulders", "Arms", "Legs"],
   },
+  {
+    id: "glute_lower",
+    name: "Glute & Lower Focus",
+    days: ["Glutes & Hams", "Quads & Calves", "Upper Body"],
+  },
 ];
 
 /** Always available regardless of split, for non-lifting days. */

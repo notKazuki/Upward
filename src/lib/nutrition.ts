@@ -32,6 +32,29 @@ export type Targets = {
   fat?: number;
 };
 
+export type Goal = "lose" | "maintain" | "gain";
+
+/**
+ * Weight goals. `factor` scales maintenance calories; `proteinPerKg` sets the
+ * protein target (higher on a cut to preserve muscle). Rates are conservative
+ * and sustainable, not aggressive.
+ */
+export const GOALS: {
+  id: Goal;
+  label: string;
+  blurb: string;
+  factor: number;
+  proteinPerKg: number;
+}[] = [
+  { id: "lose", label: "Lose weight", blurb: "Gentle ~20% deficit", factor: 0.8, proteinPerKg: 2.0 },
+  { id: "maintain", label: "Maintain", blurb: "Stay where you are", factor: 1.0, proteinPerKg: 1.6 },
+  { id: "gain", label: "Gain weight", blurb: "Lean ~15% surplus", factor: 1.15, proteinPerKg: 1.8 },
+];
+
+export function goalLabel(id: string): string {
+  return GOALS.find((g) => g.id === id)?.label ?? "Maintain";
+}
+
 /** A single logged item (a component of a meal). */
 export type FoodItem = {
   name: string;
@@ -68,23 +91,28 @@ export const MACROS: { key: "protein" | "carbs" | "fat"; label: string; color: s
 
 /**
  * Suggest daily targets from the onboarding profile using Mifflin–St Jeor
- * (light-activity TDEE). "Rather not say" uses a neutral average of the
- * male/female formulas. Returns null if height/weight/DOB are missing.
+ * (light-activity TDEE), adjusted for the weight goal. "Rather not say" uses a
+ * neutral average of the male/female formulas. Returns null if
+ * height/weight/DOB are missing.
  */
-export function suggestTargets(p: {
-  dob: string | null;
-  gender: Gender | null;
-  height_cm: number | null;
-  weight_kg: number | null;
-}): Targets | null {
+export function suggestTargets(
+  p: {
+    dob: string | null;
+    gender: Gender | null;
+    height_cm: number | null;
+    weight_kg: number | null;
+  },
+  goal: Goal = "maintain",
+): Targets | null {
   if (!p.dob || !p.height_cm || !p.weight_kg) return null;
+  const g = GOALS.find((x) => x.id === goal) ?? GOALS[1];
   const age = ageFromDob(p.dob);
   const base = 10 * p.weight_kg + 6.25 * p.height_cm - 5 * age;
   const offset = p.gender === "male" ? 5 : p.gender === "female" ? -161 : -78;
   const bmr = base + offset;
-  const tdee = bmr * 1.375; // light activity
+  const tdee = bmr * 1.375 * g.factor; // light activity, goal-adjusted
   const calories = Math.round(tdee / 10) * 10;
-  const protein = Math.round(1.6 * p.weight_kg);
+  const protein = Math.round(g.proteinPerKg * p.weight_kg);
   const fat = Math.round((tdee * 0.25) / 9);
   const carbs = Math.max(0, Math.round((tdee - protein * 4 - fat * 9) / 4));
   return { calories, protein, carbs, fat };

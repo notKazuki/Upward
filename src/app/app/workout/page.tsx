@@ -3,6 +3,7 @@ import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import WorkoutForm from "@/components/workout/workout-form";
 import SplitChooser from "@/components/workout/split-chooser";
+import DayGuide from "@/components/workout/day-guide";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import {
@@ -133,6 +134,10 @@ export default async function WorkoutPage({
           </div>
         ))}
       </div>
+
+      <DashboardCard title={`${splitName} — day guide`}>
+        <DayGuide days={days} />
+      </DashboardCard>
 
       <div className="grid gap-5 lg:grid-cols-5">
         <DashboardCard title="Log a workout" className="lg:col-span-2">

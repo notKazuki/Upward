@@ -91,6 +91,90 @@ export const FOODS: Food[] = [
   { name: "Coffee (black)", aliases: ["coffee"], per100: per(1, 0.1, 0, 0), portions: [g("1 cup (240 g)", 240)] },
   { name: "Cola", aliases: ["soda", "soft drink"], per100: per(41, 0, 11, 0), portions: [g("1 can (355 g)", 355)] },
   { name: "Beer", per100: per(43, 0.5, 3.6, 0), portions: [g("1 can (355 g)", 355)] },
+
+  // More proteins
+  { name: "Ground turkey", per100: per(170, 22, 0, 9), portions: [g("100 g", 100), g("1 patty (113 g)", 113)] },
+  { name: "Ham (deli)", aliases: ["ham"], per100: per(145, 21, 1.5, 6), portions: [g("3 slices (84 g)", 84), g("100 g", 100)] },
+  { name: "Sausage", per100: per(301, 14, 2, 27), portions: [g("1 link (75 g)", 75)] },
+  { name: "Tilapia", per100: per(96, 20, 0, 1.7), portions: [g("1 fillet (140 g)", 140), g("100 g", 100)] },
+  { name: "Edamame", per100: per(121, 12, 9, 5), portions: [g("1 cup (155 g)", 155), g("100 g", 100)] },
+  { name: "Peanuts", per100: per(567, 26, 16, 49), portions: [g("1 oz (28 g)", 28)] },
+  { name: "Hummus", per100: per(166, 8, 14, 10), portions: [g("2 tbsp (30 g)", 30)] },
+
+  // More dairy
+  { name: "Milk (whole)", per100: per(61, 3.2, 4.8, 3.3), portions: [g("1 cup (244 g)", 244)] },
+  { name: "Mozzarella", per100: per(280, 28, 3.1, 17), portions: [g("1 oz (28 g)", 28)] },
+  { name: "Cream cheese", per100: per(342, 6, 4, 34), portions: [g("1 tbsp (15 g)", 15)] },
+  { name: "Parmesan", per100: per(431, 38, 4.1, 29), portions: [g("1 tbsp (5 g)", 5)] },
+  { name: "Sour cream", per100: per(198, 2.4, 4.6, 19), portions: [g("2 tbsp (30 g)", 30)] },
+  { name: "Almond milk (unsweetened)", aliases: ["almond milk"], per100: per(15, 0.6, 0.6, 1.2), portions: [g("1 cup (244 g)", 244)] },
+  { name: "Oat milk", per100: per(47, 1, 7, 1.5), portions: [g("1 cup (240 g)", 240)] },
+
+  // More carbs / grains
+  { name: "Bagel", per100: per(257, 10, 50, 1.5), portions: [g("1 bagel (98 g)", 98)] },
+  { name: "English muffin", per100: per(227, 8, 44, 1.7), portions: [g("1 muffin (57 g)", 57)] },
+  { name: "Pita bread", aliases: ["pita"], per100: per(275, 9, 56, 1.2), portions: [g("1 pita (60 g)", 60)] },
+  { name: "Naan", per100: per(310, 9, 50, 9), portions: [g("1 naan (90 g)", 90)] },
+  { name: "Couscous (cooked)", per100: per(112, 3.8, 23, 0.2), portions: [g("1 cup (157 g)", 157), g("100 g", 100)] },
+  { name: "Rice cake", per100: per(387, 8, 82, 2.8), portions: [g("1 cake (9 g)", 9)] },
+  { name: "Croissant", per100: per(406, 8, 46, 21), portions: [g("1 croissant (57 g)", 57)] },
+  { name: "Whole wheat bread", per100: per(247, 13, 41, 3.4), portions: [g("1 slice (32 g)", 32), g("2 slices (64 g)", 64)] },
+  { name: "Mac and cheese", per100: per(164, 6, 20, 6.6), portions: [g("1 cup (200 g)", 200)] },
+
+  // More fruit
+  { name: "Orange", per100: per(47, 0.9, 12, 0.1), portions: [g("1 medium (131 g)", 131)] },
+  { name: "Grapes", per100: per(69, 0.7, 18, 0.2), portions: [g("1 cup (151 g)", 151)] },
+  { name: "Pineapple", per100: per(50, 0.5, 13, 0.1), portions: [g("1 cup (165 g)", 165)] },
+  { name: "Mango", per100: per(60, 0.8, 15, 0.4), portions: [g("1 cup (165 g)", 165)] },
+  { name: "Watermelon", per100: per(30, 0.6, 7.6, 0.2), portions: [g("1 cup (152 g)", 152)] },
+  { name: "Pear", per100: per(57, 0.4, 15, 0.1), portions: [g("1 medium (178 g)", 178)] },
+  { name: "Peach", per100: per(39, 0.9, 10, 0.3), portions: [g("1 medium (150 g)", 150)] },
+  { name: "Grapefruit", per100: per(42, 0.8, 11, 0.1), portions: [g("1/2 fruit (123 g)", 123)] },
+  { name: "Raspberries", per100: per(52, 1.2, 12, 0.7), portions: [g("1 cup (123 g)", 123)] },
+  { name: "Dates", per100: per(282, 2.5, 75, 0.4), portions: [g("1 date (24 g)", 24)] },
+
+  // More veg
+  { name: "Tomato", per100: per(18, 0.9, 3.9, 0.2), portions: [g("1 medium (123 g)", 123)] },
+  { name: "Cucumber", per100: per(15, 0.7, 3.6, 0.1), portions: [g("1 cup (104 g)", 104)] },
+  { name: "Bell pepper", aliases: ["pepper"], per100: per(31, 1, 6, 0.3), portions: [g("1 medium (119 g)", 119)] },
+  { name: "Corn", per100: per(96, 3.4, 21, 1.5), portions: [g("1 cup (154 g)", 154)] },
+  { name: "Green beans", per100: per(31, 1.8, 7, 0.2), portions: [g("1 cup (100 g)", 100)] },
+  { name: "Mushrooms", per100: per(22, 3.1, 3.3, 0.3), portions: [g("1 cup (70 g)", 70)] },
+  { name: "Peas", per100: per(81, 5.4, 14, 0.4), portions: [g("1 cup (145 g)", 145)] },
+  { name: "Zucchini", per100: per(17, 1.2, 3.1, 0.3), portions: [g("1 cup (124 g)", 124)] },
+  { name: "Kale", per100: per(49, 4.3, 9, 0.9), portions: [g("1 cup (67 g)", 67)] },
+  { name: "Onion", per100: per(40, 1.1, 9.3, 0.1), portions: [g("1/2 cup (80 g)", 80)] },
+
+  // More fats / extras
+  { name: "Cashews", per100: per(553, 18, 30, 44), portions: [g("1 oz (28 g)", 28)] },
+  { name: "Walnuts", per100: per(654, 15, 14, 65), portions: [g("1 oz (28 g)", 28)] },
+  { name: "Chia seeds", per100: per(486, 17, 42, 31), portions: [g("1 tbsp (12 g)", 12)] },
+  { name: "Mayonnaise", aliases: ["mayo"], per100: per(680, 1, 0.6, 75), portions: [g("1 tbsp (14 g)", 14)] },
+  { name: "Ketchup", per100: per(101, 1.1, 26, 0.1), portions: [g("1 tbsp (17 g)", 17)] },
+  { name: "Dark chocolate", per100: per(598, 7.8, 46, 43), portions: [g("1 oz (28 g)", 28)] },
+
+  // More meals / fast food / snacks
+  { name: "Chicken nuggets", aliases: ["nuggets"], per100: per(296, 15, 18, 19), portions: [g("6 pieces (96 g)", 96)] },
+  { name: "Hot dog", per100: per(290, 10, 4, 26), portions: [g("1 hot dog (98 g)", 98)] },
+  { name: "Taco", per100: per(226, 9, 20, 12), portions: [g("1 taco (102 g)", 102)] },
+  { name: "Fried chicken", per100: per(320, 22, 8, 22), portions: [g("1 piece (140 g)", 140)] },
+  { name: "Sandwich (turkey)", aliases: ["sandwich"], per100: per(230, 12, 26, 8), portions: [g("1 sandwich (200 g)", 200)] },
+  { name: "Curry (chicken)", aliases: ["curry"], per100: per(150, 9, 7, 9), portions: [g("1 cup (240 g)", 240)] },
+  { name: "Pad thai", per100: per(170, 7, 22, 6), portions: [g("1 plate (300 g)", 300)] },
+  { name: "Donut", per100: per(452, 4.9, 51, 25), portions: [g("1 donut (60 g)", 60)] },
+  { name: "Cookie", per100: per(488, 5.7, 64, 24), portions: [g("1 cookie (30 g)", 30)] },
+  { name: "Muffin", per100: per(377, 5.6, 55, 15), portions: [g("1 muffin (113 g)", 113)] },
+  { name: "Popcorn", per100: per(387, 13, 78, 4.5), portions: [g("1 cup popped (8 g)", 8)] },
+  { name: "Potato chips", aliases: ["crisps"], per100: per(536, 7, 53, 35), portions: [g("1 oz (28 g)", 28)] },
+  { name: "Tortilla chips", per100: per(490, 7, 64, 23), portions: [g("1 oz (28 g)", 28)] },
+
+  // More drinks
+  { name: "Energy drink", per100: per(45, 0, 11, 0), portions: [g("1 can (250 g)", 250)] },
+  { name: "Sports drink", aliases: ["gatorade"], per100: per(24, 0, 6, 0), portions: [g("1 bottle (591 g)", 591)] },
+  { name: "Latte", per100: per(63, 3.4, 5, 3.3), portions: [g("1 grande (473 g)", 473)] },
+  { name: "Smoothie (fruit)", aliases: ["smoothie"], per100: per(60, 1, 14, 0.4), portions: [g("1 cup (240 g)", 240)] },
+  { name: "Tea (unsweetened)", aliases: ["tea"], per100: per(1, 0, 0.3, 0), portions: [g("1 cup (240 g)", 240)] },
+  { name: "Wine (red)", aliases: ["wine"], per100: per(85, 0.1, 2.6, 0), portions: [g("1 glass (147 g)", 147)] },
 ];
 
 export function searchFoods(query: string, limit = 6): Food[] {
