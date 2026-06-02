@@ -1,0 +1,22 @@
+name: Changelog to Discord
+
+# Posts the newest changelog entry to a Discord webhook whenever the changelog
+# changes on main. Set the DISCORD_WEBHOOK_URL repo secret to enable it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/data/changelog.json"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post latest changelog to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: node .github/scripts/changelog-discord.mjs

@@ -11,7 +11,7 @@ export default function DashboardCard({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-line bg-card p-5 ${className}`}
+      className={`min-w-0 rounded-2xl border border-line bg-card p-5 ${className}`}
     >
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">

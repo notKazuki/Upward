@@ -1,0 +1,48 @@
+[
+  {
+    "date": "2026-06-02",
+    "title": "Update log, favorites & hardened security",
+    "items": [
+      "Added this update log — tap the spark icon by your profile to see what's new.",
+      "Meals: save individual items as favorites (not just whole meals) and re-add them in a tap.",
+      "Consistent, themed date pickers across every tracker.",
+      "Tightened the site's Content-Security-Policy to a strict, nonce-based policy."
+    ]
+  },
+  {
+    "date": "2026-06-01",
+    "title": "Meals got a lot smarter",
+    "items": [
+      "Build a meal from multiple items with a built-in calorie & macro estimator.",
+      "Daily targets are auto-suggested from your profile and fully editable.",
+      "Today's totals and macros update live as you log."
+    ]
+  },
+  {
+    "date": "2026-05-31",
+    "title": "Gaming tracker",
+    "items": [
+      "Track multiple games, set daily/weekly goals, and log sessions.",
+      "See your win rate trend and matches by game.",
+      "Save a tracker.gg link for quick access (auto-sync coming later)."
+    ]
+  },
+  {
+    "date": "2026-05-30",
+    "title": "Dark mode & a live dashboard",
+    "items": [
+      "New black-and-purple dark theme with a toggle (follows your system by default).",
+      "The dashboard now reads your real workout & gaming data.",
+      "A tailored weekly summary that reads like someone looked through everything."
+    ]
+  },
+  {
+    "date": "2026-05-29",
+    "title": "Account & security",
+    "items": [
+      "Set a unique username and a profile photo.",
+      "Two-factor authentication via an authenticator app.",
+      "Google & Discord sign-in, plus password reset."
+    ]
+  }
+]

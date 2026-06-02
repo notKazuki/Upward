@@ -192,6 +192,20 @@ Nutrition also feeds the dashboard summary + a "Calories today" stat.
 For **favorites** (save a meal/item and re-add it later), also run
 [`supabase/meal-favorites.sql`](supabase/meal-favorites.sql).
 
+## I. Update log → Discord (optional)
+
+The in-app **What's new** log (spark icon by your avatar) reads
+`src/data/changelog.json`. To also post new entries to a Discord channel:
+
+1. In Discord: **Server Settings → Integrations → Webhooks → New Webhook**,
+   pick a channel, **Copy Webhook URL**.
+2. In GitHub: repo **Settings → Secrets and variables → Actions → New
+   repository secret**, name it `DISCORD_WEBHOOK_URL`, paste the URL.
+
+After that, any push to `main` that changes `src/data/changelog.json` runs the
+`Changelog to Discord` workflow and posts the newest entry. (Without the secret
+the workflow simply skips.)
+
 ## Not done yet (later steps)
 
 - **Remaining trackers** — Meal, Supplement, Calendar, Goals still use the

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/icons";
+import Changelog from "@/components/dashboard/changelog";
 import { createClient } from "@/lib/supabase/client";
 
 export type SessionUser = {
@@ -37,7 +38,10 @@ export default function Topbar({
         </p>
       </div>
 
-      <ProfileMenu user={user} />
+      <div className="flex items-center gap-1">
+        <Changelog />
+        <ProfileMenu user={user} />
+      </div>
     </header>
   );
 }
