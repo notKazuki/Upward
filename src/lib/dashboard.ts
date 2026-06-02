@@ -71,11 +71,20 @@ export type GoalProgress = {
 
 export type Aggregates = ReturnType<typeof aggregate>;
 
+export type Nutrition = {
+  hasMeals: boolean;
+  caloriesToday: number;
+  proteinToday: number;
+  calTarget?: number;
+  proteinTarget?: number;
+};
+
 export function aggregate(
   workouts: WorkoutRow[],
   sessions: SessionRow[],
   games: GameRow[],
   workoutDays: string[] = [],
+  nutrition: Nutrition = { hasMeals: false, caloriesToday: 0, proteinToday: 0 },
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -248,6 +257,7 @@ export function aggregate(
     topCategory,
     matchesByGame,
     goalProgress,
+    nutrition,
 
     totals: {
       workouts: workouts.length,
@@ -277,6 +287,16 @@ export function statCards(a: Aggregates): StatCard[] {
     },
   ];
 
+  if (a.nutrition.hasMeals) {
+    cards.push({
+      label: "Calories",
+      value: `${a.nutrition.caloriesToday}`,
+      suffix: a.nutrition.calTarget
+        ? `of ${a.nutrition.calTarget} today`
+        : "today",
+      icon: "meal",
+    });
+  }
   if (a.hasWorkouts) {
     cards.push({
       label: "Workouts",

@@ -39,8 +39,8 @@ type Candidate = { score: number; tokens: Token[] };
 export function buildSummary(a: Aggregates): Token[] {
   const rng = mulberry32(seedFrom(a.todayStr));
 
-  // Brand-new user, nothing logged.
-  if (!a.hasAny) {
+  // Brand-new user, nothing logged anywhere.
+  if (!a.hasAny && !a.nutrition.hasMeals) {
     return pickOpening(rng);
   }
 
@@ -168,6 +168,29 @@ export function buildSummary(a: Aggregates): Token[] {
         em(`${remaining} to go`),
         t(". "),
       ]);
+    }
+  }
+
+  /* Nutrition */
+  if (a.nutrition.hasMeals) {
+    const { caloriesToday, calTarget, proteinToday, proteinTarget } = a.nutrition;
+    if (calTarget) {
+      if (caloriesToday > calTarget * 1.08) {
+        add(64, [t("You're "), em(`${caloriesToday - calTarget} kcal over`), t(" today's calorie target. ")]);
+      } else if (caloriesToday >= calTarget * 0.6) {
+        add(60, [t("You're at "), em(`${caloriesToday}`), t(" of "), em(`${calTarget}`), t(" calories today. ")]);
+      } else if (caloriesToday > 0) {
+        add(52, [em(`${caloriesToday} kcal`), t(" in so far — room to go before "), em(`${calTarget}`), t(". ")]);
+      }
+    } else if (caloriesToday > 0) {
+      add(50, [em(`${caloriesToday} kcal`), t(" logged today. ")]);
+    }
+    if (proteinTarget && proteinToday > 0) {
+      const p = Math.round((proteinToday / proteinTarget) * 100);
+      add(54, pick(rng, [
+        [t("Protein's at "), em(`${proteinToday}g`), t(" — "), em(`${p}%`), t(" of goal. ")],
+        [em(`${proteinToday}g protein`), t(" so far, "), em(`${p}%`), t(" of today's goal. ")],
+      ]));
     }
   }
 

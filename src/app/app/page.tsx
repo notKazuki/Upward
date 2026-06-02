@@ -18,6 +18,13 @@ import {
   type WorkoutRow,
 } from "@/lib/dashboard";
 import { buildSummary } from "@/lib/summary";
+import {
+  effectiveTargets,
+  suggestTargets,
+  todayISO,
+  type Targets,
+} from "@/lib/nutrition";
+import type { Gender } from "@/lib/onboarding";
 
 export const metadata: Metadata = { title: "Dashboard — Upward" };
 
@@ -50,8 +57,9 @@ export default async function DashboardPage() {
   const user = await currentUser();
   const supabase = await createClient();
   const since = isoDaysAgo(56);
+  const today = todayISO();
 
-  const [wRes, sRes, gRes, pRes] = await Promise.all([
+  const [wRes, sRes, gRes, pRes, mRes] = await Promise.all([
     supabase
       .from("workouts")
       .select("performed_on, category, duration_min")
@@ -64,19 +72,53 @@ export default async function DashboardPage() {
     user
       ? supabase
           .from("profiles")
-          .select("workout_days")
+          .select("workout_days, dob, gender, height_cm, weight_kg, nutrition_targets")
           .eq("id", user.id)
           .maybeSingle()
-      : Promise.resolve({ data: null }),
+      : Promise.resolve({ data: null, error: null }),
+    supabase.from("meals").select("calories, protein").eq("eaten_on", today),
   ]);
 
   const workouts = (wRes.error ? [] : (wRes.data ?? [])) as WorkoutRow[];
   const sessions = (sRes.error ? [] : (sRes.data ?? [])) as SessionRow[];
   const games = (gRes.error ? [] : (gRes.data ?? [])) as GameRow[];
-  const workoutDays =
-    (("data" in pRes ? pRes.data?.workout_days : null) as string[] | null) ?? [];
 
-  const a = aggregate(workouts, sessions, games, workoutDays);
+  const profile = (pRes.error ? null : pRes.data) as {
+    workout_days?: string[] | null;
+    dob?: string | null;
+    gender?: string | null;
+    height_cm?: number | null;
+    weight_kg?: number | null;
+    nutrition_targets?: Targets | null;
+  } | null;
+  const workoutDays = profile?.workout_days ?? [];
+
+  // Nutrition (today's totals vs effective targets)
+  const mealsToday = (mRes.error ? [] : (mRes.data ?? [])) as {
+    calories: number;
+    protein: number;
+  }[];
+  const caloriesToday = mealsToday.reduce((s, m) => s + (m.calories || 0), 0);
+  const proteinToday = mealsToday.reduce((s, m) => s + (m.protein || 0), 0);
+  const suggested = suggestTargets({
+    dob: profile?.dob ?? null,
+    gender: (profile?.gender as Gender | null) ?? null,
+    height_cm: profile?.height_cm ?? null,
+    weight_kg: profile?.weight_kg ?? null,
+  });
+  const savedRaw = profile?.nutrition_targets ?? null;
+  const targets = effectiveTargets(
+    savedRaw && Object.keys(savedRaw).length > 0 ? savedRaw : null,
+    suggested,
+  );
+
+  const a = aggregate(workouts, sessions, games, workoutDays, {
+    hasMeals: mealsToday.length > 0,
+    caloriesToday,
+    proteinToday,
+    calTarget: targets.calories,
+    proteinTarget: targets.protein,
+  });
   const summary = buildSummary(a);
   const cards = statCards(a);
 

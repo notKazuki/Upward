@@ -180,6 +180,15 @@ Then open the avatar menu (top-right) → **Account** to set a unique username
 (≤17 chars), upload a profile photo, and turn on **two-factor authentication**
 (authenticator app / TOTP — scan the QR, enter the 6-digit code).
 
+## H. Meal tracker
+
+Run [`supabase/meals.sql`](supabase/meals.sql) in Supabase → **SQL Editor**
+(adds the `meals` table + RLS and a `nutrition_targets` column on profiles).
+Then open **Meal**: log meals (type, name, calories, protein/carbs/fat), see
+today's totals vs targets, and set daily targets (auto-suggested from your
+onboarding age/sex/height/weight, editable). Nutrition also feeds the dashboard
+summary + a "Calories today" stat.
+
 ## Not done yet (later steps)
 
 - **Remaining trackers** — Meal, Supplement, Calendar, Goals still use the
