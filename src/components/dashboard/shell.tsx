@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Atmosphere from "@/components/atmosphere";
 import Sidebar from "./sidebar";
 import Topbar, { type SessionUser } from "./topbar";
 
@@ -27,7 +28,8 @@ export default function DashboardShell({
   }
 
   return (
-    <div className="flex min-h-dvh bg-paper">
+    <div className="flex min-h-dvh">
+      <Atmosphere />
       {/* Desktop sidebar */}
       <div className="sticky top-0 hidden h-dvh shrink-0 md:block">
         <Sidebar collapsed={collapsed} onToggleCollapse={toggleCollapsed} />

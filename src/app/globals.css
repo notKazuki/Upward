@@ -94,16 +94,15 @@ body {
   border-radius: 4px;
 }
 
-/* Smooth the light/dark switch. Element-level transitions (hovers) keep their
- * own timing thanks to higher specificity. */
-@media (prefers-reduced-motion: no-preference) {
-  *,
-  *::before,
-  *::after {
-    transition-property: background-color, border-color, color, fill, stroke;
-    transition-duration: 0.3s;
-    transition-timing-function: ease;
-  }
+/* Smooth the light/dark switch. A color cross-fade is not "motion", so this
+ * stays on even under reduced-motion. Element-level transitions (hovers) keep
+ * their own timing thanks to higher specificity. */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
 }
 
 /* ------------------------------------------------------------------ *
@@ -147,13 +146,13 @@ body {
 .dark .u-aurora {
   background:
     radial-gradient(
-      38% 38% at 28% 30%,
-      color-mix(in srgb, var(--ember) 36%, transparent),
+      40% 40% at 28% 28%,
+      color-mix(in srgb, var(--ember) 48%, transparent),
       transparent 70%
     ),
     radial-gradient(
-      42% 42% at 72% 64%,
-      color-mix(in srgb, var(--ember-soft) 26%, transparent),
+      44% 44% at 74% 66%,
+      color-mix(in srgb, var(--ember-soft) 34%, transparent),
       transparent 72%
     );
 }
@@ -290,22 +289,22 @@ body {
 /* ------------------------------------------------------------------ *
  * Accessibility — honour reduced motion
  * ------------------------------------------------------------------ */
+/* Reduced motion: drop sliding/drifting MOTION, but keep gentle opacity
+ * fade-ins and the static glow (neither is vestibular). */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
-  .u-rise,
-  .u-fade,
+  /* Rise (translate) degrades to a plain fade in place. */
+  .u-rise {
+    animation-name: u-fade;
+  }
+  /* Scale/draw and the aurora drift stop moving. */
   .u-line {
     animation: none;
-    opacity: 1;
     transform: none;
   }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+  .u-aurora {
+    animation: none;
   }
 }
