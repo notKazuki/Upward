@@ -2,9 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import ThemeToggle from "@/components/theme-toggle";
-
-// Runs before paint to set the theme class — prevents a flash of the wrong theme.
-const themeScript = `(function(){try{var t=localStorage.getItem('theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
+import { THEME_SCRIPT } from "@/lib/theme-script";
 
 // Display: characterful old-style serif with optical sizing + true italics.
 const fraunces = Fraunces({
@@ -25,6 +23,9 @@ export const metadata: Metadata = {
   description:
     "Upward is a universal tracker that adapts to you. Track anything, grow steadily, and watch the small steps add up.",
 };
+
+// Per-request CSP nonces require dynamic rendering across the app.
+export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -47,7 +48,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hanken.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {children}
         <ThemeToggle />
       </body>
