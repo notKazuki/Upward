@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Build your program, exercise by exercise",
+    "items": [
+      "Every split day is now fully editable — add exercises from a searchable library or your own, set sets & reps, and edit or remove any of them.",
+      "Start a day from its suggested routine, then make it yours — works for the preset splits too."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Journal",
     "items": [
       "A new private Journal tab — write a dated entry with a mood, your thoughts, and photos.",

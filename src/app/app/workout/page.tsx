@@ -115,7 +115,10 @@ export default async function WorkoutPage({
   const trainingGoal =
     (goalRes.data?.training_goal as TrainingGoal | null) ?? null;
 
-  const ceRes = await supabase.from("custom_exercises").select("*");
+  const ceRes = await supabase
+    .from("custom_exercises")
+    .select("*")
+    .order("created_at", { ascending: true });
   const customByDay: Record<string, CustomExercise[]> = {};
   if (!ceRes.error) {
     for (const c of (ceRes.data ?? []) as CustomExercise[]) {

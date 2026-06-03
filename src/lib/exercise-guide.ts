@@ -219,6 +219,28 @@ export function guideForDay(label: string): Exercise[] {
   return EXERCISE_GUIDE[label] ?? DEFAULT_GUIDE;
 }
 
+// Flat, de-duplicated library built from every day's curated exercises — used
+// for the "add exercise" search when building a program.
+const _lib = new Map<string, string>();
+for (const list of Object.values(EXERCISE_GUIDE)) {
+  for (const e of list) if (!_lib.has(e.name)) _lib.set(e.name, e.target);
+}
+export const EXERCISE_LIBRARY: { name: string; target: string }[] = [..._lib.entries()]
+  .map(([name, target]) => ({ name, target }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+export function searchExercises(
+  q: string,
+  limit = 8,
+): { name: string; target: string }[] {
+  const s = q.trim().toLowerCase();
+  if (!s) return [];
+  return EXERCISE_LIBRARY.filter(
+    (e) =>
+      e.name.toLowerCase().includes(s) || e.target.toLowerCase().includes(s),
+  ).slice(0, limit);
+}
+
 /** Days that are recovery-only and shouldn't show an exercise list. */
 export function isRestDay(label: string): boolean {
   return label.toLowerCase() === "rest";

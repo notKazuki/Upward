@@ -144,6 +144,41 @@ export async function addCustomExercise(input: {
   return { ok: true };
 }
 
+export async function updateCustomExercise(
+  id: string,
+  patch: { name?: string; target?: string; sets?: string; reps?: string },
+): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Session expired." };
+  if (!id) return { error: "Missing exercise." };
+
+  const fields: Record<string, unknown> = {};
+  if (patch.name !== undefined) {
+    const n = patch.name.trim().slice(0, 80);
+    if (!n) return { error: "Name can't be empty." };
+    fields.name = n;
+  }
+  const clean = (v: string | undefined, max: number) => {
+    const s = (v ?? "").trim().slice(0, max);
+    return s || null;
+  };
+  if (patch.target !== undefined) fields.target = clean(patch.target, 60);
+  if (patch.sets !== undefined) fields.sets = clean(patch.sets, 12);
+  if (patch.reps !== undefined) fields.reps = clean(patch.reps, 16);
+
+  const { error } = await supabase
+    .from("custom_exercises")
+    .update(fields)
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) return { error: "Couldn't save changes." };
+  revalidatePath("/app/workout");
+  return { ok: true };
+}
+
 export async function deleteCustomExercise(id: string): Promise<void> {
   const supabase = await createClient();
   const {
