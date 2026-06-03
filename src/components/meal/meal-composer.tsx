@@ -90,7 +90,7 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
     }
     setError(null);
     startTransition(async () => {
-      const res = await logMeal({ mealType: type, date, items });
+      const res = await logMeal({ mealType: type, date: date || today, items });
       if (res.error) {
         setError(res.error);
         return;

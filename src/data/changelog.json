@@ -1,6 +1,6 @@
 [
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Workout builder fixes",
     "items": [
       "Your custom reps now stick — picking a training goal no longer overwrites the reps you set on each exercise (it just sets the default for new ones).",
@@ -8,7 +8,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Set-by-set workout logging + personal records",
     "items": [
       "Log every set — weight × reps — for each exercise in your day, not just a session title.",
@@ -17,7 +17,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Build your program, exercise by exercise",
     "items": [
       "Every split day is now fully editable — add exercises from a searchable library or your own, set sets & reps, and edit or remove any of them.",
@@ -25,7 +25,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Journal",
     "items": [
       "A new private Journal tab — write a dated entry with a mood, your thoughts, and photos.",
@@ -33,7 +33,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Workout goals, custom exercises & game logos",
     "items": [
       "Workout day-guide: tap a goal (Strength / Muscle / Tone) and every exercise's reps retune to match — and it sticks.",
@@ -42,7 +42,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Stay signed in + type your dates",
     "items": [
       "The landing page now recognizes when you're already signed in — it shows 'Open dashboard' instead of making you log in again.",
@@ -50,7 +50,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Insights — patterns across everything",
     "items": [
       "New Insights tab: 30- and 90-day stats plus a 12-week activity trend.",
@@ -59,7 +59,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Your data, your control",
     "items": [
       "Export everything you've logged as a JSON file — Account → Data & account → Download.",
@@ -67,7 +67,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "Install Upward on your phone",
     "items": [
       "Upward is now an installable app — add it to your home screen for a full-screen, app-like experience (Share → Add to Home Screen on iPhone, or the install icon on Android/desktop).",
@@ -75,7 +75,7 @@
     ]
   },
   {
-    "date": "2026-06-02",
+    "date": "2026-06-03",
     "title": "A few fixes",
     "items": [
       "The username checker now correctly flags a taken name before you save, not after.",
