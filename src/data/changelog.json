@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Insights — patterns across everything",
+    "items": [
+      "New Insights tab: 30- and 90-day stats plus a 12-week activity trend.",
+      "Cross-tracker findings a single app can't see — like whether your win rate is higher on days you train, or how training changes your appetite.",
+      "Opens from the sidebar or the dashboard's weekly summary."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Your data, your control",
     "items": [
       "Export everything you've logged as a JSON file — Account → Data & account → Download.",

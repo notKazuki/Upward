@@ -207,7 +207,11 @@ export default async function DashboardPage() {
 
       {/* Main grid */}
       <div className="u-rise u-d3 grid gap-5 lg:grid-cols-3">
-        <DashboardCard title="Your week, summarised" className="lg:col-span-2">
+        <DashboardCard
+          title="Your week, summarised"
+          className="lg:col-span-2"
+          action={<OpenLink href="/app/insights" />}
+        >
           <p className="text-lg leading-relaxed text-ink-soft">
             {summary.map((tok, i) =>
               tok.em ? (
