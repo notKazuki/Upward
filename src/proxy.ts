@@ -34,6 +34,8 @@ function buildCsp(nonce: string, themeHash: string): string {
     "img-src 'self' data: blob: https://*.supabase.co",
     "font-src 'self' data:",
     `connect-src 'self' https://*.supabase.co wss://*.supabase.co${connectExtra}`,
+    "manifest-src 'self'",
+    "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -103,7 +105,7 @@ export const config = {
      */
     {
       source:
-        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
+        "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
       missing: [{ type: "header", key: "next-router-prefetch" }],
     },
   ],

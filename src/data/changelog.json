@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Install Upward on your phone",
+    "items": [
+      "Upward is now an installable app — add it to your home screen for a full-screen, app-like experience (Share → Add to Home Screen on iPhone, or the install icon on Android/desktop).",
+      "Polished the mobile layout so controls clear notches and home bars."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "A few fixes",
     "items": [
       "The username checker now correctly flags a taken name before you save, not after.",

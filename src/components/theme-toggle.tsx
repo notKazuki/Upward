@@ -49,7 +49,11 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
       title={dark ? "Light mode" : "Dark mode"}
-      className="fixed bottom-5 right-5 z-40 grid size-11 cursor-pointer place-items-center rounded-full border border-line bg-card/90 text-ink-soft shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:border-ember hover:text-ember"
+      style={{
+        bottom: "calc(1.25rem + env(safe-area-inset-bottom))",
+        right: "calc(1.25rem + env(safe-area-inset-right))",
+      }}
+      className="fixed z-40 grid size-11 cursor-pointer place-items-center rounded-full border border-line bg-card/90 text-ink-soft shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:border-ember hover:text-ember"
     >
       <span className="relative block size-5">
         {/* Sun */}
