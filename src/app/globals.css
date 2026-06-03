@@ -157,12 +157,15 @@ body {
     );
 }
 
+/* Translate-only: a blurred layer that also scales must re-rasterize the
+ * blur every frame (expensive, esp. in Brave). Drifting via transform alone
+ * keeps it on a single promoted layer the compositor just moves. */
 @keyframes u-aurora {
   from {
-    transform: translate3d(-3%, -2%, 0) scale(1);
+    transform: translate3d(-3%, -2%, 0);
   }
   to {
-    transform: translate3d(4%, 3%, 0) scale(1.12);
+    transform: translate3d(5%, 4%, 0);
   }
 }
 

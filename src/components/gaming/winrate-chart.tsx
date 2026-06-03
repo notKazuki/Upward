@@ -4,11 +4,11 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import ChartFrame from "@/components/charts/chart-frame";
 import { useThemeColors } from "@/lib/use-theme-colors";
 
 export default function WinrateChart({
@@ -18,9 +18,8 @@ export default function WinrateChart({
 }) {
   const C = useThemeColors();
   return (
-    <div className="h-[220px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
+    <ChartFrame height={220}>
+      <LineChart data={data} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
           <CartesianGrid stroke={C.line} vertical={false} />
           <XAxis
             dataKey="label"
@@ -54,8 +53,7 @@ export default function WinrateChart({
             dot={{ r: 3, fill: C.ember, strokeWidth: 0 }}
             activeDot={{ r: 5 }}
           />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+      </LineChart>
+    </ChartFrame>
   );
 }

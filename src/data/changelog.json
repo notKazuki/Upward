@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Smoother & faster",
+    "items": [
+      "Charts now size themselves instantly — no more flicker or repeated console warnings.",
+      "Lighter background effects for noticeably smoother scrolling, especially on Brave."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Smarter targets, workout guides & more foods",
     "items": [
       "Meal: choose a goal — lose, maintain, or gain — and your calorie & protein targets adjust to match.",

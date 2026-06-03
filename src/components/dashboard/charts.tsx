@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactElement } from "react";
 import {
   Area,
   AreaChart,
@@ -7,11 +8,11 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import ChartFrame from "@/components/charts/chart-frame";
 import { useThemeColors, type ChartColors } from "@/lib/use-theme-colors";
 
 function axis(C: ChartColors) {
@@ -37,14 +38,12 @@ function tooltip(C: ChartColors) {
   } as const;
 }
 
-function Frame({ children }: { children: React.ReactElement }) {
-  return (
-    <div className="h-[240px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        {children}
-      </ResponsiveContainer>
-    </div>
-  );
+function Frame({
+  children,
+}: {
+  children: ReactElement<{ width?: number; height?: number }>;
+}) {
+  return <ChartFrame height={240}>{children}</ChartFrame>;
 }
 
 export function ActivityChart({
