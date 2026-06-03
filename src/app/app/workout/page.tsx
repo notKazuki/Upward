@@ -4,6 +4,7 @@ import DashboardCard from "@/components/dashboard/card";
 import WorkoutForm from "@/components/workout/workout-form";
 import SplitChooser from "@/components/workout/split-chooser";
 import DayGuide from "@/components/workout/day-guide";
+import type { CustomExercise, TrainingGoal } from "@/lib/exercise-guide";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import {
@@ -104,6 +105,24 @@ export default async function WorkoutPage({
     (profile!.workout_split_name as string) ?? null,
   );
 
+  // Training goal + custom exercises (fetched tolerantly so a not-yet-run
+  // migration degrades gracefully rather than breaking the page).
+  const goalRes = await supabase
+    .from("profiles")
+    .select("training_goal")
+    .eq("id", user!.id)
+    .maybeSingle();
+  const trainingGoal =
+    (goalRes.data?.training_goal as TrainingGoal | null) ?? null;
+
+  const ceRes = await supabase.from("custom_exercises").select("*");
+  const customByDay: Record<string, CustomExercise[]> = {};
+  if (!ceRes.error) {
+    for (const c of (ceRes.data ?? []) as CustomExercise[]) {
+      (customByDay[c.day_label] ??= []).push(c);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <Header
@@ -136,7 +155,7 @@ export default async function WorkoutPage({
       </div>
 
       <DashboardCard title={`${splitName} — day guide`}>
-        <DayGuide days={days} />
+        <DayGuide days={days} goal={trainingGoal} customByDay={customByDay} />
       </DashboardCard>
 
       <div className="grid gap-5 lg:grid-cols-5">

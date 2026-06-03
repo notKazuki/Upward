@@ -3,13 +3,8 @@ import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import AddGame from "@/components/gaming/add-game";
 import { createClient } from "@/lib/supabase/server";
-import {
-  monogram,
-  pct,
-  tileColor,
-  winRate,
-  type Game,
-} from "@/lib/gaming";
+import { pct, winRate, type Game } from "@/lib/gaming";
+import GameTile from "@/components/gaming/game-tile";
 import { serverWeekStart } from "@/lib/server-today";
 
 export const metadata: Metadata = { title: "Gaming — Upward" };
@@ -71,12 +66,7 @@ export default async function GamingPage() {
                 className="group rounded-2xl border border-line bg-card p-5 transition-colors hover:border-line-strong"
               >
                 <div className="flex items-center gap-3">
-                  <span
-                    className="grid size-11 shrink-0 place-items-center rounded-xl text-base font-semibold text-paper-bright"
-                    style={{ backgroundColor: tileColor(g.slug) }}
-                  >
-                    {monogram(g.name)}
-                  </span>
+                  <GameTile slug={g.slug} name={g.name} size={44} />
                   <div className="min-w-0">
                     <p className="truncate font-display text-lg text-ink">
                       {g.name}

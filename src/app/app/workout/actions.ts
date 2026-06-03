@@ -82,6 +82,78 @@ export async function deleteWorkout(formData: FormData): Promise<void> {
   revalidatePath("/app");
 }
 
+const GOALS = ["strength", "hypertrophy", "endurance"];
+
+export async function updateTrainingGoal(
+  goal: string,
+): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Session expired." };
+  // Empty string clears the goal.
+  const value = GOALS.includes(goal) ? goal : null;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ training_goal: value })
+    .eq("id", user.id);
+  if (error) {
+    return { error: "Couldn't save. Make sure you've run supabase/workout-goal-custom.sql." };
+  }
+  revalidatePath("/app/workout");
+  return { ok: true };
+}
+
+export async function addCustomExercise(input: {
+  day: string;
+  name: string;
+  target?: string;
+  sets?: string;
+  reps?: string;
+}): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Session expired." };
+
+  const day = input.day?.trim();
+  const name = input.name?.trim().slice(0, 80);
+  if (!day) return { error: "Missing day." };
+  if (!name) return { error: "Name your exercise." };
+
+  const clean = (v: string | undefined, max: number) => {
+    const s = (v ?? "").trim().slice(0, max);
+    return s || null;
+  };
+
+  const { error } = await supabase.from("custom_exercises").insert({
+    user_id: user.id,
+    day_label: day,
+    name,
+    target: clean(input.target, 60),
+    sets: clean(input.sets, 12),
+    reps: clean(input.reps, 16),
+  });
+  if (error) {
+    return { error: "Couldn't save. Make sure you've run supabase/workout-goal-custom.sql." };
+  }
+  revalidatePath("/app/workout");
+  return { ok: true };
+}
+
+export async function deleteCustomExercise(id: string): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !id) return;
+  await supabase.from("custom_exercises").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/app/workout");
+}
+
 export async function saveWorkoutSplit(input: {
   splitId: string;
   name: string;

@@ -9,32 +9,56 @@ export type Exercise = {
   reps: string; // e.g. "8–12"
 };
 
-/** How rep ranges map to a training goal — the legend under the guide. */
+export type TrainingGoal = "strength" | "hypertrophy" | "endurance";
+
+/** How rep ranges map to a training goal — the legend, and the selectable goal. */
 export const REP_GUIDANCE: {
+  id: TrainingGoal;
   goal: string;
+  repRange: string;
   reps: string;
   rest: string;
   note: string;
 }[] = [
   {
+    id: "strength",
     goal: "Strength",
+    repRange: "3–5",
     reps: "3–5 reps",
     rest: "2–3 min rest",
     note: "Heavy weight, low reps. Builds raw strength and power.",
   },
   {
+    id: "hypertrophy",
     goal: "Muscle / size",
+    repRange: "8–12",
     reps: "8–12 reps",
     rest: "60–90s rest",
     note: "Moderate weight taken close to failure. The classic size range.",
   },
   {
+    id: "endurance",
     goal: "Tone / endurance",
+    repRange: "15–20",
     reps: "15–20 reps",
     rest: "30–45s rest",
     note: "Lighter weight, high reps. Builds definition and stamina.",
   },
 ];
+
+/** Rep range for a goal, used to retune the guide when a goal is selected. */
+export function repsForGoal(goal: TrainingGoal | null): string | null {
+  return REP_GUIDANCE.find((g) => g.id === goal)?.repRange ?? null;
+}
+
+export type CustomExercise = {
+  id: string;
+  day_label: string;
+  name: string;
+  target: string | null;
+  sets: string | null;
+  reps: string | null;
+};
 
 export const PROGRESSION_NOTE =
   "Progressive overload is the whole game: each week aim to add a little weight, one more rep, or one more set. If you hit the top of a rep range with good form, go heavier next time.";

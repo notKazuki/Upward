@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { POPULAR_GAMES, monogram, tileColor } from "@/lib/gaming";
+import { POPULAR_GAMES } from "@/lib/gaming";
+import GameTile from "./game-tile";
 import { addGame } from "@/app/app/gaming/actions";
 
 export default function AddGame() {
@@ -59,12 +60,7 @@ export default function AddGame() {
                   : "border-line bg-paper-bright hover:border-line-strong"
               }`}
             >
-              <span
-                className="grid size-9 shrink-0 place-items-center rounded-lg text-sm font-semibold text-paper-bright"
-                style={{ backgroundColor: tileColor(g.slug) }}
-              >
-                {monogram(g.name)}
-              </span>
+              <GameTile slug={g.slug} name={g.name} size={36} />
               <span className="truncate text-sm font-medium text-ink">
                 {g.name}
               </span>

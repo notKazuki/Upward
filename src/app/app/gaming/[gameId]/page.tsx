@@ -9,13 +9,12 @@ import WinrateChart from "@/components/gaming/winrate-chart-lazy";
 import { createClient } from "@/lib/supabase/server";
 import {
   formatDate,
-  monogram,
   sumSessions,
-  tileColor,
   winRate,
   type Game,
   type GameSession,
 } from "@/lib/gaming";
+import GameTile from "@/components/gaming/game-tile";
 import { serverToday, serverWeekStart } from "@/lib/server-today";
 import { deleteGame, deleteSession } from "../actions";
 
@@ -88,12 +87,7 @@ export default async function GameDetailPage({
           >
             <Icon name="chevronLeft" size={20} />
           </Link>
-          <span
-            className="grid size-11 place-items-center rounded-xl text-base font-semibold text-paper-bright"
-            style={{ backgroundColor: tileColor(g.slug) }}
-          >
-            {monogram(g.name)}
-          </span>
+          <GameTile slug={g.slug} name={g.name} size={44} />
           <h1 className="font-display text-[1.9rem] font-normal tracking-tight text-ink">
             {g.name}
           </h1>

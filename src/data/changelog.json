@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Workout goals, custom exercises & game logos",
+    "items": [
+      "Workout day-guide: tap a goal (Strength / Muscle / Tone) and every exercise's reps retune to match — and it sticks.",
+      "Add your own exercises to any split day.",
+      "The gaming picker now shows real logos for popular games (Valorant, LoL, CS2, Fortnite), branded tiles for the rest."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Stay signed in + type your dates",
     "items": [
       "The landing page now recognizes when you're already signed in — it shows 'Open dashboard' instead of making you log in again.",

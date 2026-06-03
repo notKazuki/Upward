@@ -23,8 +23,9 @@ export type GameSession = {
   created_at: string;
 };
 
-/** Popular games for the picker. No logos (avoids wrong brand art) — we use
- * a monogram tile instead. Users can also add a custom game. */
+/** Popular games for the picker. Rendered with a real brand logo where we have
+ * a verified one (see game-icons.ts), otherwise a monogram tile. Users can also
+ * add a custom game. */
 export const POPULAR_GAMES: { slug: string; name: string }[] = [
   { slug: "valorant", name: "Valorant" },
   { slug: "league-of-legends", name: "League of Legends" },
