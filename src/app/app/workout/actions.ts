@@ -67,6 +67,101 @@ export async function addWorkout(
   return { ok: true, ts: Date.now() };
 }
 
+export async function logSession(input: {
+  day: string;
+  date: string;
+  title?: string;
+  durationMin?: number | null;
+  notes?: string;
+  entries: { exercise: string; sets: { weight: number | null; reps: number | null }[] }[];
+}): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Please sign in again." };
+
+  const day = (input.day ?? "").trim();
+  if (!day) return { error: "Pick a day." };
+  if (!input.date) return { error: "Pick a date." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("workout_days")
+    .eq("id", user.id)
+    .maybeSingle();
+  const allowed = [...(profile?.workout_days ?? []), ...GENERAL_DAYS];
+  if (allowed.length > 0 && !allowed.includes(day)) {
+    return { error: "That day isn't part of your split." };
+  }
+
+  // Collect non-empty sets.
+  const setRows: {
+    exercise: string;
+    set_index: number;
+    weight: number | null;
+    reps: number | null;
+  }[] = [];
+  for (const e of input.entries ?? []) {
+    const name = (e.exercise ?? "").trim().slice(0, 80);
+    if (!name) continue;
+    let idx = 0;
+    for (const s of e.sets ?? []) {
+      const weight =
+        typeof s.weight === "number" && Number.isFinite(s.weight) && s.weight >= 0
+          ? s.weight
+          : null;
+      const reps =
+        typeof s.reps === "number" && Number.isFinite(s.reps) && s.reps >= 0
+          ? Math.round(s.reps)
+          : null;
+      if (weight == null && reps == null) continue;
+      idx++;
+      setRows.push({ exercise: name, set_index: idx, weight, reps });
+    }
+  }
+
+  const notes = (input.notes ?? "").trim().slice(0, 500) || null;
+  const explicitTitle = (input.title ?? "").trim().slice(0, 120);
+  const duration_min =
+    typeof input.durationMin === "number" && input.durationMin >= 0
+      ? Math.round(input.durationMin)
+      : null;
+
+  if (setRows.length === 0 && !notes && !explicitTitle && duration_min === null) {
+    return { error: "Log at least one set, or add a note." };
+  }
+
+  const { data: w, error: wErr } = await supabase
+    .from("workouts")
+    .insert({
+      user_id: user.id,
+      title: explicitTitle || day,
+      category: day,
+      performed_on: input.date,
+      duration_min,
+      notes,
+    })
+    .select("id")
+    .single();
+  if (wErr || !w) {
+    return { error: "Couldn't save. Make sure you've run supabase/workouts.sql." };
+  }
+
+  if (setRows.length > 0) {
+    const { error: sErr } = await supabase
+      .from("workout_sets")
+      .insert(setRows.map((r) => ({ ...r, user_id: user.id, workout_id: w.id })));
+    if (sErr) {
+      return { error: "Session saved — but run supabase/workout-sets.sql to record sets." };
+    }
+  }
+
+  revalidatePath("/app/workout");
+  revalidatePath("/app");
+  return { ok: true };
+}
+
 export async function deleteWorkout(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const {

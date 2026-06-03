@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Set-by-set workout logging + personal records",
+    "items": [
+      "Log every set — weight × reps — for each exercise in your day, not just a session title.",
+      "Your last numbers pre-fill so you can beat them, and personal records surface automatically.",
+      "Recent sessions now show exactly what you lifted."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Build your program, exercise by exercise",
     "items": [
       "Every split day is now fully editable — add exercises from a searchable library or your own, set sets & reps, and edit or remove any of them.",

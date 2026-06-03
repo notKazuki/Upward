@@ -11,13 +11,37 @@ import {
   dayColor,
   displayDay,
   formatDate,
+  lastByExercise,
+  personalRecords,
   splitDisplayName,
   type Workout,
+  type WorkoutSet,
 } from "@/lib/workouts";
 import { serverWeekStart } from "@/lib/server-today";
 import { deleteWorkout } from "./actions";
 
 export const metadata: Metadata = { title: "Workout — Upward" };
+
+/** Group a session's sets by exercise (preserving first-seen order). */
+function groupSets(sets: WorkoutSet[]): { exercise: string; sets: WorkoutSet[] }[] {
+  const order: string[] = [];
+  const map = new Map<string, WorkoutSet[]>();
+  for (const s of sets) {
+    if (!map.has(s.exercise)) {
+      map.set(s.exercise, []);
+      order.push(s.exercise);
+    }
+    map.get(s.exercise)!.push(s);
+  }
+  return order.map((exercise) => ({ exercise, sets: map.get(exercise)! }));
+}
+
+function setLabel(s: WorkoutSet): string {
+  if (s.weight != null && s.reps != null) return `${s.weight}×${s.reps}`;
+  if (s.reps != null) return `${s.reps}`;
+  if (s.weight != null) return `${s.weight}`;
+  return "";
+}
 
 export default async function WorkoutPage({
   searchParams,
@@ -126,6 +150,21 @@ export default async function WorkoutPage({
     }
   }
 
+  // Logged sets (newest first) → per-session display, PRs, and prefill.
+  const setsRes = await supabase
+    .from("workout_sets")
+    .select("*")
+    .order("created_at", { ascending: false });
+  const allSets = (setsRes.error ? [] : (setsRes.data ?? [])) as WorkoutSet[];
+  const setsByWorkout: Record<string, WorkoutSet[]> = {};
+  for (const s of allSets) (setsByWorkout[s.workout_id] ??= []).push(s);
+  // sets within a workout in performed order
+  for (const id in setsByWorkout) {
+    setsByWorkout[id].sort((a, b) => a.set_index - b.set_index);
+  }
+  const lastEx = lastByExercise(allSets);
+  const prs = personalRecords(allSets).slice(0, 6);
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <Header
@@ -161,9 +200,34 @@ export default async function WorkoutPage({
         <DayGuide days={days} goal={trainingGoal} customByDay={customByDay} />
       </DashboardCard>
 
+      {prs.length > 0 && (
+        <DashboardCard title="Personal records">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {prs.map((p) => (
+              <li
+                key={p.exercise}
+                className="flex items-baseline justify-between gap-3 rounded-xl border border-line bg-paper-bright px-4 py-3"
+              >
+                <span className="min-w-0 truncate text-sm text-ink-soft">{p.exercise}</span>
+                <span className="shrink-0 font-display text-lg text-ink">
+                  {p.weight}
+                  {p.reps != null && (
+                    <span className="text-sm text-muted"> × {p.reps}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </DashboardCard>
+      )}
+
       <div className="grid gap-5 lg:grid-cols-5">
         <DashboardCard title="Log a workout" className="lg:col-span-2">
-          <WorkoutForm days={days} />
+          <WorkoutForm
+            days={days}
+            customByDay={customByDay}
+            lastByExercise={lastEx}
+          />
         </DashboardCard>
 
         <DashboardCard title="Recent" className="lg:col-span-3">
@@ -196,6 +260,16 @@ export default async function WorkoutPage({
                       </span>
                     </div>
                     <p className="truncate font-medium text-ink">{w.title}</p>
+                    {setsByWorkout[w.id]?.length ? (
+                      <div className="mt-1 space-y-0.5">
+                        {groupSets(setsByWorkout[w.id]).map((g) => (
+                          <p key={g.exercise} className="text-xs text-muted">
+                            <span className="text-ink-soft">{g.exercise}</span>{" "}
+                            {g.sets.map(setLabel).filter(Boolean).join(", ")}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
                     {w.notes && (
                       <p className="mt-0.5 text-sm leading-relaxed text-muted">
                         {w.notes}

@@ -8,6 +8,42 @@ export type Workout = {
   created_at: string;
 };
 
+export type WorkoutSet = {
+  id: string;
+  workout_id: string;
+  exercise: string;
+  set_index: number;
+  weight: number | null;
+  reps: number | null;
+  created_at: string;
+};
+
+/** Best (heaviest) set per exercise, strongest first. */
+export function personalRecords(
+  sets: WorkoutSet[],
+): { exercise: string; weight: number; reps: number | null }[] {
+  const best = new Map<string, { weight: number; reps: number | null }>();
+  for (const s of sets) {
+    if (s.weight == null) continue;
+    const cur = best.get(s.exercise);
+    if (!cur || s.weight > cur.weight) best.set(s.exercise, { weight: s.weight, reps: s.reps });
+  }
+  return [...best.entries()]
+    .map(([exercise, v]) => ({ exercise, ...v }))
+    .sort((a, b) => b.weight - a.weight);
+}
+
+/** Most recent set per exercise (expects `sets` ordered newest-first). */
+export function lastByExercise(
+  sets: WorkoutSet[],
+): Record<string, { weight: number | null; reps: number | null }> {
+  const out: Record<string, { weight: number | null; reps: number | null }> = {};
+  for (const s of sets) {
+    if (!(s.exercise in out)) out[s.exercise] = { weight: s.weight, reps: s.reps };
+  }
+  return out;
+}
+
 /** Preset training splits. Each is an ordered list of day labels. */
 export const SPLIT_PRESETS: { id: string; name: string; days: string[] }[] = [
   { id: "full_body", name: "Full Body", days: ["Full Body"] },

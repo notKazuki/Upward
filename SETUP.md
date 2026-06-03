@@ -156,6 +156,14 @@ the sidebar: on first open you'll pick a training split (Full Body, Upper/Lower,
 PPL, Arnold, Bro, or build your own), then log sessions against your split's days
 (plus Cardio/Mobility/Rest). Stats update live; change your split anytime.
 
+For the **full program builder + set-by-set logging**, also run
+[`supabase/workout-goal-custom.sql`](supabase/workout-goal-custom.sql) (training
+goal + per-day custom exercises) and
+[`supabase/workout-sets.sql`](supabase/workout-sets.sql) (logs each exercise's
+sets — weight × reps — and powers personal records). Then each split day is fully
+editable (add from a library or your own, edit sets/reps, seed from the suggested
+routine), and logging captures every set with PRs.
+
 ## F. Gaming tracker
 
 Run [`supabase/gaming.sql`](supabase/gaming.sql) in Supabase → **SQL Editor**.
