@@ -3,6 +3,14 @@ export const MIN_AGE = 13;
 export type Gender = "male" | "female" | "unspecified";
 export type UnitPref = "metric" | "imperial";
 
+/** Short unit labels driven by the user's preference. */
+export function weightUnit(p: UnitPref | null | undefined): string {
+  return p === "imperial" ? "lb" : "kg";
+}
+export function heightUnit(p: UnitPref | null | undefined): string {
+  return p === "imperial" ? "in" : "cm";
+}
+
 export type Profile = {
   id: string;
   full_name: string | null;

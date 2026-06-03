@@ -125,7 +125,15 @@ function ProfileMenu({ user }: { user: SessionUser }) {
               <Icon name="account" size={18} />
               Account
             </Link>
-            <MenuItem icon="settings" label="Settings" />
+            <Link
+              href="/app/settings"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-paper"
+            >
+              <Icon name="settings" size={18} />
+              Settings
+            </Link>
           </div>
 
           <div className="border-t border-line p-1.5">
@@ -146,27 +154,3 @@ function ProfileMenu({ user }: { user: SessionUser }) {
   );
 }
 
-/** Account / Settings — placeholders until those screens exist. */
-function MenuItem({
-  icon,
-  label,
-}: {
-  icon: "account" | "settings";
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      className="flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-paper"
-    >
-      <span className="flex items-center gap-3">
-        <Icon name={icon} size={18} />
-        {label}
-      </span>
-      <span className="text-[0.65rem] uppercase tracking-wide text-faint">
-        soon
-      </span>
-    </button>
-  );
-}

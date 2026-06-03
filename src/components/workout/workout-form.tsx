@@ -17,10 +17,12 @@ export default function WorkoutForm({
   days,
   customByDay,
   lastByExercise,
+  weightUnit = "kg",
 }: {
   days: string[];
   customByDay: Record<string, CustomExercise[]>;
   lastByExercise: Last;
+  weightUnit?: string;
 }) {
   const today = useToday();
   const [day, setDay] = useState(days[0] ?? GENERAL_DAYS[0]);
@@ -163,7 +165,7 @@ export default function WorkoutForm({
                       step="any"
                       value={s.weight}
                       onChange={(e) => setField(ex.name, i, "weight", e.target.value)}
-                      placeholder="kg"
+                      placeholder={weightUnit}
                       className={numCls}
                     />
                     <span className="text-faint">×</span>

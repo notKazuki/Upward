@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-03",
+    "title": "Units & a Settings page",
+    "items": [
+      "New Settings (under your profile menu) — choose Metric or Imperial, and weights show in kg or lb across the app.",
+      "Fixed: logging your first meal no longer asks for a date when one's already shown."
+    ]
+  },
+  {
+    "date": "2026-06-03",
     "title": "Workout builder fixes",
     "items": [
       "Your custom reps now stick — picking a training goal no longer overwrites the reps you set on each exercise (it just sets the default for new ones).",

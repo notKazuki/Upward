@@ -18,6 +18,7 @@ import {
   type WorkoutSet,
 } from "@/lib/workouts";
 import { serverWeekStart } from "@/lib/server-today";
+import { weightUnit, type UnitPref } from "@/lib/onboarding";
 import { deleteWorkout } from "./actions";
 
 export const metadata: Metadata = { title: "Workout — Upward" };
@@ -54,7 +55,7 @@ export default async function WorkoutPage({
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("workout_split, workout_split_name, workout_days")
+    .select("workout_split, workout_split_name, workout_days, unit_pref")
     .eq("id", user!.id)
     .maybeSingle();
 
@@ -164,6 +165,7 @@ export default async function WorkoutPage({
   }
   const lastEx = lastByExercise(allSets);
   const prs = personalRecords(allSets).slice(0, 6);
+  const unit = weightUnit((profile?.unit_pref as UnitPref | null) ?? "metric");
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
@@ -211,6 +213,7 @@ export default async function WorkoutPage({
                 <span className="min-w-0 truncate text-sm text-ink-soft">{p.exercise}</span>
                 <span className="shrink-0 font-display text-lg text-ink">
                   {p.weight}
+                  <span className="text-sm text-muted"> {unit}</span>
                   {p.reps != null && (
                     <span className="text-sm text-muted"> × {p.reps}</span>
                   )}
@@ -227,6 +230,7 @@ export default async function WorkoutPage({
             days={days}
             customByDay={customByDay}
             lastByExercise={lastEx}
+            weightUnit={unit}
           />
         </DashboardCard>
 
