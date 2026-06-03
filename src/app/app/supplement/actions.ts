@@ -5,7 +5,13 @@ import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import type { Timing } from "@/lib/supplements";
 
-const TIMINGS: Timing[] = ["morning", "preworkout", "evening", "anytime"];
+const TIMINGS: Timing[] = [
+  "morning",
+  "preworkout",
+  "postworkout",
+  "evening",
+  "anytime",
+];
 type Result = { ok?: boolean; error?: string };
 
 function clean(v: unknown, max: number): string | null {

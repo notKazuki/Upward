@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Icon from "@/components/icons";
 import {
   addSupplement,
@@ -39,16 +39,30 @@ export default function SupplementBoard({
     return (takenBySupplement[id] ?? []).includes(date);
   }
 
+  // Drop an optimistic override only once the refreshed server data agrees with
+  // it. Clearing it eagerly (right after the action) raced the revalidation and
+  // briefly showed the stale value — the "check → uncheck → check" flicker.
+  useEffect(() => {
+    setOptimistic((prev) => {
+      if (Object.keys(prev).length === 0) return prev;
+      let changed = false;
+      const next = { ...prev };
+      for (const id of Object.keys(prev)) {
+        const serverTaken = (takenBySupplement[id] ?? []).includes(today);
+        if (serverTaken === prev[id]) {
+          delete next[id];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [takenBySupplement, today]);
+
   function toggle(id: string) {
     const next = !isTaken(id, today);
     setOptimistic((o) => ({ ...o, [id]: next }));
-    startTransition(async () => {
-      await toggleTaken(id, today);
-      setOptimistic((o) => {
-        const rest = { ...o };
-        delete rest[id];
-        return rest;
-      });
+    startTransition(() => {
+      void toggleTaken(id, today);
     });
   }
 

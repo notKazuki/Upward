@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "A few fixes",
+    "items": [
+      "The username checker now correctly flags a taken name before you save, not after.",
+      "Added a 'Post-workout' timing to the supplement tracker.",
+      "Fixed the supplement check-off flicker — one tap, one clean check."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Display names + username cooldown",
     "items": [
       "You now have a display name you can change anytime — it's what shows around the app.",

@@ -1,4 +1,9 @@
-export type Timing = "morning" | "preworkout" | "evening" | "anytime";
+export type Timing =
+  | "morning"
+  | "preworkout"
+  | "postworkout"
+  | "evening"
+  | "anytime";
 
 export type Supplement = {
   id: string;
@@ -17,6 +22,7 @@ export type SupplementLog = {
 export const TIMINGS: { id: Timing; label: string }[] = [
   { id: "morning", label: "Morning" },
   { id: "preworkout", label: "Pre-workout" },
+  { id: "postworkout", label: "Post-workout" },
   { id: "evening", label: "Evening" },
   { id: "anytime", label: "Anytime" },
 ];

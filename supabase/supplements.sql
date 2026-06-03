@@ -7,7 +7,7 @@ create table if not exists public.supplements (
   name        text not null,
   dose        text,
   timing      text not null default 'anytime'
-                check (timing in ('morning', 'preworkout', 'evening', 'anytime')),
+                check (timing in ('morning', 'preworkout', 'postworkout', 'evening', 'anytime')),
   created_at  timestamptz not null default now()
 );
 
@@ -26,6 +26,14 @@ create table if not exists public.supplement_logs (
 
 create index if not exists supplement_logs_idx
   on public.supplement_logs (user_id, taken_on desc);
+
+-- Widen the timing set to include post-workout on existing installs (the inline
+-- check above only applies to fresh tables).
+alter table public.supplements drop constraint if exists supplements_timing_check;
+alter table public.supplements drop constraint if exists supplements_timing_chk;
+alter table public.supplements
+  add constraint supplements_timing_chk
+  check (timing in ('morning', 'preworkout', 'postworkout', 'evening', 'anytime'));
 
 alter table public.supplements enable row level security;
 alter table public.supplement_logs enable row level security;

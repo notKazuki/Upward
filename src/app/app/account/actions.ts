@@ -20,14 +20,16 @@ export async function checkUsernameAvailable(
   if (!user) return { available: false, error: "Session expired." };
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("id")
-    .ilike("username", name)
-    .neq("id", user.id)
-    .maybeSingle();
+  // RLS hides other users' rows, so a normal select can't see a clash. Ask a
+  // SECURITY DEFINER function that checks across everyone and returns a boolean.
+  const { data, error } = await supabase.rpc("username_available", {
+    candidate: name,
+  });
 
-  return { available: !data };
+  // If the function isn't installed yet, don't falsely claim "taken" — the
+  // unique index still backstops it on save.
+  if (error) return { available: true };
+  return { available: Boolean(data) };
 }
 
 export async function updateUsername(
