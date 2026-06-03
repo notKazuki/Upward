@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-03",
+    "title": "Valorant auto-sync",
+    "items": [
+      "Connect your Riot ID on the Valorant page to auto-import recent Competitive matches.",
+      "Each match becomes a session with win/loss, agent, map, KDA and duration; re-syncing never duplicates.",
+      "Region is detected automatically — just enter your GameName#TAG."
+    ]
+  },
+  {
+    "date": "2026-06-03",
     "title": "Dota 2 auto-sync",
     "items": [
       "Connect your Dota 2 account (via OpenDota — free, no API key) and import recent matches automatically.",

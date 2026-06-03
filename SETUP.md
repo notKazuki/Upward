@@ -179,10 +179,27 @@ page open **Auto-sync**, paste your account ID (or OpenDota/Dotabuff link), and
 re-syncing never duplicates. Your Dota match history must be public (in Dota:
 Settings → Options → *Expose Public Match Data*).
 
-> Other games stay manual for now. tracker.gg can only serve Apex / The Division
-> 2 and isn't allowed to provide other titles' data, so durable auto-sync means
-> per-game official APIs (Riot for LoL/Valorant next). The provider columns added
-> by `game-sync.sql` generalise to those.
+**Valorant auto-sync** uses the HenrikDev API (Riot has no usable public
+Valorant match API). It needs a free key, added as a **server-only** env var:
+
+1. Get a key at [docs.henrikdev.xyz](https://docs.henrikdev.xyz) → their Discord
+   → the key bot/portal → generate a **Basic** key.
+2. Add it wherever the app runs:
+   - **Vercel** → Project → **Settings → Environment Variables** → add
+     `HENRIKDEV_API_KEY` = the key (Production + Preview). Redeploy.
+   - **Local** → add `HENRIKDEV_API_KEY=...` to `.env.local`, then restart
+     `npm run dev`.
+
+Then on the Valorant game page open **Auto-sync**, enter your Riot ID
+(`GameName#TAG`), and **Sync now** — recent **Competitive** matches import as
+sessions (win/loss, agent · map · KDA, duration), and re-syncing never
+duplicates. Region is detected automatically from your Riot ID.
+
+> ⚠️ HenrikDev is unofficial; never prefix the key with `NEXT_PUBLIC_` (it's read
+> only server-side in `src/lib/valorant.ts`). Other games stay manual for now —
+> tracker.gg may only serve Apex / The Division 2, so durable auto-sync means
+> per-game APIs. The provider columns added by `game-sync.sql` generalise across
+> all of them.
 
 ## G. Account / profile
 

@@ -131,10 +131,11 @@ export default async function GameDetailPage({
         ))}
       </div>
 
-      {g.slug === "dota-2" && (
+      {(g.slug === "dota-2" || g.slug === "valorant") && (
         <DashboardCard title="Auto-sync">
           <GameSync
             gameId={g.id}
+            slug={g.slug}
             provider={g.provider ?? null}
             providerId={g.provider_id ?? null}
             lastSyncedAt={g.last_synced_at ?? null}

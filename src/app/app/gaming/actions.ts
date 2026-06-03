@@ -12,6 +12,15 @@ import {
   parseOpenDotaId,
   won,
 } from "@/lib/opendota";
+import {
+  fetchValorantAccount,
+  fetchValorantMatchesByPuuid,
+  isCompetitive,
+  normalizeMatch,
+  parseRiotId,
+  type NormalizedValMatch,
+  type ValError,
+} from "@/lib/valorant";
 
 async function uid() {
   const supabase = await createClient();
@@ -162,6 +171,45 @@ export async function connectDota(input: {
   return { ok: true, name: prof.name };
 }
 
+const VAL_ERRORS: Record<ValError, string> = {
+  config: "Valorant sync isn't configured yet (missing HENRIKDEV_API_KEY).",
+  auth: "Valorant sync key is missing or invalid — check HENRIKDEV_API_KEY.",
+  notfound:
+    "Couldn't find that Riot ID. Use the form GameName#TAG, and make sure you've played Valorant on it.",
+  rate: "Valorant data source is rate-limited right now — try again in a minute.",
+  unavailable: "Valorant data source is unavailable right now — try again shortly.",
+};
+
+export async function connectRiot(input: {
+  gameId: string;
+  riotId: string;
+}): Promise<{ ok?: boolean; error?: string; name?: string | null }> {
+  const { supabase, user } = await uid();
+  if (!user) return { error: "Your session expired." };
+
+  const parsed = parseRiotId(input.riotId);
+  if (!parsed) {
+    return { error: "Enter your Riot ID as GameName#TAG (e.g. Phoenix#NA1)." };
+  }
+
+  const acc = await fetchValorantAccount(parsed.name, parsed.tag);
+  if ("error" in acc) return { error: VAL_ERRORS[acc.error] };
+
+  const { error } = await supabase
+    .from("games")
+    .update({
+      provider: "henrikdev",
+      provider_id: `${acc.data.puuid}|${acc.data.region}`,
+    })
+    .eq("id", input.gameId)
+    .eq("user_id", user.id);
+  if (error) {
+    return { error: "Couldn't save. Make sure you've run supabase/game-sync.sql." };
+  }
+  revalidatePath(`/app/gaming/${input.gameId}`);
+  return { ok: true, name: `${acc.data.name}#${acc.data.tag}` };
+}
+
 export async function disconnectProvider(
   gameId: string,
 ): Promise<{ ok?: boolean }> {
@@ -189,28 +237,35 @@ export async function syncGame(
     .eq("user_id", user.id)
     .maybeSingle();
   if (!game) return { error: "Game not found." };
-  if (game.provider !== "opendota" || !game.provider_id) {
+  if (!game.provider || !game.provider_id) {
     return { error: "This game isn't connected for sync." };
   }
 
-  const matches = await fetchRecentMatches(game.provider_id as string);
-  if (matches === null) {
-    return { error: "OpenDota is unavailable right now — try again in a minute." };
-  }
-
-  // Dedupe against already-imported matches.
-  const { data: existing } = await supabase
-    .from("game_sessions")
-    .select("external_id")
-    .eq("game_id", gameId)
-    .not("external_id", "is", null);
-  const have = new Set((existing ?? []).map((r) => String(r.external_id)));
-
   const zone = decodeURIComponent((await cookies()).get("tz")?.value || "") || "UTC";
 
-  const rows = matches
-    .filter((m) => !have.has(String(m.match_id)))
-    .map((m) => {
+  type Row = {
+    user_id: string;
+    game_id: string;
+    played_on: string;
+    matches: number;
+    wins: number;
+    losses: number;
+    minutes: number;
+    rank: string | null;
+    notes: string;
+    external_id: string;
+    source: string;
+  };
+
+  // Build candidate rows per provider (one match → one row).
+  let candidates: Row[];
+
+  if (game.provider === "opendota") {
+    const matches = await fetchRecentMatches(game.provider_id as string);
+    if (matches === null) {
+      return { error: "OpenDota is unavailable right now — try again in a minute." };
+    }
+    candidates = matches.map((m) => {
       const w = won(m);
       return {
         user_id: user.id,
@@ -226,6 +281,43 @@ export async function syncGame(
         source: "opendota",
       };
     });
+  } else if (game.provider === "henrikdev") {
+    const [puuid, region] = String(game.provider_id).split("|");
+    if (!puuid || !region) return { error: "Reconnect this game to sync." };
+    const res = await fetchValorantMatchesByPuuid(region, puuid, {
+      mode: "competitive",
+      size: 10,
+    });
+    if ("error" in res) return { error: VAL_ERRORS[res.error] };
+    candidates = res.data
+      .filter(isCompetitive)
+      .map((m) => normalizeMatch(m, puuid))
+      .filter((n): n is NormalizedValMatch => n !== null)
+      .map((n) => ({
+        user_id: user.id,
+        game_id: gameId,
+        played_on: ymdInTz(zone, n.startedAt),
+        matches: 1,
+        wins: n.won ? 1 : 0,
+        losses: n.won ? 0 : 1,
+        minutes: n.minutes,
+        rank: n.rank,
+        notes: n.notes,
+        external_id: n.matchId,
+        source: "henrikdev",
+      }));
+  } else {
+    return { error: "This game isn't connected for sync." };
+  }
+
+  // Dedupe against already-imported matches.
+  const { data: existing } = await supabase
+    .from("game_sessions")
+    .select("external_id")
+    .eq("game_id", gameId)
+    .not("external_id", "is", null);
+  const have = new Set((existing ?? []).map((r) => String(r.external_id)));
+  const rows = candidates.filter((r) => !have.has(r.external_id));
 
   let imported = 0;
   if (rows.length > 0) {
