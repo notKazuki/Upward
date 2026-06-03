@@ -1,0 +1,55 @@
+name: Apply DB migrations
+
+# Applies the idempotent SQL files in supabase/ to the Supabase database on push
+# to main whenever any of them change. The files use "if not exists" / "drop ...
+# if exists", so re-running the full set every time is safe.
+#
+# Setup (once): add a repo secret SUPABASE_DB_URL = your Supabase *Session
+# pooler* connection string (Project Settings → Database → Session pooler).
+# Use the pooler, not the "direct" connection — GitHub runners are IPv4-only and
+# the direct connection is IPv6-only. Without the secret this workflow skips.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/**"
+  # Lets you apply migrations on demand from the Actions tab (e.g. right after
+  # adding the secret, to apply files you haven't run yet).
+  workflow_dispatch:
+
+# Don't let two pushes apply migrations at the same time.
+concurrency:
+  group: db-migrate
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply SQL files
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "SUPABASE_DB_URL not set — skipping (add it in repo Settings → Secrets)."
+            exit 0
+          fi
+          set -euo pipefail
+
+          # profiles.sql must run first: several files ALTER the profiles table,
+          # and profile.sql even sorts before profiles.sql alphabetically.
+          echo "→ supabase/profiles.sql"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/profiles.sql
+
+          for f in supabase/*.sql; do
+            [ "$f" = "supabase/profiles.sql" ] && continue
+            echo "→ $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+          echo "All migrations applied."
