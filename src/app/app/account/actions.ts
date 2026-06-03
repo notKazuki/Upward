@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import { validateUsername } from "@/lib/username";
+import {
+  usernameCooldownMs,
+  validateDisplayName,
+  validateUsername,
+} from "@/lib/username";
 
 export async function checkUsernameAvailable(
   raw: string,
@@ -37,9 +41,37 @@ export async function updateUsername(
   if (!user) return { error: "Session expired. Please sign in again." };
 
   const supabase = await createClient();
+
+  // Current username + when it last changed (for the 30-day cooldown).
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("username, username_changed_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  const current = (prof?.username as string | null) ?? null;
+  const changedAt = (prof?.username_changed_at as string | null) ?? null;
+
+  // No real change → nothing to do.
+  if (current && current.toLowerCase() === name.toLowerCase()) {
+    return { ok: true };
+  }
+
+  // Changing an existing username is rate-limited; first claim is free.
+  if (current) {
+    const remaining = usernameCooldownMs(changedAt);
+    if (remaining > 0) {
+      const days = Math.ceil(remaining / 86_400_000);
+      return {
+        error: `You can change your username again in ${days} day${
+          days === 1 ? "" : "s"
+        }.`,
+      };
+    }
+  }
+
   const { error } = await supabase
     .from("profiles")
-    .update({ username: name })
+    .update({ username: name, username_changed_at: new Date().toISOString() })
     .eq("id", user.id);
 
   if (error) {
@@ -47,7 +79,32 @@ export async function updateUsername(
     if (error.code === "23505" || /duplicate|unique/i.test(error.message)) {
       return { error: "That username is taken — try another." };
     }
-    return { error: "Couldn't save your username." };
+    return { error: "Couldn't save. Make sure you've run supabase/display-name.sql." };
+  }
+
+  revalidatePath("/app/account");
+  revalidatePath("/app", "layout");
+  return { ok: true };
+}
+
+export async function updateDisplayName(
+  raw: string,
+): Promise<{ ok?: boolean; error?: string }> {
+  const name = raw.trim();
+  const invalid = validateDisplayName(name);
+  if (invalid) return { error: invalid };
+
+  const user = await currentUser();
+  if (!user) return { error: "Session expired." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ display_name: name })
+    .eq("id", user.id);
+
+  if (error) {
+    return { error: "Couldn't save. Make sure you've run supabase/display-name.sql." };
   }
 
   revalidatePath("/app/account");

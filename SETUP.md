@@ -180,6 +180,11 @@ Then open the avatar menu (top-right) → **Account** to set a unique username
 (≤17 chars), upload a profile photo, and turn on **two-factor authentication**
 (authenticator app / TOTP — scan the QR, enter the 6-digit code).
 
+For the **display name** (freely editable, shown around the app) and the
+**30-day username change cooldown**, also run
+[`supabase/display-name.sql`](supabase/display-name.sql) (adds `display_name`
+and `username_changed_at` to profiles).
+
 ## H. Meal tracker
 
 Run [`supabase/meals.sql`](supabase/meals.sql) in Supabase → **SQL Editor**

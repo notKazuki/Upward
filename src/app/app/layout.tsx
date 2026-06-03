@@ -50,9 +50,21 @@ export default async function AppLayout({
     (user.user_metadata?.full_name as string | undefined)?.trim() ?? "";
   const email = user.email ?? "";
   const username = (profile?.username as string | undefined) ?? "";
-  // Prefer the chosen username as the display name; fall back to first name.
+
+  // Display name (freely editable) is fetched separately so a missing column
+  // (migration not yet run) doesn't break the layout.
+  const dn = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  const displayName = ((dn.data?.display_name as string | null) ?? "").trim();
+
+  // Prefer the display name, then the username, then first name / email.
   const name =
-    username || (fullName ? fullName.split(" ")[0] : email.split("@")[0]);
+    displayName ||
+    username ||
+    (fullName ? fullName.split(" ")[0] : email.split("@")[0]);
 
   const cookieStore = await cookies();
   const initialCollapsed = cookieStore.get("sidebar")?.value === "collapsed";
@@ -65,7 +77,7 @@ export default async function AppLayout({
         user={{
           name,
           email,
-          initials: initialsFrom(username || fullName, email),
+          initials: initialsFrom(displayName || username || fullName, email),
           avatarUrl: (profile?.avatar_url as string | null) ?? null,
         }}
       >

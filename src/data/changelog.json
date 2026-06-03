@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Display names + username cooldown",
+    "items": [
+      "You now have a display name you can change anytime — it's what shows around the app.",
+      "Your @username stays unique and can be changed once every 30 days.",
+      "Set both under Account."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Dashboard now shows goals & supplements",
     "items": [
       "Your active goals appear on the dashboard with live progress bars.",

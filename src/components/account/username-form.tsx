@@ -15,7 +15,15 @@ type Status =
   | "invalid"
   | "current";
 
-export default function UsernameForm({ current }: { current: string | null }) {
+export default function UsernameForm({
+  current,
+  locked = false,
+  unlockText,
+}: {
+  current: string | null;
+  locked?: boolean;
+  unlockText?: string | null;
+}) {
   const [value, setValue] = useState(current ?? "");
   const [status, setStatus] = useState<Status>(current ? "current" : "idle");
   const [saving, setSaving] = useState(false);
@@ -60,6 +68,22 @@ export default function UsernameForm({ current }: { current: string | null }) {
 
   const canSave =
     status === "available" && value.trim() !== (current ?? "") && !saving;
+
+  // On cooldown: show the handle read-only with the unlock date.
+  if (locked) {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 rounded-xl border border-line bg-paper px-4 py-2.5">
+          <span className="text-muted">@</span>
+          <span className="font-medium text-ink-soft">{current}</span>
+        </div>
+        <p className="text-xs text-faint">
+          {unlockText ??
+            "Your username can only be changed once every 30 days."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -109,6 +133,11 @@ export default function UsernameForm({ current }: { current: string | null }) {
           <span className="text-faint">This is your current username.</span>
         )}
       </p>
+      {current && (
+        <p className="text-xs text-faint">
+          Heads up — changing your username locks it for 30 days.
+        </p>
+      )}
     </div>
   );
 }

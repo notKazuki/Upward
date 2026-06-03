@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import DashboardCard from "@/components/dashboard/card";
 import UsernameForm from "@/components/account/username-form";
+import DisplayNameForm from "@/components/account/display-name-form";
 import AvatarUploader from "@/components/account/avatar-uploader";
 import TwoFactor from "@/components/account/two-factor";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
+import { usernameUnlockDate } from "@/lib/username";
 
 export const metadata: Metadata = { title: "Account — Upward" };
 
@@ -27,9 +29,29 @@ export default async function AccountPage() {
     .eq("id", user.id)
     .maybeSingle();
 
+  // Fetched separately so a missing column (migration not yet run) degrades
+  // gracefully instead of breaking the page.
+  const extra = await supabase
+    .from("profiles")
+    .select("display_name, username_changed_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  const displayName = (extra.data?.display_name as string | null) ?? null;
+  const changedAt = (extra.data?.username_changed_at as string | null) ?? null;
+
+  const username = (profile?.username as string | null) ?? null;
   const email = user.email ?? "";
   const fullName = (profile?.full_name as string | undefined) ?? "";
-  const initials = initialsFrom(fullName, email);
+  const initials = initialsFrom(displayName || username || fullName, email);
+
+  const unlockDate = usernameUnlockDate(changedAt);
+  const unlockText = unlockDate
+    ? `Locked until ${unlockDate.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })} — usernames can change once every 30 days.`
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -59,9 +81,18 @@ export default async function AccountPage() {
             />
           </DashboardCard>
 
+          <DashboardCard title="Display name">
+            <DisplayNameForm
+              current={displayName}
+              placeholder={username ?? "Your name"}
+            />
+          </DashboardCard>
+
           <DashboardCard title="Username">
             <UsernameForm
-              current={(profile?.username as string | null) ?? null}
+              current={username}
+              locked={Boolean(unlockDate)}
+              unlockText={unlockText}
             />
           </DashboardCard>
 
