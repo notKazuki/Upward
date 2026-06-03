@@ -190,10 +190,20 @@ Valorant match API). It needs a free key, added as a **server-only** env var:
    - **Local** → add `HENRIKDEV_API_KEY=...` to `.env.local`, then restart
      `npm run dev`.
 
-Then on the Valorant game page open **Auto-sync**, enter your Riot ID
-(`GameName#TAG`), and **Sync now** — recent **Competitive** matches import as
-sessions (win/loss, agent · map · KDA, duration), and re-syncing never
-duplicates. Region is detected automatically from your Riot ID.
+When you **add Valorant**, enter your Riot ID (`GameName#TAG`) right in the
+add-game form — it validates and connects on the spot (or leave it blank and
+connect later from the game's **Auto-sync** card). Region is detected
+automatically. **Sync now** imports recent **Competitive** matches as sessions
+(win/loss, agent · map · KDA, duration); re-syncing never duplicates. You can
+**Change Riot ID** anytime from the Auto-sync card — and if you rename in-game,
+sync keeps working (it keys on your durable PUUID and auto-updates the handle).
+
+Two efficiency notes: a **10-minute per-account cooldown** means rapid re-syncs
+return instantly from the DB (0 API calls), keeping usage well under HenrikDev's
+~30 req/min. And every ranked match is also written to a shared
+`valorant_matches` archive — run [`supabase/valorant-matches.sql`](supabase/valorant-matches.sql)
+(writes use the service-role key, the same one as account deletion) — so future
+cross-user features read from our own database instead of the API.
 
 > ⚠️ HenrikDev is unofficial; never prefix the key with `NEXT_PUBLIC_` (it's read
 > only server-side in `src/lib/valorant.ts`). Other games stay manual for now —

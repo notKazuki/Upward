@@ -79,9 +79,12 @@ type V4Metadata = {
   game_length_in_ms?: number;
   started_at?: string;
   queue?: V4Queue;
+  region?: string;
 };
 type V4Player = {
   puuid?: string;
+  name?: string;
+  tag?: string;
   team_id?: string;
   agent?: { name?: string };
   tier?: { name?: string };
@@ -126,6 +129,39 @@ export type NormalizedValMatch = {
   rank: string | null;
   notes: string;
 };
+
+/** The player's current Riot ID (name#tag) as recorded in this match, or null.
+ * Lets us auto-refresh a stored handle for free when someone renames. */
+export function currentNameTag(m: V4Match, puuid: string): string | null {
+  const me = (m.players ?? []).find((p) => p.puuid === puuid);
+  if (!me?.name) return null;
+  return me.tag ? `${me.name}#${me.tag}` : me.name;
+}
+
+export type ValMatchRow = {
+  match_id: string;
+  region: string | null;
+  map: string | null;
+  mode: string | null;
+  started_at: string | null;
+  duration_s: number;
+  raw: V4Match;
+};
+
+/** Flatten a match into a row for the global valorant_matches archive. */
+export function matchSummary(m: V4Match): ValMatchRow | null {
+  const match_id = m.metadata?.match_id;
+  if (!match_id) return null;
+  return {
+    match_id,
+    region: m.metadata?.region ?? null,
+    map: m.metadata?.map?.name ?? null,
+    mode: m.metadata?.queue?.id ?? null,
+    started_at: m.metadata?.started_at ?? null,
+    duration_s: Math.max(0, Math.round((m.metadata?.game_length_in_ms ?? 0) / 1000)),
+    raw: m,
+  };
+}
 
 /**
  * Reduce a v4 match to the fields we store. Returns null if the match is

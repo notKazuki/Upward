@@ -3,9 +3,9 @@
     "date": "2026-06-03",
     "title": "Valorant auto-sync",
     "items": [
-      "Connect your Riot ID on the Valorant page to auto-import recent Competitive matches.",
-      "Each match becomes a session with win/loss, agent, map, KDA and duration; re-syncing never duplicates.",
-      "Region is detected automatically — just enter your GameName#TAG."
+      "Add Valorant with your Riot ID (GameName#TAG) and it connects on the spot — region detected automatically.",
+      "Auto-imports recent Competitive matches as sessions (win/loss, agent, map, KDA, duration); re-syncing never duplicates.",
+      "Change your Riot ID anytime, and renames just work — sync follows your account, not your name."
     ]
   },
   {

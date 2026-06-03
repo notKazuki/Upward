@@ -13,14 +13,19 @@ import {
   won,
 } from "@/lib/opendota";
 import {
+  currentNameTag,
   fetchValorantAccount,
   fetchValorantMatchesByPuuid,
   isCompetitive,
+  matchSummary,
   normalizeMatch,
   parseRiotId,
   type NormalizedValMatch,
   type ValError,
+  type ValMatchRow,
+  type V4Match,
 } from "@/lib/valorant";
+import { createAdminClient, isAdminConfigured } from "@/lib/supabase/admin";
 
 async function uid() {
   const supabase = await createClient();
@@ -34,6 +39,7 @@ export async function addGame(input: {
   name: string;
   slug?: string;
   trackerUrl?: string;
+  riotId?: string;
 }): Promise<{ error?: string; id?: string }> {
   const { supabase, user } = await uid();
   if (!user) return { error: "Your session expired. Please sign in again." };
@@ -42,14 +48,31 @@ export async function addGame(input: {
   if (!name) return { error: "Give the game a name." };
   const slug = input.slug?.trim() || slugify(name);
 
-  const trackerUrl = input.trackerUrl?.trim() || null;
-  if (trackerUrl && !/^https?:\/\//i.test(trackerUrl)) {
-    return { error: "Tracker link must start with http(s)://" };
+  // Valorant: if a Riot ID is supplied, validate + connect it at creation time
+  // so the user gets the "fix it" steps immediately (and we never create a
+  // half-broken game). Empty Riot ID is allowed — they can connect later.
+  const row: Record<string, unknown> = { user_id: user.id, name, slug };
+  if (slug === "valorant" && input.riotId?.trim()) {
+    const parsed = parseRiotId(input.riotId);
+    if (!parsed) {
+      return { error: "Enter your Riot ID as GameName#TAG (e.g. Phoenix#NA1)." };
+    }
+    const acc = await fetchValorantAccount(parsed.name, parsed.tag);
+    if ("error" in acc) return { error: VAL_ERRORS[acc.error] };
+    row.provider = "henrikdev";
+    row.provider_id = `${acc.data.puuid}|${acc.data.region}`;
+    row.provider_label = `${acc.data.name}#${acc.data.tag}`;
+  } else {
+    const trackerUrl = input.trackerUrl?.trim() || null;
+    if (trackerUrl && !/^https?:\/\//i.test(trackerUrl)) {
+      return { error: "Tracker link must start with http(s)://" };
+    }
+    row.tracker_url = trackerUrl;
   }
 
   const { data, error } = await supabase
     .from("games")
-    .insert({ user_id: user.id, name, slug, tracker_url: trackerUrl })
+    .insert(row)
     .select("id")
     .single();
 
@@ -171,6 +194,28 @@ export async function connectDota(input: {
   return { ok: true, name: prof.name };
 }
 
+// Min gap between Valorant syncs per game (ranked games run 30-45 min).
+const VAL_SYNC_COOLDOWN_MS = 10 * 60 * 1000;
+
+/** Best-effort write of competitive matches into the global archive. Uses the
+ * service-role client (bypasses RLS); silently no-ops if it isn't configured or
+ * fails, so it can never break a user's own sync. */
+async function archiveValorantMatches(matches: V4Match[]): Promise<void> {
+  if (!isAdminConfigured || matches.length === 0) return;
+  const rows = matches
+    .map(matchSummary)
+    .filter((r): r is ValMatchRow => r !== null);
+  if (!rows.length) return;
+  try {
+    const admin = createAdminClient();
+    await admin
+      .from("valorant_matches")
+      .upsert(rows, { onConflict: "match_id", ignoreDuplicates: true });
+  } catch {
+    /* archive is best-effort */
+  }
+}
+
 const VAL_ERRORS: Record<ValError, string> = {
   config: "Valorant sync isn't configured yet (missing HENRIKDEV_API_KEY).",
   auth: "Valorant sync key is missing or invalid — check HENRIKDEV_API_KEY.",
@@ -200,6 +245,7 @@ export async function connectRiot(input: {
     .update({
       provider: "henrikdev",
       provider_id: `${acc.data.puuid}|${acc.data.region}`,
+      provider_label: `${acc.data.name}#${acc.data.tag}`,
     })
     .eq("id", input.gameId)
     .eq("user_id", user.id);
@@ -208,6 +254,16 @@ export async function connectRiot(input: {
   }
   revalidatePath(`/app/gaming/${input.gameId}`);
   return { ok: true, name: `${acc.data.name}#${acc.data.tag}` };
+}
+
+/** Re-point a connected Valorant game to a different/corrected Riot ID. */
+export async function updateRiotId(input: {
+  gameId: string;
+  riotId: string;
+}): Promise<{ ok?: boolean; error?: string; name?: string | null }> {
+  // Same validate-then-store flow as connectRiot; kept separate so the UI can
+  // label it "Change Riot ID" on an already-connected game.
+  return connectRiot(input);
 }
 
 export async function disconnectProvider(
@@ -226,13 +282,13 @@ export async function disconnectProvider(
 
 export async function syncGame(
   gameId: string,
-): Promise<{ ok?: boolean; error?: string; imported?: number }> {
+): Promise<{ ok?: boolean; error?: string; imported?: number; note?: string }> {
   const { supabase, user } = await uid();
   if (!user) return { error: "Your session expired." };
 
   const { data: game } = await supabase
     .from("games")
-    .select("id, provider, provider_id")
+    .select("id, provider, provider_id, last_synced_at")
     .eq("id", gameId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -282,6 +338,19 @@ export async function syncGame(
       };
     });
   } else if (game.provider === "henrikdev") {
+    // Rate-limit guard: HenrikDev allows ~30 req/min shared across all users,
+    // and a ranked game lasts 30-45 min, so re-syncing sooner can't find
+    // anything new. Within the cooldown we return from cache — zero API calls.
+    const last = game.last_synced_at ? new Date(game.last_synced_at).getTime() : 0;
+    if (Date.now() - last < VAL_SYNC_COOLDOWN_MS) {
+      const mins = Math.ceil((VAL_SYNC_COOLDOWN_MS - (Date.now() - last)) / 60000);
+      return {
+        ok: true,
+        imported: 0,
+        note: `Synced recently — check back in ~${mins} min for new matches.`,
+      };
+    }
+
     const [puuid, region] = String(game.provider_id).split("|");
     if (!puuid || !region) return { error: "Reconnect this game to sync." };
     const res = await fetchValorantMatchesByPuuid(region, puuid, {
@@ -289,8 +358,25 @@ export async function syncGame(
       size: 10,
     });
     if ("error" in res) return { error: VAL_ERRORS[res.error] };
-    candidates = res.data
-      .filter(isCompetitive)
+
+    const comp = res.data.filter(isCompetitive);
+
+    // Auto-refresh the stored Riot ID from the newest match (handles renames
+    // for free — the match data carries their current name#tag).
+    const handle = comp.length ? currentNameTag(comp[0], puuid) : null;
+    if (handle) {
+      await supabase
+        .from("games")
+        .update({ provider_label: handle })
+        .eq("id", gameId)
+        .eq("user_id", user.id);
+    }
+
+    // Archive every competitive match into the global dataset (service-role,
+    // dedup on match_id). Best-effort — never block the user's own import.
+    await archiveValorantMatches(comp);
+
+    candidates = comp
       .map((m) => normalizeMatch(m, puuid))
       .filter((n): n is NormalizedValMatch => n !== null)
       .map((n) => ({

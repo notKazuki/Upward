@@ -138,6 +138,7 @@ export default async function GameDetailPage({
             slug={g.slug}
             provider={g.provider ?? null}
             providerId={g.provider_id ?? null}
+            providerLabel={g.provider_label ?? null}
             lastSyncedAt={g.last_synced_at ?? null}
           />
         </DashboardCard>

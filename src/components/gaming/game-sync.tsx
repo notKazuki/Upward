@@ -7,6 +7,7 @@ import {
   connectRiot,
   disconnectProvider,
   syncGame,
+  updateRiotId,
 } from "@/app/app/gaming/actions";
 
 const inputCls =
@@ -16,21 +17,24 @@ const btnCls =
 
 type SyncConfig = {
   provider: string;
-  label: string;
   intro: string;
   placeholder: string;
   help: ReactNode;
+  editable: boolean; // can the handle be changed after connecting?
   connect: (
     gameId: string,
     value: string,
   ) => Promise<{ ok?: boolean; error?: string; name?: string | null }>;
-  connectedLine: (providerId: string) => string;
+  change?: (
+    gameId: string,
+    value: string,
+  ) => Promise<{ ok?: boolean; error?: string; name?: string | null }>;
+  connectedLine: (providerId: string, label: string | null) => string;
 };
 
 const CONFIGS: Record<string, SyncConfig> = {
   "dota-2": {
     provider: "opendota",
-    label: "OpenDota",
     intro:
       "Connect your Dota 2 account to auto-import recent matches from OpenDota — free, no API key.",
     placeholder: "Account ID, or your OpenDota / Dotabuff profile link",
@@ -41,46 +45,65 @@ const CONFIGS: Record<string, SyncConfig> = {
         Public Match Data).
       </>
     ),
+    editable: false,
     connect: (gameId, value) => connectDota({ gameId, account: value }),
     connectedLine: (id) => `Account ${id}`,
   },
   valorant: {
     provider: "henrikdev",
-    label: "tracker",
     intro:
       "Connect your Riot ID to auto-import recent Competitive matches (win/loss, agent, map, KDA).",
     placeholder: "Your Riot ID — e.g. Phoenix#NA1",
-    help: (
-      <>
-        Use your in-game Riot ID — your name plus the #tag (find it on your
-        Valorant career page). Only ranked Competitive matches are imported.
-      </>
-    ),
+    help: <RiotHelp />,
+    editable: true,
     connect: (gameId, value) => connectRiot({ gameId, riotId: value }),
-    connectedLine: (id) => {
+    change: (gameId, value) => updateRiotId({ gameId, riotId: value }),
+    connectedLine: (id, label) => {
       const region = id.split("|")[1];
-      return region ? `Region ${region.toUpperCase()}` : "Connected";
+      const r = region ? region.toUpperCase() : "";
+      return label ? `${label}${r ? ` · ${r}` : ""}` : r ? `Region ${r}` : "Connected";
     },
   },
 };
+
+/** Shared "how to find / fix it" steps for the Valorant connect + change flows. */
+export function RiotHelp() {
+  return (
+    <ul className="space-y-1">
+      <li>
+        Enter it as <span className="font-medium text-ink-soft">GameName#TAG</span>{" "}
+        — your tag is on your Valorant career page (e.g. <code>Phoenix#NA1</code>).
+      </li>
+      <li>You must have played at least one Competitive match this act.</li>
+      <li>
+        Not found? Double-check the spelling and tag — they&rsquo;re
+        case-insensitive but must be exact.
+      </li>
+    </ul>
+  );
+}
 
 export default function GameSync({
   gameId,
   slug,
   provider,
   providerId,
+  providerLabel,
   lastSyncedAt,
 }: {
   gameId: string;
   slug: string;
   provider: string | null;
   providerId: string | null;
+  providerLabel: string | null;
   lastSyncedAt: string | null;
 }) {
   const router = useRouter();
   const cfg = CONFIGS[slug];
   const connected = !!cfg && provider === cfg.provider && !!providerId;
   const [value, setValue] = useState("");
+  const [editValue, setEditValue] = useState("");
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -100,6 +123,21 @@ export default function GameSync({
     });
   }
 
+  function saveChange() {
+    if (!cfg.change) return;
+    setError(null);
+    setMsg(null);
+    startTransition(async () => {
+      const res = await cfg.change!(gameId, editValue);
+      if (res.error) setError(res.error);
+      else {
+        setEditing(false);
+        setEditValue("");
+        router.refresh();
+      }
+    });
+  }
+
   function sync() {
     setError(null);
     setMsg(null);
@@ -108,9 +146,10 @@ export default function GameSync({
       if (res.error) setError(res.error);
       else {
         setMsg(
-          res.imported
-            ? `Imported ${res.imported} new match${res.imported === 1 ? "" : "es"}.`
-            : "You're already up to date.",
+          res.note ??
+            (res.imported
+              ? `Imported ${res.imported} new match${res.imported === 1 ? "" : "es"}.`
+              : "You're already up to date."),
         );
         router.refresh();
       }
@@ -144,7 +183,7 @@ export default function GameSync({
         >
           {pending ? "Connecting…" : "Connect"}
         </button>
-        <p className="text-xs leading-relaxed text-faint">{cfg.help}</p>
+        <div className="text-xs leading-relaxed text-faint">{cfg.help}</div>
       </div>
     );
   }
@@ -155,7 +194,7 @@ export default function GameSync({
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink">Connected</p>
           <p className="text-xs text-muted">
-            {cfg.connectedLine(providerId as string)}
+            {cfg.connectedLine(providerId as string, providerLabel)}
             {lastSyncedAt &&
               ` · last synced ${new Date(lastSyncedAt).toLocaleString(undefined, {
                 month: "short",
@@ -169,16 +208,74 @@ export default function GameSync({
           {pending ? "Syncing…" : "Sync now"}
         </button>
       </div>
+
       {msg && <p className="text-sm text-ember">{msg}</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
-      <button
-        type="button"
-        onClick={disconnect}
-        disabled={pending}
-        className="cursor-pointer text-xs font-medium text-muted transition-colors hover:text-danger disabled:opacity-60"
-      >
-        Disconnect
-      </button>
+
+      {cfg.editable && editing && (
+        <div className="space-y-2 rounded-xl border border-line bg-paper-bright p-3">
+          <label className="block text-xs font-medium text-ink-soft">
+            New Riot ID
+          </label>
+          <input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            placeholder={cfg.placeholder}
+            className={inputCls}
+            spellCheck={false}
+            autoFocus
+          />
+          <div className="text-xs leading-relaxed text-faint">{cfg.help}</div>
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={saveChange}
+              disabled={pending || !editValue.trim()}
+              className={btnCls}
+            >
+              {pending ? "Saving…" : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setEditValue("");
+                setError(null);
+              }}
+              disabled={pending}
+              className="cursor-pointer text-xs font-medium text-muted transition-colors hover:text-ink disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-4">
+        {cfg.editable && !editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(true);
+              setEditValue(providerLabel ?? "");
+              setMsg(null);
+              setError(null);
+            }}
+            disabled={pending}
+            className="cursor-pointer text-xs font-medium text-muted transition-colors hover:text-ink disabled:opacity-60"
+          >
+            Change Riot ID
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={disconnect}
+          disabled={pending}
+          className="cursor-pointer text-xs font-medium text-muted transition-colors hover:text-danger disabled:opacity-60"
+        >
+          Disconnect
+        </button>
+      </div>
     </div>
   );
 }
