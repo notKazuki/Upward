@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Supplement tracker",
+    "items": [
+      "Build your daily stack — name, dose, and when you take each one (morning, pre-workout, evening, anytime).",
+      "Tick supplements off as you take them; today's progress and your last 7 days show at a glance.",
+      "That completes every sidebar tracker — Workout, Gaming, Meal, Calendar, Goals, and Supplement are all live."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Goals",
     "items": [
       "Set goals that are measurable (run 100 miles), streak-based (30 days straight), or simple done/not-done.",

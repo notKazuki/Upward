@@ -215,6 +215,14 @@ between active / paused / completed / abandoned — so a rough week means pausin
 or adjusting, not deleting. Progress check-ins build a history you can look back
 on, and hitting a target auto-completes the goal with a small celebration.
 
+## L. Supplement
+
+Run [`supabase/supplements.sql`](supabase/supplements.sql) in Supabase → **SQL
+Editor** (creates `supplements` + `supplement_logs` with RLS). Then open
+**Supplement**: add what you take (name, dose, and when — morning / pre-workout
+/ evening / anytime), then tick each one off as you take it. Today's "X of Y
+taken" updates live and each item shows its last 7 days at a glance.
+
 ## I. Update log → Discord (optional)
 
 The in-app **What's new** log (spark icon by your avatar) reads
@@ -231,8 +239,8 @@ the workflow simply skips.)
 
 ## Not done yet (later steps)
 
-- **Remaining trackers** — Supplement still uses the "coming soon" placeholder
-  (Workout, Gaming, Meal, Calendar, and Goals are live).
+- **Remaining trackers** — all sidebar trackers are now live (Workout, Gaming,
+  Meal, Calendar, Goals, Supplement).
 - **Dashboard live data** — the `/app` dashboard widgets still use sample data;
   next they'll read from real tables (starting with workouts).
 - **Account / Settings screens** — menu items are stubbed.
