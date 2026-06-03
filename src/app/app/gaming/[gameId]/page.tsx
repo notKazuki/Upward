@@ -10,14 +10,13 @@ import { createClient } from "@/lib/supabase/server";
 import {
   formatDate,
   monogram,
-  startOfWeekISO,
   sumSessions,
   tileColor,
-  todayISO,
   winRate,
   type Game,
   type GameSession,
 } from "@/lib/gaming";
+import { serverToday, serverWeekStart } from "@/lib/server-today";
 import { deleteGame, deleteSession } from "../actions";
 
 export const metadata: Metadata = { title: "Game — Upward" };
@@ -46,8 +45,8 @@ export default async function GameDetailPage({
     .order("created_at", { ascending: false });
   const sessions = (sData ?? []) as GameSession[];
 
-  const today = todayISO();
-  const weekStart = startOfWeekISO();
+  const today = await serverToday();
+  const weekStart = await serverWeekStart();
   const todayT = sumSessions(sessions.filter((s) => s.played_on === today));
   const weekT = sumSessions(sessions.filter((s) => s.played_on >= weekStart));
   const allT = sumSessions(sessions);

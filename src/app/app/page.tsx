@@ -21,9 +21,9 @@ import { buildSummary } from "@/lib/summary";
 import {
   effectiveTargets,
   suggestTargets,
-  todayISO,
   type Targets,
 } from "@/lib/nutrition";
+import { serverToday } from "@/lib/server-today";
 import type { Gender } from "@/lib/onboarding";
 
 export const metadata: Metadata = { title: "Dashboard — Upward" };
@@ -57,7 +57,7 @@ export default async function DashboardPage() {
   const user = await currentUser();
   const supabase = await createClient();
   const since = isoDaysAgo(56);
-  const today = todayISO();
+  const today = await serverToday();
 
   const [wRes, sRes, gRes, pRes, mRes] = await Promise.all([
     supabase
@@ -112,13 +112,20 @@ export default async function DashboardPage() {
     suggested,
   );
 
-  const a = aggregate(workouts, sessions, games, workoutDays, {
-    hasMeals: mealsToday.length > 0,
-    caloriesToday,
-    proteinToday,
-    calTarget: targets.calories,
-    proteinTarget: targets.protein,
-  });
+  const a = aggregate(
+    workouts,
+    sessions,
+    games,
+    workoutDays,
+    {
+      hasMeals: mealsToday.length > 0,
+      caloriesToday,
+      proteinToday,
+      calTarget: targets.calories,
+      proteinTarget: targets.protein,
+    },
+    today,
+  );
   const summary = buildSummary(a);
   const cards = statCards(a);
 

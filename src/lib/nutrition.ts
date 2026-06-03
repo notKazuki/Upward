@@ -143,13 +143,6 @@ export function sumMeals(meals: Meal[]) {
   );
 }
 
-export function todayISO(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`;
-}
-
 export function pct(value: number, target: number | undefined): number {
   if (!target || target <= 0) return 0;
   return Math.min(100, Math.round((value / target) * 100));

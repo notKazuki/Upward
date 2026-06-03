@@ -2,20 +2,21 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { addSession, type SessionState } from "@/app/app/gaming/actions";
+import { useToday } from "@/lib/use-today";
 import DateField from "@/components/date-field";
 
 const INITIAL: SessionState = {};
-const TODAY = new Date().toISOString().slice(0, 10);
 
 export default function SessionForm({ gameId }: { gameId: string }) {
+  const today = useToday();
   const [state, action, pending] = useActionState(addSession, INITIAL);
   const formRef = useRef<HTMLFormElement>(null);
-  const [date, setDate] = useState(TODAY);
+  const [date, setDate] = useState("");
 
   useEffect(() => {
     if (state.ok) {
       formRef.current?.reset();
-      setDate(TODAY);
+      setDate("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.ts, state.ok]);
@@ -26,7 +27,7 @@ export default function SessionForm({ gameId }: { gameId: string }) {
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-ink-soft">Date</span>
-        <DateField name="played_on" value={date} onChange={setDate} max={TODAY} />
+        <DateField name="played_on" value={date || today} onChange={setDate} max={today || undefined} />
       </div>
 
       <div className="grid grid-cols-3 gap-3">

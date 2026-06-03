@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Fixed: dates now follow your timezone",
+    "items": [
+      "Trackers were rolling over to the next day late at night — they ran on the server's clock (UTC), not yours.",
+      "Workout, meal, gaming, supplement and the dashboard now use your local day for 'today' and weekly stats."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Supplement tracker",
     "items": [
       "Build your daily stack — name, dose, and when you take each one (morning, pre-workout, evening, anytime).",

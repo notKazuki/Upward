@@ -13,12 +13,12 @@ import {
   pct,
   suggestTargets,
   sumMeals,
-  todayISO,
   type Favorite,
   type Goal,
   type Meal,
   type Targets,
 } from "@/lib/nutrition";
+import { serverToday } from "@/lib/server-today";
 import { deleteMeal } from "./actions";
 
 export const metadata: Metadata = { title: "Meal — Upward" };
@@ -26,7 +26,7 @@ export const metadata: Metadata = { title: "Meal — Upward" };
 export default async function MealPage() {
   const supabase = await createClient();
   const user = await currentUser();
-  const today = todayISO();
+  const today = await serverToday();
 
   const [mealsRes, profRes, favRes] = await Promise.all([
     supabase

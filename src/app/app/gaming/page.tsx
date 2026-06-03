@@ -6,11 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import {
   monogram,
   pct,
-  startOfWeekISO,
   tileColor,
   winRate,
   type Game,
 } from "@/lib/gaming";
+import { serverWeekStart } from "@/lib/server-today";
 
 export const metadata: Metadata = { title: "Gaming — Upward" };
 
@@ -40,7 +40,7 @@ export default async function GamingPage() {
   const games = (gamesData ?? []) as Game[];
 
   // This week's sessions for all games, grouped.
-  const weekStart = startOfWeekISO();
+  const weekStart = await serverWeekStart();
   const { data: weekData } = await supabase
     .from("game_sessions")
     .select("game_id, matches, wins, losses")

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import DashboardShell from "@/components/dashboard/shell";
+import TimezoneCookie from "@/components/tz-cookie";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
@@ -57,16 +58,19 @@ export default async function AppLayout({
   const initialCollapsed = cookieStore.get("sidebar")?.value === "collapsed";
 
   return (
-    <DashboardShell
-      initialCollapsed={initialCollapsed}
-      user={{
-        name,
-        email,
-        initials: initialsFrom(username || fullName, email),
-        avatarUrl: (profile?.avatar_url as string | null) ?? null,
-      }}
-    >
-      {children}
-    </DashboardShell>
+    <>
+      <TimezoneCookie />
+      <DashboardShell
+        initialCollapsed={initialCollapsed}
+        user={{
+          name,
+          email,
+          initials: initialsFrom(username || fullName, email),
+          avatarUrl: (profile?.avatar_url as string | null) ?? null,
+        }}
+      >
+        {children}
+      </DashboardShell>
+    </>
   );
 }

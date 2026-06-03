@@ -3,22 +3,23 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { addWorkout, type WorkoutActionState } from "@/app/app/workout/actions";
 import { GENERAL_DAYS, dayColor } from "@/lib/workouts";
+import { useToday } from "@/lib/use-today";
 import DateField from "@/components/date-field";
 
 const INITIAL: WorkoutActionState = {};
-const TODAY = new Date().toISOString().slice(0, 10);
 
 export default function WorkoutForm({ days }: { days: string[] }) {
+  const today = useToday();
   const [state, action, pending] = useActionState(addWorkout, INITIAL);
   const formRef = useRef<HTMLFormElement>(null);
   const [day, setDay] = useState(days[0] ?? GENERAL_DAYS[0]);
-  const [date, setDate] = useState(TODAY);
+  const [date, setDate] = useState("");
 
   useEffect(() => {
     if (state.ok) {
       formRef.current?.reset();
       setDay(days[0] ?? GENERAL_DAYS[0]);
-      setDate(TODAY);
+      setDate("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.ts, state.ok]);
@@ -31,9 +32,9 @@ export default function WorkoutForm({ days }: { days: string[] }) {
         <span className="text-sm font-medium text-ink-soft">Date</span>
         <DateField
           name="performed_on"
-          value={date}
+          value={date || today}
           onChange={setDate}
-          max={TODAY}
+          max={today || undefined}
         />
       </div>
 

@@ -15,14 +15,14 @@ import {
   type MealType,
 } from "@/lib/nutrition";
 import { estimate, searchFoods, type Food } from "@/lib/food-db";
+import { useToday } from "@/lib/use-today";
 import DateField from "@/components/date-field";
-
-const TODAY = new Date().toISOString().slice(0, 10);
 
 export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
   const router = useRouter();
+  const today = useToday();
   const [type, setType] = useState<MealType>("breakfast");
-  const [date, setDate] = useState(TODAY);
+  const [date, setDate] = useState("");
   const [items, setItems] = useState<FoodItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [logged, setLogged] = useState(false);
@@ -143,7 +143,7 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
       {/* Date */}
       <div className="flex flex-col gap-1.5 sm:max-w-xs">
         <span className="text-sm font-medium text-ink-soft">Date</span>
-        <DateField value={date} onChange={setDate} max={TODAY} />
+        <DateField value={date || today} onChange={setDate} max={today || undefined} />
       </div>
 
       {/* Favorites */}

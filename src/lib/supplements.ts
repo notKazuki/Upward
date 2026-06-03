@@ -35,18 +35,6 @@ export function todayYmd(): string {
   return ymd(new Date());
 }
 
-/** Last `n` days (oldest → newest) as YYYY-MM-DD, ending today. */
-export function lastDays(n: number): string[] {
-  const out: string[] = [];
-  const d = new Date();
-  for (let i = n - 1; i >= 0; i--) {
-    const x = new Date(d);
-    x.setDate(d.getDate() - i);
-    out.push(ymd(x));
-  }
-  return out;
-}
-
 export function weekdayLetter(iso: string): string {
   return ["S", "M", "T", "W", "T", "F", "S"][new Date(`${iso}T00:00:00`).getDay()];
 }

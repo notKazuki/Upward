@@ -66,16 +66,6 @@ export function dayColor(label: string): string {
   return PALETTE[h % PALETTE.length];
 }
 
-/** Monday-based start of the current week, as a YYYY-MM-DD string. */
-export function startOfWeekISO(): string {
-  const now = new Date();
-  const day = (now.getDay() + 6) % 7;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - day);
-  monday.setHours(0, 0, 0, 0);
-  return monday.toISOString().slice(0, 10);
-}
-
 export function formatDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
   return d.toLocaleDateString(undefined, {

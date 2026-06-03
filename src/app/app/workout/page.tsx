@@ -11,9 +11,9 @@ import {
   displayDay,
   formatDate,
   splitDisplayName,
-  startOfWeekISO,
   type Workout,
 } from "@/lib/workouts";
+import { serverWeekStart } from "@/lib/server-today";
 import { deleteWorkout } from "./actions";
 
 export const metadata: Metadata = { title: "Workout — Upward" };
@@ -80,7 +80,7 @@ export default async function WorkoutPage({
   }
 
   // --- Stats ---------------------------------------------------------
-  const weekStart = startOfWeekISO();
+  const weekStart = await serverWeekStart();
   const week = workouts.filter((w) => w.performed_on >= weekStart);
   const weekMinutes = week.reduce((s, w) => s + (w.duration_min ?? 0), 0);
   const counts = new Map<string, number>();

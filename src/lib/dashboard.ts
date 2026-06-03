@@ -85,10 +85,11 @@ export function aggregate(
   games: GameRow[],
   workoutDays: string[] = [],
   nutrition: Nutrition = { hasMeals: false, caloriesToday: 0, proteinToday: 0 },
+  // The user's local "today" (YYYY-MM-DD). Defaults to the runtime's date, but
+  // callers pass a timezone-correct value so week/today don't drift on UTC.
+  todayStr: string = fmt(new Date()),
 ) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = fmt(today);
+  const today = new Date(`${todayStr}T00:00:00`);
   const weekStart = startOfWeek(today);
   const weekStartStr = fmt(weekStart);
   const lastWeekStartStr = fmt(addDays(weekStart, -7));

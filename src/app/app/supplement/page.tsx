@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import DashboardCard from "@/components/dashboard/card";
 import SupplementBoard from "@/components/supplement/supplement-board";
 import { createClient } from "@/lib/supabase/server";
-import { lastDays, type Supplement, type SupplementLog } from "@/lib/supplements";
+import { serverToday } from "@/lib/server-today";
+import { daysEnding } from "@/lib/today";
+import type { Supplement, SupplementLog } from "@/lib/supplements";
 
 export const metadata: Metadata = { title: "Supplement — Upward" };
 
 export default async function SupplementPage() {
   const supabase = await createClient();
-  const days = lastDays(7);
+  const days = daysEnding(await serverToday(), 7);
   const since = days[0];
 
   const [suppRes, logRes] = await Promise.all([
