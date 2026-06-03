@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Goals",
+    "items": [
+      "Set goals that are measurable (run 100 miles), streak-based (30 days straight), or simple done/not-done.",
+      "Add the 'why' behind each goal, an optional deadline with overdue & due-soon flags, and log check-ins that build a history.",
+      "Hit a rough week? Pause or adjust a goal instead of giving up. Reaching a target auto-completes it with a little celebration."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Smoother & faster",
     "items": [
       "Charts now size themselves instantly — no more flicker or repeated console warnings.",

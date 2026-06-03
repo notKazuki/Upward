@@ -204,6 +204,17 @@ Editor**. Then open **Calendar**: a month view where you add typed, checkable
 plans (workout/meal/gaming/goal/other) per day, with your tracked workouts,
 meals, and gaming overlaid so it's one view of done + planned.
 
+## K. Goals
+
+Run [`supabase/goals.sql`](supabase/goals.sql) in Supabase → **SQL Editor**
+(creates the `goals` + `goal_logs` tables and RLS). Then open **Goals**: create
+goals that are **measurable** (count toward a target, e.g. run 100 miles),
+**streak** (consecutive days), or **done/not-done**. Each goal carries a "why",
+an optional deadline (with overdue / due-soon flags), and a status you can move
+between active / paused / completed / abandoned — so a rough week means pausing
+or adjusting, not deleting. Progress check-ins build a history you can look back
+on, and hitting a target auto-completes the goal with a small celebration.
+
 ## I. Update log → Discord (optional)
 
 The in-app **What's new** log (spark icon by your avatar) reads
@@ -220,8 +231,8 @@ the workflow simply skips.)
 
 ## Not done yet (later steps)
 
-- **Remaining trackers** — Meal, Supplement, Calendar, Goals still use the
-  "coming soon" placeholder (Workout & Gaming are the templates to follow).
+- **Remaining trackers** — Supplement still uses the "coming soon" placeholder
+  (Workout, Gaming, Meal, Calendar, and Goals are live).
 - **Dashboard live data** — the `/app` dashboard widgets still use sample data;
   next they'll read from real tables (starting with workouts).
 - **Account / Settings screens** — menu items are stubbed.
