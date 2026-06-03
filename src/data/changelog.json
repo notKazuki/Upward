@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-03",
+    "title": "Dota 2 auto-sync",
+    "items": [
+      "Connect your Dota 2 account (via OpenDota — free, no API key) and import recent matches automatically.",
+      "Each match becomes a session with win/loss, KDA and duration; re-syncing never duplicates.",
+      "More games will follow as their official APIs allow."
+    ]
+  },
+  {
+    "date": "2026-06-03",
     "title": "Units & a Settings page",
     "items": [
       "New Settings (under your profile menu) — choose Metric or Imperial, and weights show in kg or lb across the app.",

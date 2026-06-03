@@ -172,10 +172,17 @@ your tracker.gg profile link, set daily/weekly goals (matches, wins, hours), and
 log sessions (matches/wins/losses/hours/rank/notes). Win rate, totals, and a
 trend chart update live.
 
-> **tracker.gg auto-sync** is intentionally manual for now. tracker.gg blocks
-> server scraping and its API needs an approval-gated key, so the link is saved
-> for "View full stats" and a "Sync · soon" placeholder is shown. The data model
-> is ready to drop in real sync once a key is approved.
+**Dota 2 auto-sync** works with **no API key**: run
+[`supabase/game-sync.sql`](supabase/game-sync.sql), then on the Dota 2 game
+page open **Auto-sync**, paste your account ID (or OpenDota/Dotabuff link), and
+**Sync now** — recent matches import as sessions (win/loss, KDA, duration), and
+re-syncing never duplicates. Your Dota match history must be public (in Dota:
+Settings → Options → *Expose Public Match Data*).
+
+> Other games stay manual for now. tracker.gg can only serve Apex / The Division
+> 2 and isn't allowed to provide other titles' data, so durable auto-sync means
+> per-game official APIs (Riot for LoL/Valorant next). The provider columns added
+> by `game-sync.sql` generalise to those.
 
 ## G. Account / profile
 

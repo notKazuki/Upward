@@ -8,6 +8,9 @@ export type Game = {
   tracker_url: string | null;
   goals: GameGoals;
   created_at: string;
+  provider?: string | null;
+  provider_id?: string | null;
+  last_synced_at?: string | null;
 };
 
 export type GameSession = {

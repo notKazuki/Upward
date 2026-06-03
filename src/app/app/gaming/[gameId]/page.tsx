@@ -15,6 +15,7 @@ import {
   type GameSession,
 } from "@/lib/gaming";
 import GameTile from "@/components/gaming/game-tile";
+import GameSync from "@/components/gaming/game-sync";
 import { serverToday, serverWeekStart } from "@/lib/server-today";
 import { deleteGame, deleteSession } from "../actions";
 
@@ -95,22 +96,14 @@ export default async function GameDetailPage({
 
         <div className="flex items-center gap-2">
           {g.tracker_url && (
-            <>
-              <a
-                href={g.tracker_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-bright px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
-              >
-                View full stats <Icon name="external" size={14} />
-              </a>
-              <span
-                title="Automatic sync needs an approved tracker.gg API key — coming later."
-                className="cursor-help rounded-full border border-dashed border-line-strong px-3.5 py-1.5 text-sm font-medium text-faint"
-              >
-                Sync · soon
-              </span>
-            </>
+            <a
+              href={g.tracker_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-bright px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+            >
+              View full stats <Icon name="external" size={14} />
+            </a>
           )}
           <form action={deleteGame}>
             <input type="hidden" name="id" value={g.id} />
@@ -137,6 +130,17 @@ export default async function GameDetailPage({
           </div>
         ))}
       </div>
+
+      {g.slug === "dota-2" && (
+        <DashboardCard title="Auto-sync">
+          <GameSync
+            gameId={g.id}
+            provider={g.provider ?? null}
+            providerId={g.provider_id ?? null}
+            lastSyncedAt={g.last_synced_at ?? null}
+          />
+        </DashboardCard>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="space-y-5 lg:col-span-2">
