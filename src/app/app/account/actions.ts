@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, isAdminConfigured } from "@/lib/supabase/admin";
 import { currentUser } from "@/lib/auth";
 import {
   usernameCooldownMs,
@@ -112,6 +114,40 @@ export async function updateDisplayName(
   revalidatePath("/app/account");
   revalidatePath("/app", "layout");
   return { ok: true };
+}
+
+export async function deleteAccount(
+  confirmation: string,
+): Promise<{ error?: string }> {
+  const user = await currentUser();
+  if (!user) return { error: "Session expired. Please sign in again." };
+
+  if (confirmation.trim().toUpperCase() !== "DELETE") {
+    return { error: "Type DELETE to confirm." };
+  }
+  if (!isAdminConfigured) {
+    return {
+      error:
+        "Account deletion isn't enabled on this deployment yet (server key missing).",
+    };
+  }
+
+  // Deleting the auth user cascades to every table (all user_id FKs are
+  // ON DELETE CASCADE), so this removes all of the user's data too.
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) {
+    return { error: "Couldn't delete your account. Please try again." };
+  }
+
+  // Clear the (now-orphaned) session cookies, then send them home.
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  } catch {
+    /* session already invalid — cookies get cleared on next request anyway */
+  }
+  redirect("/");
 }
 
 export async function updateAvatar(

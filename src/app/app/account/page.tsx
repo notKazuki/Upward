@@ -5,7 +5,9 @@ import UsernameForm from "@/components/account/username-form";
 import DisplayNameForm from "@/components/account/display-name-form";
 import AvatarUploader from "@/components/account/avatar-uploader";
 import TwoFactor from "@/components/account/two-factor";
+import DangerZone from "@/components/account/danger-zone";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminConfigured } from "@/lib/supabase/admin";
 import { currentUser } from "@/lib/auth";
 import { usernameUnlockDate } from "@/lib/username";
 
@@ -105,6 +107,10 @@ export default async function AccountPage() {
             <p className="mt-1 text-xs text-faint">
               Your sign-in email can&rsquo;t be changed here yet.
             </p>
+          </DashboardCard>
+
+          <DashboardCard title="Data & account">
+            <DangerZone deletionEnabled={isAdminConfigured} />
           </DashboardCard>
         </>
       )}

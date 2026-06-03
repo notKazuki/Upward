@@ -228,6 +228,26 @@ Editor** (creates `supplements` + `supplement_logs` with RLS). Then open
 / evening / anytime), then tick each one off as you take it. Today's "X of Y
 taken" updates live and each item shows its last 7 days at a glance.
 
+## M. Account deletion (service-role key)
+
+**Data export** needs no setup — Account → *Data & account* → **Download
+(.json)** works immediately (it uses your own session, scoped by RLS).
+
+**Account deletion** needs the Supabase **service_role** key, because the anon
+key can't delete an auth user. Add it as a **server-only** env var:
+
+1. Supabase → **Project Settings → API** → copy the **`service_role`** key
+   (the secret one — *not* the anon key).
+2. Add it wherever the app runs:
+   - **Vercel** → Project → **Settings → Environment Variables** → add
+     `SUPABASE_SERVICE_ROLE_KEY` = the key (Production + Preview). Redeploy.
+   - **Local** → add `SUPABASE_SERVICE_ROLE_KEY=...` to `.env.local`.
+
+⚠️ **Never** prefix it with `NEXT_PUBLIC_` and never commit it — it has full
+database access. The app only reads it server-side (`src/lib/supabase/admin.ts`).
+Until it's set, the Delete-account control shows "not enabled" and export still
+works.
+
 ## I. Update log → Discord (optional)
 
 The in-app **What's new** log (spark icon by your avatar) reads

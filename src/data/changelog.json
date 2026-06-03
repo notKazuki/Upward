@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Your data, your control",
+    "items": [
+      "Export everything you've logged as a JSON file — Account → Data & account → Download.",
+      "Delete your account and all your data permanently, with a type-to-confirm step."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Install Upward on your phone",
     "items": [
       "Upward is now an installable app — add it to your home screen for a full-screen, app-like experience (Share → Add to Home Screen on iPhone, or the install icon on Android/desktop).",
