@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Journal",
+    "items": [
+      "A new private Journal tab — write a dated entry with a mood, your thoughts, and photos.",
+      "Photos are stored privately and only ever shown to you."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Workout goals, custom exercises & game logos",
     "items": [
       "Workout day-guide: tap a goal (Strength / Muscle / Tone) and every exercise's reps retune to match — and it sticks.",

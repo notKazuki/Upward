@@ -248,6 +248,14 @@ database access. The app only reads it server-side (`src/lib/supabase/admin.ts`)
 Until it's set, the Delete-account control shows "not enabled" and export still
 works.
 
+## N. Journal
+
+Run [`supabase/journal.sql`](supabase/journal.sql) in Supabase → **SQL Editor**
+(creates the `journal_entries` table with RLS and a **private** `journal`
+storage bucket for photos). Then open **Journal**: write a dated entry with a
+mood, free-text, and up to 6 photos. Photos live in a private bucket and are
+shown to you via short-lived signed URLs — no one else can see them.
+
 ## I. Update log → Discord (optional)
 
 The in-app **What's new** log (spark icon by your avatar) reads
