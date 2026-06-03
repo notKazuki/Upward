@@ -25,6 +25,30 @@ function formatLong(s: string) {
     year: "numeric",
   });
 }
+/** Editable representation (MM/DD/YYYY) for typing. */
+function fmtInput(s: string) {
+  const d = fromISO(s);
+  return `${pad(d.getMonth() + 1)}/${pad(d.getDate())}/${d.getFullYear()}`;
+}
+/** Parse a typed date (MM/DD/YYYY, M/D/YYYY, or YYYY-MM-DD) → ISO, or null. */
+function parseInput(s: string): string | null {
+  const str = s.trim();
+  let y: number, mo: number, d: number;
+  let m: RegExpMatchArray | null;
+  if ((m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) {
+    [y, mo, d] = [+m[1], +m[2], +m[3]];
+  } else if ((m = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/))) {
+    [mo, d, y] = [+m[1], +m[2], +m[3]];
+  } else {
+    return null;
+  }
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  const dt = new Date(y, mo - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) {
+    return null; // rejects impossible dates like 02/30
+  }
+  return toISO(dt);
+}
 
 /**
  * Themed date picker. Controlled (value + onChange) or uncontrolled
@@ -55,6 +79,9 @@ export default function DateField({
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"days" | "years">("days");
+  // Typed-entry state: while editing, show raw text; otherwise the pretty date.
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState("");
 
   const start = current ? fromISO(current) : max ? fromISO(max) : new Date();
   const [vy, setVy] = useState(start.getFullYear());
@@ -89,10 +116,25 @@ export default function DateField({
     }
   }, [focus, open, mode]);
 
-  function commit(iso: string) {
+  function setValue(iso: string) {
     if (value === undefined) setInternal(iso);
     onChange?.(iso);
+  }
+  function commit(iso: string) {
+    setValue(iso);
     setOpen(false);
+  }
+
+  function onType(raw: string) {
+    setText(raw);
+    const iso = parseInput(raw);
+    if (iso && !isDisabled(fromISO(iso))) {
+      setValue(iso);
+      const d = fromISO(iso);
+      setVy(d.getFullYear());
+      setVm(d.getMonth());
+      setFocus(iso);
+    }
   }
 
   function openPicker() {
@@ -147,26 +189,41 @@ export default function DateField({
     <div ref={rootRef} className="relative">
       {name && <input type="hidden" name={name} value={current} />}
 
-      <button
-        type="button"
-        id={id}
-        onClick={() => (open ? setOpen(false) : openPicker())}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-line bg-paper-bright px-4 py-3 text-left text-[0.95rem] transition-colors hover:border-line-strong focus:border-ember focus:outline-none"
-      >
-        <span className={current ? "text-ink" : "text-faint"}>
-          {current ? formatLong(current) : placeholder}
-        </span>
-        <svg
-          width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"
-          strokeLinejoin="round" aria-hidden className="text-muted"
+      <div className="flex w-full items-center gap-2 rounded-xl border border-line bg-paper-bright px-3 py-2.5 transition-colors focus-within:border-ember">
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          spellCheck={false}
+          value={editing ? text : current ? formatLong(current) : ""}
+          placeholder={placeholder}
+          onFocus={() => {
+            setEditing(true);
+            setText(current ? fmtInput(current) : "");
+          }}
+          onChange={(e) => onType(e.target.value)}
+          onBlur={() => setEditing(false)}
+          className="w-full bg-transparent text-[0.95rem] text-ink placeholder:text-faint focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => (open ? setOpen(false) : openPicker())}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label="Open calendar"
+          className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-muted transition-colors hover:bg-paper hover:text-ink"
         >
-          <rect x="3" y="4.5" width="18" height="16" rx="2" />
-          <path d="M3 9h18M8 2.5v4M16 2.5v4" />
-        </svg>
-      </button>
+          <svg
+            width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"
+            strokeLinejoin="round" aria-hidden
+          >
+            <rect x="3" y="4.5" width="18" height="16" rx="2" />
+            <path d="M3 9h18M8 2.5v4M16 2.5v4" />
+          </svg>
+        </button>
+      </div>
 
       {open && (
         <div

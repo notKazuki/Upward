@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Stay signed in + type your dates",
+    "items": [
+      "The landing page now recognizes when you're already signed in — it shows 'Open dashboard' instead of making you log in again.",
+      "You can now type a date straight into any date field (MM/DD/YYYY), not only pick from the calendar."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Insights — patterns across everything",
     "items": [
       "New Insights tab: 30- and 90-day stats plus a 12-week activity trend.",
