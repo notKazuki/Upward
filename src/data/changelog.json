@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Dashboard now shows goals & supplements",
+    "items": [
+      "Your active goals appear on the dashboard with live progress bars.",
+      "A 'Supplements today' card shows how much of your daily stack you've taken.",
+      "The calendar now opens to the correct month for your timezone."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Fixed: dates now follow your timezone",
     "items": [
       "Trackers were rolling over to the next day late at night — they ran on the server's clock (UTC), not yours.",

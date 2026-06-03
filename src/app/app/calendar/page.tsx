@@ -4,10 +4,10 @@ import CalendarBoard from "@/components/calendar/calendar-board";
 import { createClient } from "@/lib/supabase/server";
 import {
   monthRange,
-  todayKey,
   type CalendarEvent,
   type MonthActivity,
 } from "@/lib/calendar";
+import { serverToday } from "@/lib/server-today";
 
 export const metadata: Metadata = { title: "Calendar — Upward" };
 
@@ -31,7 +31,9 @@ export default async function CalendarPage({
 }) {
   const sp = await searchParams;
   const monthStr =
-    sp.month && /^\d{4}-\d{2}$/.test(sp.month) ? sp.month : todayKey();
+    sp.month && /^\d{4}-\d{2}$/.test(sp.month)
+      ? sp.month
+      : (await serverToday()).slice(0, 7);
   const { start, end } = monthRange(monthStr);
 
   const supabase = await createClient();
