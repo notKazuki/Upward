@@ -5,6 +5,7 @@
 alter table public.games
   add column if not exists provider       text,
   add column if not exists provider_id    text,
+  add column if not exists provider_label text,  -- human-readable handle (e.g. Riot ID "Kaz#EXP")
   add column if not exists last_synced_at timestamptz;
 
 alter table public.game_sessions

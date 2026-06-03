@@ -10,6 +10,7 @@ export type Game = {
   created_at: string;
   provider?: string | null;
   provider_id?: string | null;
+  provider_label?: string | null;
   last_synced_at?: string | null;
 };
 

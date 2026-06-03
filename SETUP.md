@@ -179,10 +179,37 @@ page open **Auto-sync**, paste your account ID (or OpenDota/Dotabuff link), and
 re-syncing never duplicates. Your Dota match history must be public (in Dota:
 Settings → Options → *Expose Public Match Data*).
 
-> Other games stay manual for now. tracker.gg can only serve Apex / The Division
-> 2 and isn't allowed to provide other titles' data, so durable auto-sync means
-> per-game official APIs (Riot for LoL/Valorant next). The provider columns added
-> by `game-sync.sql` generalise to those.
+**Valorant auto-sync** uses the HenrikDev API (Riot has no usable public
+Valorant match API). It needs a free key, added as a **server-only** env var:
+
+1. Get a key at [docs.henrikdev.xyz](https://docs.henrikdev.xyz) → their Discord
+   → the key bot/portal → generate a **Basic** key.
+2. Add it wherever the app runs:
+   - **Vercel** → Project → **Settings → Environment Variables** → add
+     `HENRIKDEV_API_KEY` = the key (Production + Preview). Redeploy.
+   - **Local** → add `HENRIKDEV_API_KEY=...` to `.env.local`, then restart
+     `npm run dev`.
+
+When you **add Valorant**, enter your Riot ID (`GameName#TAG`) right in the
+add-game form — it validates and connects on the spot (or leave it blank and
+connect later from the game's **Auto-sync** card). Region is detected
+automatically. **Sync now** imports recent **Competitive** matches as sessions
+(win/loss, agent · map · KDA, duration); re-syncing never duplicates. You can
+**Change Riot ID** anytime from the Auto-sync card — and if you rename in-game,
+sync keeps working (it keys on your durable PUUID and auto-updates the handle).
+
+Two efficiency notes: a **10-minute per-account cooldown** means rapid re-syncs
+return instantly from the DB (0 API calls), keeping usage well under HenrikDev's
+~30 req/min. And every ranked match is also written to a shared
+`valorant_matches` archive — run [`supabase/valorant-matches.sql`](supabase/valorant-matches.sql)
+(writes use the service-role key, the same one as account deletion) — so future
+cross-user features read from our own database instead of the API.
+
+> ⚠️ HenrikDev is unofficial; never prefix the key with `NEXT_PUBLIC_` (it's read
+> only server-side in `src/lib/valorant.ts`). Other games stay manual for now —
+> tracker.gg may only serve Apex / The Division 2, so durable auto-sync means
+> per-game APIs. The provider columns added by `game-sync.sql` generalise across
+> all of them.
 
 ## G. Account / profile
 

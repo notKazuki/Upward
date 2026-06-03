@@ -4,7 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { POPULAR_GAMES } from "@/lib/gaming";
 import GameTile from "./game-tile";
+import { RiotHelp } from "./game-sync";
 import { addGame } from "@/app/app/gaming/actions";
+
+const fieldCls =
+  "w-full rounded-xl border border-line bg-paper-bright px-4 py-2.5 text-[0.95rem] text-ink placeholder:text-faint transition-colors focus:border-ember focus:outline-none";
 
 export default function AddGame() {
   const router = useRouter();
@@ -12,8 +16,11 @@ export default function AddGame() {
   const [name, setName] = useState("");
   const [custom, setCustom] = useState(false);
   const [trackerUrl, setTrackerUrl] = useState("");
+  const [riotId, setRiotId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const isValorant = !custom && slug === "valorant";
 
   function pick(g: { slug: string; name: string }) {
     setCustom(false);
@@ -33,7 +40,8 @@ export default function AddGame() {
       const res = await addGame({
         name: finalName,
         slug: custom ? undefined : slug,
-        trackerUrl,
+        trackerUrl: isValorant ? undefined : trackerUrl,
+        riotId: isValorant ? riotId : undefined,
       });
       if (res.error) {
         setError(res.error);
@@ -95,22 +103,46 @@ export default function AddGame() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Game name"
-          className="mt-3 w-full rounded-xl border border-line bg-paper-bright px-4 py-2.5 text-[0.95rem] text-ink placeholder:text-faint transition-colors focus:border-ember focus:outline-none"
+          className={`mt-3 ${fieldCls}`}
         />
       )}
 
-      <label className="mt-3 flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-ink-soft">
-          Tracker link <span className="text-faint">(optional)</span>
-        </span>
-        <input
-          type="url"
-          value={trackerUrl}
-          onChange={(e) => setTrackerUrl(e.target.value)}
-          placeholder="https://tracker.gg/valorant/profile/…"
-          className="w-full rounded-xl border border-line bg-paper-bright px-4 py-2.5 text-[0.95rem] text-ink placeholder:text-faint transition-colors focus:border-ember focus:outline-none"
-        />
-      </label>
+      {isValorant ? (
+        <div className="mt-3 space-y-2">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-ink-soft">
+              Riot ID <span className="text-faint">(auto-syncs your matches)</span>
+            </span>
+            <input
+              type="text"
+              value={riotId}
+              onChange={(e) => setRiotId(e.target.value)}
+              placeholder="GameName#TAG — e.g. Phoenix#NA1"
+              className={fieldCls}
+              spellCheck={false}
+            />
+          </label>
+          <div className="text-xs leading-relaxed text-faint">
+            <RiotHelp />
+            <p className="mt-1.5">
+              Leave it blank to add Valorant now and connect later.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <label className="mt-3 flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink-soft">
+            Tracker link <span className="text-faint">(optional)</span>
+          </span>
+          <input
+            type="url"
+            value={trackerUrl}
+            onChange={(e) => setTrackerUrl(e.target.value)}
+            placeholder="https://tracker.gg/valorant/profile/…"
+            className={fieldCls}
+          />
+        </label>
+      )}
 
       {error && (
         <p role="alert" className="mt-3 text-sm text-danger">
