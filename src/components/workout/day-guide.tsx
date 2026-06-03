@@ -61,7 +61,7 @@ export default function DayGuide({
         name: ex.name,
         target: ex.target,
         sets: ex.sets,
-        reps: ex.reps,
+        reps: goalReps ?? ex.reps,
       });
     });
   }
@@ -96,7 +96,7 @@ export default function DayGuide({
       {/* Goal selector */}
       <div>
         <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-faint">
-          Training goal {selectedGoal && <span className="text-ember">· reps tuned below</span>}
+          Training goal {selectedGoal && <span className="text-ember">· default reps for new exercises</span>}
         </p>
         <div className="grid gap-2 sm:grid-cols-3">
           {REP_GUIDANCE.map((g) => {
@@ -133,14 +133,14 @@ export default function DayGuide({
         ) : (
           <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
             {program.map((ex) => (
-              <ProgramRow key={ex.id} ex={ex} goalReps={goalReps} pending={pending} />
+              <ProgramRow key={ex.id} ex={ex} pending={pending} />
             ))}
           </ul>
         )}
       </div>
 
       {/* Add exercise */}
-      <AddExercise day={active} />
+      <AddExercise key={selectedGoal ?? "none"} day={active} defaultReps={goalReps} />
 
       {/* Suggested exercises to seed/extend the day */}
       {suggestions.length > 0 && (
@@ -159,7 +159,7 @@ export default function DayGuide({
                       name: s.name,
                       target: s.target,
                       sets: s.sets,
-                      reps: s.reps,
+                      reps: goalReps ?? s.reps,
                     });
                   }
                 })
@@ -203,11 +203,9 @@ export default function DayGuide({
 
 function ProgramRow({
   ex,
-  goalReps,
   pending,
 }: {
   ex: CustomExercise;
-  goalReps: string | null;
   pending: boolean;
 }) {
   const [editing, setEditing] = useState(false);
@@ -248,8 +246,7 @@ function ProgramRow({
     );
   }
 
-  const override = goalReps && ex.sets !== "—";
-  const repsText = override ? goalReps : ex.reps;
+  const repsText = ex.reps;
   const setsText = ex.sets && ex.sets !== "—" ? ex.sets : null;
 
   return (
@@ -282,17 +279,31 @@ function ProgramRow({
   );
 }
 
-function AddExercise({ day }: { day: string }) {
+function AddExercise({
+  day,
+  defaultReps,
+}: {
+  day: string;
+  defaultReps?: string | null;
+}) {
+  const repsDefault = defaultReps || "8–12";
   const [name, setName] = useState("");
   const [target, setTarget] = useState("");
   const [sets, setSets] = useState("3");
-  const [reps, setReps] = useState("8–12");
+  const [reps, setReps] = useState(repsDefault);
+  const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const matches = searchExercises(name, 6).filter(
     (m) => m.name.toLowerCase() !== name.trim().toLowerCase(),
   );
+
+  function choose(m: { name: string; target: string }) {
+    setName(m.name);
+    setTarget(m.target);
+    setOpen(false);
+  }
 
   function submit() {
     setError(null);
@@ -303,7 +314,8 @@ function AddExercise({ day }: { day: string }) {
         setName("");
         setTarget("");
         setSets("3");
-        setReps("8–12");
+        setReps(repsDefault);
+        setOpen(false);
       }
     });
   }
@@ -316,22 +328,23 @@ function AddExercise({ day }: { day: string }) {
           value={name}
           onChange={(e) => {
             setName(e.target.value);
+            setOpen(true);
             const m = searchExercises(e.target.value, 1)[0];
             if (m && m.name.toLowerCase() === e.target.value.trim().toLowerCase()) setTarget(m.target);
           }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
           placeholder="Search the library or type your own…"
           className={`${inputCls} w-full`}
         />
-        {matches.length > 0 && (
+        {open && matches.length > 0 && (
           <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-line bg-card shadow-lg">
             {matches.map((m) => (
               <li key={m.name}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setName(m.name);
-                    setTarget(m.target);
-                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => choose(m)}
                   className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-paper"
                 >
                   <span className="text-ink">{m.name}</span>

@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-02",
+    "title": "Workout builder fixes",
+    "items": [
+      "Your custom reps now stick — picking a training goal no longer overwrites the reps you set on each exercise (it just sets the default for new ones).",
+      "The exercise search dropdown now closes once you pick one."
+    ]
+  },
+  {
+    "date": "2026-06-02",
     "title": "Set-by-set workout logging + personal records",
     "items": [
       "Log every set — weight × reps — for each exercise in your day, not just a session title.",
