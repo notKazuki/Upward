@@ -6,6 +6,7 @@ import { currentUser } from "@/lib/auth";
 const TABLES = [
   "profiles",
   "workouts",
+  "custom_exercises",
   "meals",
   "favorites",
   "games",
@@ -15,6 +16,7 @@ const TABLES = [
   "goal_logs",
   "supplements",
   "supplement_logs",
+  "journal_entries",
 ];
 
 export async function GET() {
