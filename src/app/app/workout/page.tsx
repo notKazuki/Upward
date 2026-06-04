@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import WorkoutForm from "@/components/workout/workout-form";
+import WorkoutCard from "@/components/workout/workout-card";
 import SplitChooser from "@/components/workout/split-chooser";
 import DayGuide from "@/components/workout/day-guide";
 import type { CustomExercise, TrainingGoal } from "@/lib/exercise-guide";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import {
-  dayColor,
   displayDay,
-  formatDate,
   lastByExercise,
   personalRecords,
   splitDisplayName,
@@ -19,7 +18,6 @@ import {
 } from "@/lib/workouts";
 import { serverWeekStart } from "@/lib/server-today";
 import { weightUnit, type UnitPref } from "@/lib/onboarding";
-import { deleteWorkout } from "./actions";
 
 export const metadata: Metadata = { title: "Workout — Upward" };
 
@@ -35,13 +33,6 @@ function groupSets(sets: WorkoutSet[]): { exercise: string; sets: WorkoutSet[] }
     map.get(s.exercise)!.push(s);
   }
   return order.map((exercise) => ({ exercise, sets: map.get(exercise)! }));
-}
-
-function setLabel(s: WorkoutSet): string {
-  if (s.weight != null && s.reps != null) return `${s.weight}×${s.reps}`;
-  if (s.reps != null) return `${s.reps}`;
-  if (s.weight != null) return `${s.weight}`;
-  return "";
 }
 
 export default async function WorkoutPage({
@@ -246,59 +237,23 @@ export default async function WorkoutPage({
           ) : (
             <ul className="space-y-2.5">
               {workouts.map((w) => (
-                <li
+                <WorkoutCard
                   key={w.id}
-                  className="flex items-start justify-between gap-4 rounded-xl border border-line bg-paper-bright px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="mb-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
-                      <span className="inline-flex items-center gap-1.5 font-medium text-ink-soft">
-                        <span
-                          className="inline-block size-2 rounded-full"
-                          style={{ backgroundColor: dayColor(w.category) }}
-                        />
-                        {displayDay(w.category)}
-                      </span>
-                      <span className="text-faint">
-                        {formatDate(w.performed_on)}
-                      </span>
-                    </div>
-                    <p className="truncate font-medium text-ink">{w.title}</p>
-                    {setsByWorkout[w.id]?.length ? (
-                      <div className="mt-1 space-y-0.5">
-                        {groupSets(setsByWorkout[w.id]).map((g) => (
-                          <p key={g.exercise} className="text-xs text-muted">
-                            <span className="text-ink-soft">{g.exercise}</span>{" "}
-                            {g.sets.map(setLabel).filter(Boolean).join(", ")}
-                          </p>
-                        ))}
-                      </div>
-                    ) : null}
-                    {w.notes && (
-                      <p className="mt-0.5 text-sm leading-relaxed text-muted">
-                        {w.notes}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-3">
-                    {w.duration_min != null && (
-                      <span className="text-sm font-medium text-muted">
-                        {w.duration_min}m
-                      </span>
-                    )}
-                    <form action={deleteWorkout}>
-                      <input type="hidden" name="id" value={w.id} />
-                      <button
-                        type="submit"
-                        aria-label={`Delete ${w.title}`}
-                        className="grid size-8 cursor-pointer place-items-center rounded-lg text-faint transition-colors hover:bg-card hover:text-danger"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" /></svg>
-                      </button>
-                    </form>
-                  </div>
-                </li>
+                  workout={{
+                    id: w.id,
+                    performed_on: w.performed_on,
+                    category: w.category,
+                    title: w.title,
+                    duration_min: w.duration_min,
+                    notes: w.notes,
+                  }}
+                  exercises={groupSets(setsByWorkout[w.id] ?? []).map((g) => ({
+                    exercise: g.exercise,
+                    sets: g.sets.map((s) => ({ weight: s.weight, reps: s.reps })),
+                  }))}
+                  days={days}
+                  weightUnit={unit}
+                />
               ))}
             </ul>
           )}

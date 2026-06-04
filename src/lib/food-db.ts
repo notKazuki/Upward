@@ -9,6 +9,8 @@ export type Food = {
   aliases?: string[];
   per100: { kcal: number; protein: number; carbs: number; fat: number };
   portions: { label: string; grams: number }[];
+  /** Where this came from — used for a small badge in the picker. */
+  source?: "usda" | "fastfood";
 };
 
 const g = (label: string, grams: number) => ({ label, grams });
@@ -17,6 +19,30 @@ const per = (kcal: number, protein: number, carbs: number, fat: number) => ({
   protein,
   carbs,
   fat,
+});
+
+/** Build a fast-food entry from *per-item* macros + the item's weight. The
+ * default portion is one item; per-100g is derived so the estimator math works
+ * unchanged. */
+const ff = (
+  name: string,
+  grams: number,
+  kcal: number,
+  protein: number,
+  carbs: number,
+  fat: number,
+  aliases?: string[],
+): Food => ({
+  name,
+  aliases,
+  source: "fastfood",
+  per100: {
+    kcal: Math.round((kcal / grams) * 100),
+    protein: Math.round((protein / grams) * 100 * 10) / 10,
+    carbs: Math.round((carbs / grams) * 100 * 10) / 10,
+    fat: Math.round((fat / grams) * 100 * 10) / 10,
+  },
+  portions: [g(`1 serving (${grams} g)`, grams), g("100 g", 100)],
 });
 
 export const FOODS: Food[] = [
@@ -175,6 +201,59 @@ export const FOODS: Food[] = [
   { name: "Smoothie (fruit)", aliases: ["smoothie"], per100: per(60, 1, 14, 0.4), portions: [g("1 cup (240 g)", 240)] },
   { name: "Tea (unsweetened)", aliases: ["tea"], per100: per(1, 0, 0.3, 0), portions: [g("1 cup (240 g)", 240)] },
   { name: "Wine (red)", aliases: ["wine"], per100: per(85, 0.1, 2.6, 0), portions: [g("1 glass (147 g)", 147)] },
+
+  // --- Fast food (per-item published values; grams, kcal, P, C, F) ---------
+  // McDonald's
+  ff("Big Mac (McDonald's)", 219, 563, 26, 45, 33, ["mcdonalds", "big mac"]),
+  ff("Quarter Pounder w/ Cheese (McDonald's)", 199, 520, 30, 42, 26, ["mcdonalds", "quarter pounder"]),
+  ff("McDouble (McDonald's)", 151, 400, 22, 33, 20, ["mcdonalds"]),
+  ff("Cheeseburger (McDonald's)", 113, 300, 15, 32, 13, ["mcdonalds"]),
+  ff("McChicken (McDonald's)", 143, 400, 14, 39, 21, ["mcdonalds", "mcchicken"]),
+  ff("Filet-O-Fish (McDonald's)", 142, 390, 16, 39, 19, ["mcdonalds"]),
+  ff("Chicken McNuggets (10 pc, McDonald's)", 162, 420, 23, 26, 25, ["mcdonalds", "mcnuggets", "nuggets"]),
+  ff("Medium Fries (McDonald's)", 111, 320, 5, 43, 15, ["mcdonalds", "fries"]),
+  ff("Egg McMuffin (McDonald's)", 136, 310, 17, 30, 13, ["mcdonalds"]),
+  // Burger King
+  ff("Whopper (Burger King)", 270, 657, 28, 49, 40, ["burger king", "bk", "whopper"]),
+  ff("Bacon King (Burger King)", 397, 1150, 61, 49, 79, ["burger king", "bk"]),
+  ff("Chicken Fries (9 pc, Burger King)", 150, 430, 19, 30, 25, ["burger king", "bk"]),
+  // Wendy's
+  ff("Dave's Single (Wendy's)", 218, 580, 30, 39, 34, ["wendys"]),
+  ff("Baconator (Wendy's)", 330, 950, 56, 38, 62, ["wendys", "baconator"]),
+  ff("Spicy Chicken Sandwich (Wendy's)", 225, 500, 28, 49, 21, ["wendys"]),
+  ff("Chicken Nuggets (10 pc, Wendy's)", 150, 420, 22, 24, 26, ["wendys", "nuggets"]),
+  ff("Small Frosty (Wendy's)", 113, 200, 5, 35, 5, ["wendys", "frosty"]),
+  // KFC
+  ff("Original Recipe Chicken Breast (KFC)", 161, 390, 39, 11, 21, ["kfc"]),
+  ff("Original Recipe Drumstick (KFC)", 59, 130, 12, 4, 8, ["kfc"]),
+  ff("Chicken Sandwich (KFC)", 200, 650, 30, 47, 35, ["kfc"]),
+  // Chick-fil-A
+  ff("Chicken Sandwich (Chick-fil-A)", 183, 420, 28, 41, 18, ["chick-fil-a", "chick fil a"]),
+  ff("Spicy Chicken Sandwich (Chick-fil-A)", 185, 450, 28, 42, 20, ["chick-fil-a", "chick fil a"]),
+  ff("Nuggets (8 pc, Chick-fil-A)", 113, 250, 27, 11, 11, ["chick-fil-a", "chick fil a", "nuggets"]),
+  ff("Waffle Fries (medium, Chick-fil-A)", 125, 420, 5, 45, 24, ["chick-fil-a", "fries"]),
+  // Taco Bell
+  ff("Crunchy Taco (Taco Bell)", 78, 170, 8, 13, 10, ["taco bell"]),
+  ff("Beefy 5-Layer Burrito (Taco Bell)", 248, 490, 18, 65, 18, ["taco bell", "burrito"]),
+  ff("Chicken Quesadilla (Taco Bell)", 184, 510, 26, 38, 28, ["taco bell", "quesadilla"]),
+  ff("Crunchwrap Supreme (Taco Bell)", 254, 530, 16, 71, 21, ["taco bell", "crunchwrap"]),
+  // Subway (6")
+  ff("6\" Turkey Breast (Subway)", 219, 280, 18, 46, 4, ["subway"]),
+  ff("6\" Italian B.M.T. (Subway)", 232, 410, 20, 45, 17, ["subway", "bmt"]),
+  ff("6\" Meatball Marinara (Subway)", 264, 480, 22, 59, 18, ["subway", "meatball"]),
+  // Pizza
+  ff("Pepperoni Pizza (1 slice, Domino's)", 79, 210, 9, 24, 9, ["dominos", "pizza"]),
+  ff("Pepperoni Pan Pizza (1 slice, Pizza Hut)", 113, 290, 12, 28, 14, ["pizza hut", "pizza"]),
+  // Others
+  ff("Double-Double (In-N-Out)", 330, 670, 37, 39, 41, ["in-n-out", "in n out"]),
+  ff("Hamburger (Five Guys)", 303, 700, 39, 39, 43, ["five guys"]),
+  ff("Little Fries (Five Guys)", 227, 530, 8, 72, 23, ["five guys", "fries"]),
+  ff("Spicy Chicken Sandwich (Popeyes)", 219, 700, 28, 50, 42, ["popeyes"]),
+  ff("Chicken Burrito (Chipotle)", 625, 1075, 56, 113, 41, ["chipotle", "burrito"]),
+  ff("Chicken Bowl (Chipotle)", 510, 700, 54, 70, 22, ["chipotle", "bowl"]),
+  ff("Glazed Donut (Dunkin')", 60, 240, 4, 29, 11, ["dunkin", "donut"]),
+  ff("Caffè Latte (grande, Starbucks)", 473, 190, 13, 18, 7, ["starbucks", "latte"]),
+  ff("Caramel Frappuccino (grande, Starbucks)", 473, 380, 5, 64, 15, ["starbucks", "frappuccino"]),
 ];
 
 export function searchFoods(query: string, limit = 6): Food[] {

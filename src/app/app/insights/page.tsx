@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import { ActivityChart } from "@/components/dashboard/charts-lazy";
+import ReportView from "@/components/insights/report-view";
 import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth";
 import { serverToday } from "@/lib/server-today";
 import type { SessionRow, WorkoutRow } from "@/lib/dashboard";
 import {
@@ -14,6 +16,14 @@ import {
   type MealRow,
   type Period,
 } from "@/lib/insights";
+import { buildReport } from "@/lib/report";
+import type { Goal, GoalLog } from "@/lib/goals";
+import {
+  effectiveTargets,
+  suggestTargets,
+  type Targets,
+} from "@/lib/nutrition";
+import type { Gender } from "@/lib/onboarding";
 
 export const metadata: Metadata = { title: "Insights — Upward" };
 
@@ -27,24 +37,62 @@ export default async function InsightsPage({
   const meta = periodMeta(period);
 
   const supabase = await createClient();
+  const user = await currentUser();
   const today = await serverToday();
   const since = windowStart(today, 98); // cover the 12-week trend + buffer
 
-  const [wRes, sRes, mRes] = await Promise.all([
-    supabase
-      .from("workouts")
-      .select("performed_on, category, duration_min")
-      .gte("performed_on", since),
-    supabase
-      .from("game_sessions")
-      .select("game_id, played_on, matches, wins, losses, minutes")
-      .gte("played_on", since),
-    supabase.from("meals").select("eaten_on, calories, protein").gte("eaten_on", since),
-  ]);
+  const [wRes, sRes, mRes, jRes, suppRes, suppLogRes, goalsRes, goalLogsRes, pRes] =
+    await Promise.all([
+      supabase
+        .from("workouts")
+        .select("performed_on, category, duration_min")
+        .gte("performed_on", since),
+      supabase
+        .from("game_sessions")
+        .select("game_id, played_on, matches, wins, losses, minutes")
+        .gte("played_on", since),
+      supabase.from("meals").select("eaten_on, calories, protein").gte("eaten_on", since),
+      supabase.from("journal_entries").select("entry_date, mood").gte("entry_date", since),
+      supabase.from("supplements").select("id"),
+      supabase.from("supplement_logs").select("supplement_id, taken_on").gte("taken_on", since),
+      supabase.from("goals").select("*").eq("status", "active"),
+      supabase.from("goal_logs").select("*"),
+      user
+        ? supabase
+            .from("profiles")
+            .select("dob, gender, height_cm, weight_kg, nutrition_targets")
+            .eq("id", user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
 
   const workouts = (wRes.error ? [] : (wRes.data ?? [])) as WorkoutRow[];
   const sessions = (sRes.error ? [] : (sRes.data ?? [])) as SessionRow[];
   const meals = (mRes.error ? [] : (mRes.data ?? [])) as MealRow[];
+  const journal = (jRes.error ? [] : (jRes.data ?? [])) as { entry_date: string; mood: string | null }[];
+  const supplementsCount = (suppRes.error ? [] : (suppRes.data ?? [])).length;
+  const supplementLogs = (suppLogRes.error ? [] : (suppLogRes.data ?? [])) as { taken_on: string; supplement_id: string }[];
+  const goals = (goalsRes.error ? [] : (goalsRes.data ?? [])) as Goal[];
+  const goalLogs = (goalLogsRes.error ? [] : (goalLogsRes.data ?? [])) as GoalLog[];
+
+  const profile = (pRes.error ? null : pRes.data) as {
+    dob?: string | null;
+    gender?: string | null;
+    height_cm?: number | null;
+    weight_kg?: number | null;
+    nutrition_targets?: Targets | null;
+  } | null;
+  const suggested = suggestTargets({
+    dob: profile?.dob ?? null,
+    gender: (profile?.gender as Gender | null) ?? null,
+    height_cm: profile?.height_cm ?? null,
+    weight_kg: profile?.weight_kg ?? null,
+  });
+  const savedRaw = profile?.nutrition_targets ?? null;
+  const targets = effectiveTargets(
+    savedRaw && Object.keys(savedRaw).length > 0 ? savedRaw : null,
+    suggested,
+  );
 
   const periodStart = windowStart(today, meta.days);
   const stats = periodStats(workouts, sessions, meals, periodStart, today, meta.days);
@@ -57,8 +105,28 @@ export default async function InsightsPage({
     today,
   );
 
+  const report = buildReport({
+    todayStr: today,
+    days: meta.days,
+    workouts,
+    sessions,
+    meals,
+    calTarget: targets.calories,
+    proteinTarget: targets.protein,
+    journal,
+    supplementsCount,
+    supplementLogs,
+    goals,
+    goalLogs,
+  });
+
   const nothing =
-    workouts.length === 0 && sessions.length === 0 && meals.length === 0;
+    workouts.length === 0 &&
+    sessions.length === 0 &&
+    meals.length === 0 &&
+    journal.length === 0 &&
+    supplementsCount === 0 &&
+    goals.length === 0;
 
   const cards: { label: string; value: string; suffix: string }[] = [
     { label: "Workouts", value: `${stats.workouts}`, suffix: `${stats.workoutHours}h total` },
@@ -129,6 +197,9 @@ export default async function InsightsPage({
         </DashboardCard>
       ) : (
         <>
+          {/* Cross-system report card */}
+          <ReportView report={report} />
+
           {/* Period stat cards */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
             {cards.map((c) => (

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { updateAvatar } from "@/app/app/account/actions";
+import ImageCropper from "./image-cropper";
 
 export default function AvatarUploader({
   userId,
@@ -19,9 +20,11 @@ export default function AvatarUploader({
   const [preview, setPreview] = useState<string | null>(currentUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [crop, setCrop] = useState<{ src: string; type: string } | null>(null);
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
     if (!file) return;
     setError(null);
 
@@ -29,21 +32,26 @@ export default function AvatarUploader({
       setError("Please choose an image file.");
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Image must be under 2 MB.");
+    if (file.size > 8 * 1024 * 1024) {
+      setError("Image must be under 8 MB.");
       return;
     }
+    // Open the cropper; upload happens after the user confirms a square crop.
+    setCrop({ src: URL.createObjectURL(file), type: file.type });
+  }
 
+  async function uploadBlob(blob: Blob) {
+    setCrop(null);
     setBusy(true);
-    setPreview(URL.createObjectURL(file)); // optimistic
+    setPreview(URL.createObjectURL(blob)); // optimistic
 
     const supabase = createClient();
-    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const ext = blob.type === "image/png" ? "png" : "jpg";
     const path = `${userId}/avatar.${ext}`;
 
     const { error: upErr } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type });
+      .upload(path, blob, { upsert: true, contentType: blob.type });
 
     if (upErr) {
       setError("Upload failed. Make sure you've run supabase/profile.sql.");
@@ -102,9 +110,18 @@ export default function AvatarUploader({
         >
           {busy ? "Uploading…" : "Change photo"}
         </button>
-        <p className="text-xs text-faint">JPG or PNG, up to 2 MB.</p>
+        <p className="text-xs text-faint">JPG or PNG — you&rsquo;ll crop it to a square.</p>
         {error && <p className="text-xs text-danger">{error}</p>}
       </div>
+
+      {crop && (
+        <ImageCropper
+          src={crop.src}
+          fileType={crop.type}
+          onCancel={() => setCrop(null)}
+          onCropped={uploadBlob}
+        />
+      )}
     </div>
   );
 }
