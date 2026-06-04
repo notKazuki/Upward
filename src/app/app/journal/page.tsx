@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import DashboardCard from "@/components/dashboard/card";
 import JournalComposer from "@/components/journal/journal-composer";
+import JournalEntryCard from "@/components/journal/journal-entry-card";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import { formatDate, moodMeta, type JournalEntry } from "@/lib/journal";
-import { deleteJournalEntry } from "./actions";
+import { type JournalEntry } from "@/lib/journal";
 
 export const metadata: Metadata = { title: "Journal — Upward" };
 
@@ -69,56 +69,20 @@ export default async function JournalPage() {
           ) : (
             <div className="space-y-4">
               {entries.map((e) => {
-                const mood = moodMeta(e.mood);
                 const pics = (e.image_paths ?? [])
                   .map((p) => signed[p])
                   .filter(Boolean);
                 return (
-                  <article key={e.id} className="rounded-2xl border border-line bg-card p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-display text-lg text-ink">
-                          {formatDate(e.entry_date)}
-                        </h2>
-                        {mood && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2.5 py-0.5 text-xs font-medium text-ink-soft">
-                            <span className="inline-block size-2 rounded-full" style={{ backgroundColor: mood.color }} />
-                            {mood.label}
-                          </span>
-                        )}
-                      </div>
-                      <form action={deleteJournalEntry}>
-                        <input type="hidden" name="id" value={e.id} />
-                        <button
-                          type="submit"
-                          aria-label="Delete entry"
-                          className="grid size-8 cursor-pointer place-items-center rounded-lg text-faint transition-colors hover:bg-paper hover:text-danger"
-                        >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" /></svg>
-                        </button>
-                      </form>
-                    </div>
-
-                    {e.body && (
-                      <p className="mt-2 whitespace-pre-wrap text-[0.95rem] leading-relaxed text-ink-soft">
-                        {e.body}
-                      </p>
-                    )}
-
-                    {pics.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {pics.map((url, i) => (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            key={i}
-                            src={url}
-                            alt=""
-                            className="size-28 rounded-lg object-cover ring-1 ring-line"
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </article>
+                  <JournalEntryCard
+                    key={e.id}
+                    entry={{
+                      id: e.id,
+                      entry_date: e.entry_date,
+                      mood: e.mood,
+                      body: e.body,
+                    }}
+                    pics={pics}
+                  />
                 );
               })}
             </div>

@@ -43,6 +43,47 @@ export async function addJournalEntry(input: {
   return { ok: true };
 }
 
+export async function updateJournalEntry(input: {
+  id: string;
+  date: string;
+  mood?: string | null;
+  body?: string | null;
+}): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return { error: "Session expired." };
+
+  const id = input.id?.trim();
+  if (!id) return { error: "Missing entry." };
+  if (!input.date) return { error: "Pick a date." };
+  const mood = MOODS.includes(input.mood as Mood) ? input.mood : null;
+  const body = (input.body ?? "").trim().slice(0, 5000) || null;
+
+  // Photos are preserved on edit; an entry with neither body nor mood but with
+  // photos is still valid, so only block the truly-empty case.
+  const { data: existing } = await supabase
+    .from("journal_entries")
+    .select("image_paths")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!existing) return { error: "Entry not found." };
+  const hasPics = ((existing.image_paths as string[] | null) ?? []).length > 0;
+  if (!body && !mood && !hasPics) {
+    return { error: "Write something, pick a mood, or keep a photo." };
+  }
+
+  const { error } = await supabase
+    .from("journal_entries")
+    .update({ entry_date: input.date, mood, body })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) return { error: "Couldn't save your changes." };
+
+  revalidatePath("/app/journal");
+  return { ok: true };
+}
+
 export async function deleteJournalEntry(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const user = await currentUser();

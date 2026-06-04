@@ -67,13 +67,48 @@ export async function addWorkout(
   return { ok: true, ts: Date.now() };
 }
 
+type SessionEntry = {
+  exercise: string;
+  sets: { weight: number | null; reps: number | null }[];
+};
+type SetRow = {
+  exercise: string;
+  set_index: number;
+  weight: number | null;
+  reps: number | null;
+};
+
+/** Flatten exercise entries → clean, 1-indexed set rows (drops empty sets). */
+function collectSetRows(entries: SessionEntry[] = []): SetRow[] {
+  const rows: SetRow[] = [];
+  for (const e of entries) {
+    const name = (e.exercise ?? "").trim().slice(0, 80);
+    if (!name) continue;
+    let idx = 0;
+    for (const s of e.sets ?? []) {
+      const weight =
+        typeof s.weight === "number" && Number.isFinite(s.weight) && s.weight >= 0
+          ? s.weight
+          : null;
+      const reps =
+        typeof s.reps === "number" && Number.isFinite(s.reps) && s.reps >= 0
+          ? Math.round(s.reps)
+          : null;
+      if (weight == null && reps == null) continue;
+      idx++;
+      rows.push({ exercise: name, set_index: idx, weight, reps });
+    }
+  }
+  return rows;
+}
+
 export async function logSession(input: {
   day: string;
   date: string;
   title?: string;
   durationMin?: number | null;
   notes?: string;
-  entries: { exercise: string; sets: { weight: number | null; reps: number | null }[] }[];
+  entries: SessionEntry[];
 }): Promise<{ ok?: boolean; error?: string }> {
   const supabase = await createClient();
   const {
@@ -95,31 +130,7 @@ export async function logSession(input: {
     return { error: "That day isn't part of your split." };
   }
 
-  // Collect non-empty sets.
-  const setRows: {
-    exercise: string;
-    set_index: number;
-    weight: number | null;
-    reps: number | null;
-  }[] = [];
-  for (const e of input.entries ?? []) {
-    const name = (e.exercise ?? "").trim().slice(0, 80);
-    if (!name) continue;
-    let idx = 0;
-    for (const s of e.sets ?? []) {
-      const weight =
-        typeof s.weight === "number" && Number.isFinite(s.weight) && s.weight >= 0
-          ? s.weight
-          : null;
-      const reps =
-        typeof s.reps === "number" && Number.isFinite(s.reps) && s.reps >= 0
-          ? Math.round(s.reps)
-          : null;
-      if (weight == null && reps == null) continue;
-      idx++;
-      setRows.push({ exercise: name, set_index: idx, weight, reps });
-    }
-  }
+  const setRows = collectSetRows(input.entries);
 
   const notes = (input.notes ?? "").trim().slice(0, 500) || null;
   const explicitTitle = (input.title ?? "").trim().slice(0, 120);
@@ -154,6 +165,91 @@ export async function logSession(input: {
       .insert(setRows.map((r) => ({ ...r, user_id: user.id, workout_id: w.id })));
     if (sErr) {
       return { error: "Session saved — but run supabase/workout-sets.sql to record sets." };
+    }
+  }
+
+  revalidatePath("/app/workout");
+  revalidatePath("/app");
+  return { ok: true };
+}
+
+export async function updateSession(input: {
+  workoutId: string;
+  day: string;
+  date: string;
+  title?: string;
+  durationMin?: number | null;
+  notes?: string;
+  entries: SessionEntry[];
+}): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Your session expired. Please sign in again." };
+
+  const id = input.workoutId?.trim();
+  if (!id) return { error: "Missing workout." };
+  const day = (input.day ?? "").trim();
+  if (!day) return { error: "Pick a day." };
+  if (!input.date) return { error: "Pick a date." };
+
+  // Ownership check.
+  const { data: existing } = await supabase
+    .from("workouts")
+    .select("id")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!existing) return { error: "Workout not found." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("workout_days")
+    .eq("id", user.id)
+    .maybeSingle();
+  const allowed = [...(profile?.workout_days ?? []), ...GENERAL_DAYS];
+  if (allowed.length > 0 && !allowed.includes(day)) {
+    return { error: "That day isn't part of your split." };
+  }
+
+  const setRows = collectSetRows(input.entries);
+  const notes = (input.notes ?? "").trim().slice(0, 500) || null;
+  const explicitTitle = (input.title ?? "").trim().slice(0, 120);
+  const duration_min =
+    typeof input.durationMin === "number" && input.durationMin >= 0
+      ? Math.round(input.durationMin)
+      : null;
+
+  if (setRows.length === 0 && !notes && !explicitTitle && duration_min === null) {
+    return { error: "Keep at least one set, a title, or a note." };
+  }
+
+  const { error: wErr } = await supabase
+    .from("workouts")
+    .update({
+      title: explicitTitle || day,
+      category: day,
+      performed_on: input.date,
+      duration_min,
+      notes,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (wErr) return { error: "Couldn't save your changes." };
+
+  // Replace the session's sets wholesale (simplest correct approach).
+  await supabase
+    .from("workout_sets")
+    .delete()
+    .eq("workout_id", id)
+    .eq("user_id", user.id);
+  if (setRows.length > 0) {
+    const { error: sErr } = await supabase
+      .from("workout_sets")
+      .insert(setRows.map((r) => ({ ...r, user_id: user.id, workout_id: id })));
+    if (sErr) {
+      return { error: "Saved — but run supabase/workout-sets.sql to record sets." };
     }
   }
 
