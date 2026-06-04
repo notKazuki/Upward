@@ -16,7 +16,6 @@ import {
   currentNameTag,
   fetchValorantAccount,
   fetchValorantMatchesByPuuid,
-  isCompetitive,
   matchSummary,
   normalizeMatch,
   parseRiotId,
@@ -353,17 +352,16 @@ export async function syncGame(
 
     const [puuid, region] = String(game.provider_id).split("|");
     if (!puuid || !region) return { error: "Reconnect this game to sync." };
-    const res = await fetchValorantMatchesByPuuid(region, puuid, {
-      mode: "competitive",
-      size: 10,
-    });
+    // Pull recent matches across all modes (competitive, unrated, swiftplay,
+    // deathmatch, etc.) in one call.
+    const res = await fetchValorantMatchesByPuuid(region, puuid, { size: 15 });
     if ("error" in res) return { error: VAL_ERRORS[res.error] };
 
-    const comp = res.data.filter(isCompetitive);
+    const all = res.data;
 
     // Auto-refresh the stored Riot ID from the newest match (handles renames
     // for free — the match data carries their current name#tag).
-    const handle = comp.length ? currentNameTag(comp[0], puuid) : null;
+    const handle = all.length ? currentNameTag(all[0], puuid) : null;
     if (handle) {
       await supabase
         .from("games")
@@ -372,11 +370,11 @@ export async function syncGame(
         .eq("user_id", user.id);
     }
 
-    // Archive every competitive match into the global dataset (service-role,
-    // dedup on match_id). Best-effort — never block the user's own import.
-    await archiveValorantMatches(comp);
+    // Archive every match into the global dataset (service-role, dedup on
+    // match_id). Best-effort — never block the user's own import.
+    await archiveValorantMatches(all);
 
-    candidates = comp
+    candidates = all
       .map((m) => normalizeMatch(m, puuid))
       .filter((n): n is NormalizedValMatch => n !== null)
       .map((n) => ({
@@ -384,8 +382,9 @@ export async function syncGame(
         game_id: gameId,
         played_on: ymdInTz(zone, n.startedAt),
         matches: 1,
-        wins: n.won ? 1 : 0,
-        losses: n.won ? 0 : 1,
+        // null = no team result (Deathmatch): counts as a match, no W/L.
+        wins: n.won === true ? 1 : 0,
+        losses: n.won === false ? 1 : 0,
         minutes: n.minutes,
         rank: n.rank,
         notes: n.notes,

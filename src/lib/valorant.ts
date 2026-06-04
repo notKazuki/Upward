@@ -125,10 +125,21 @@ export type NormalizedValMatch = {
   matchId: string;
   startedAt: Date;
   minutes: number;
-  won: boolean;
-  rank: string | null;
+  won: boolean | null; // null = no team result (Deathmatch / FFA modes)
+  rank: string | null; // competitive tier, otherwise the mode label
+  mode: string;
   notes: string;
 };
+
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Human label for a match's queue, e.g. "Competitive", "Swiftplay". */
+export function modeLabel(m: V4Match): string {
+  const q = m.metadata?.queue;
+  return (q?.name && q.name.trim()) || (q?.id ? titleCase(q.id.replace(/_/g, " ")) : "") || "Custom";
+}
 
 /** The player's current Riot ID (name#tag) as recorded in this match, or null.
  * Lets us auto-refresh a stored handle for free when someone renames. */
@@ -164,31 +175,78 @@ export function matchSummary(m: V4Match): ValMatchRow | null {
 }
 
 /**
- * Reduce a v4 match to the fields we store. Returns null if the match is
- * unusable (no id, player not found, or no decisive team result).
+ * Reduce a v4 match (any mode) to the fields we store. `won` is null for modes
+ * without a team result (Deathmatch). Returns null only if unusable (no id or
+ * the player isn't in the match).
  */
 export function normalizeMatch(m: V4Match, puuid: string): NormalizedValMatch | null {
   const matchId = m.metadata?.match_id;
   if (!matchId) return null;
 
   const me = (m.players ?? []).find((p) => p.puuid === puuid);
-  if (!me || !me.team_id) return null;
-
-  const team = (m.teams ?? []).find((t) => t.team_id === me.team_id);
-  if (!team || typeof team.won !== "boolean") return null;
+  if (!me) return null;
 
   const k = me.stats?.kills ?? 0;
   const d = me.stats?.deaths ?? 0;
   const a = me.stats?.assists ?? 0;
   const agent = me.agent?.name ?? "Unknown";
   const map = m.metadata?.map?.name ?? "Unknown";
+  const mode = modeLabel(m);
+
+  // Team result, when the mode has one.
+  let won: boolean | null = null;
+  if (me.team_id) {
+    const team = (m.teams ?? []).find((t) => t.team_id === me.team_id);
+    if (team && typeof team.won === "boolean") won = team.won;
+  }
 
   return {
     matchId,
     startedAt: new Date(m.metadata?.started_at ?? Date.now()),
     minutes: Math.max(0, Math.round((m.metadata?.game_length_in_ms ?? 0) / 60000)),
-    won: team.won,
-    rank: me.tier?.name ?? null,
+    won,
+    rank: isCompetitive(m) ? me.tier?.name ?? "Competitive" : mode,
+    mode,
     notes: `${agent} · ${map} · ${k}/${d}/${a} KDA`,
+  };
+}
+
+// --- MMR / Rank Rating -----------------------------------------------------
+export type ValMmr = {
+  tier: string | null;
+  rr: number | null; // 0-100 within the tier
+  lastChange: number | null; // RR gained/lost last game
+  elo: number | null;
+  peakTier: string | null;
+  gamesNeeded: number | null; // placement games left before a rating shows
+};
+
+/** Current competitive rank + RR for an RR tracker. */
+export async function fetchValorantMmr(
+  region: string,
+  puuid: string,
+): Promise<ValResult<ValMmr>> {
+  const path = `/valorant/v3/by-puuid/mmr/${encodeURIComponent(region)}/${PLATFORM}/${encodeURIComponent(puuid)}`;
+  const r = await call<{
+    current?: {
+      tier?: { name?: string };
+      rr?: number;
+      last_change?: number;
+      elo?: number;
+      games_needed_for_rating?: number;
+    };
+    peak?: { tier?: { name?: string } };
+  }>(path);
+  if ("error" in r) return r;
+  const cur = r.data?.current ?? {};
+  return {
+    data: {
+      tier: cur.tier?.name ?? null,
+      rr: typeof cur.rr === "number" ? cur.rr : null,
+      lastChange: typeof cur.last_change === "number" ? cur.last_change : null,
+      elo: typeof cur.elo === "number" ? cur.elo : null,
+      peakTier: r.data?.peak?.tier?.name ?? null,
+      gamesNeeded: typeof cur.games_needed_for_rating === "number" ? cur.games_needed_for_rating : null,
+    },
   };
 }

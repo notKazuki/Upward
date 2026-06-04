@@ -28,6 +28,27 @@ export async function sendMessage(
   return { ok: true, message: data as Message };
 }
 
+/** Messages with this friend newer than `afterIso` — the polling fallback for
+ * when Realtime isn't delivering (e.g. table not in the realtime publication). */
+export async function fetchMessagesSince(
+  otherId: string,
+  afterIso: string,
+): Promise<Message[]> {
+  const me = await currentUser();
+  if (!me || !otherId) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select("*")
+    .or(
+      `and(sender_id.eq.${me.id},recipient_id.eq.${otherId}),and(sender_id.eq.${otherId},recipient_id.eq.${me.id})`,
+    )
+    .gt("created_at", afterIso)
+    .order("created_at", { ascending: true })
+    .limit(50);
+  return (data ?? []) as Message[];
+}
+
 export async function markRead(otherId: string): Promise<{ ok?: boolean }> {
   const me = await currentUser();
   if (!me || !otherId) return {};
