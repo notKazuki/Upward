@@ -308,6 +308,23 @@ storage bucket for photos). Then open **Journal**: write a dated entry with a
 mood, free-text, and up to 6 photos. Photos live in a private bucket and are
 shown to you via short-lived signed URLs — no one else can see them.
 
+## O. Friends & profile sharing
+
+Run [`supabase/social.sql`](supabase/social.sql) in Supabase → **SQL Editor**
+(adds `bio` + a per-section `privacy` map to profiles, and creates the
+`friendships` + `blocks` tables with RLS). Then open **Friends**: search members
+by username, send/accept requests, and visit `/app/u/<username>` profiles.
+
+Control sharing under **Settings → Profile sharing**: each area (activity, level,
+achievements, workouts, nutrition, gaming, goals) is independently **Only me /
+Friends / Anyone**, and **everything starts private**. Your **journal is never
+shareable**. Set a **username** (Account) to be discoverable.
+
+> Viewing another member's shared stats requires the **`SUPABASE_SERVICE_ROLE_KEY`**
+> (same key as account deletion): cross-user reads are gated in server code by
+> the relationship + privacy, then read with the service-role client because the
+> trackers' own RLS is owner-only.
+
 ## I. Update log → Discord (optional)
 
 The in-app **What's new** log (spark icon by your avatar) reads
