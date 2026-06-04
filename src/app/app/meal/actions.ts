@@ -4,6 +4,16 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import type { FoodItem, Goal, MealType, Targets } from "@/lib/nutrition";
+import { searchUsda } from "@/lib/usda";
+import type { Food } from "@/lib/food-db";
+
+/** Live food search (USDA FoodData Central). Server action so the API key
+ * stays server-side; signed-in only to protect the shared key. */
+export async function searchFoodsLive(query: string): Promise<Food[]> {
+  const user = await currentUser();
+  if (!user) return [];
+  return searchUsda(query, 8);
+}
 
 const GOALS: Goal[] = ["lose", "maintain", "gain"];
 

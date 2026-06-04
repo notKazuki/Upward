@@ -6,6 +6,7 @@ import {
   logMeal,
   saveFavorite,
   deleteFavorite,
+  searchFoodsLive,
 } from "@/app/app/meal/actions";
 import {
   MEAL_TYPES,
@@ -30,11 +31,49 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
 
   // Estimator
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Food[]>([]);
+  const [localResults, setLocalResults] = useState<Food[]>([]);
+  const [liveResults, setLiveResults] = useState<Food[]>([]);
+  const [searching, setSearching] = useState(false);
   const [food, setFood] = useState<Food | null>(null);
   const [portion, setPortion] = useState("0");
   const [grams, setGrams] = useState("100");
   const searchRef = useRef<HTMLDivElement>(null);
+  const liveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const liveSeq = useRef(0);
+
+  // Local matches show instantly; USDA results stream in (debounced) below them.
+  const localNames = new Set(localResults.map((f) => f.name.toLowerCase()));
+  const results = [
+    ...localResults,
+    ...liveResults.filter((f) => !localNames.has(f.name.toLowerCase())),
+  ].slice(0, 14);
+
+  function clearResults() {
+    setLocalResults([]);
+    setLiveResults([]);
+    setSearching(false);
+    if (liveTimer.current) clearTimeout(liveTimer.current);
+  }
+
+  function onQueryChange(v: string) {
+    setQuery(v);
+    setLocalResults(searchFoods(v));
+    setLiveResults([]);
+    if (liveTimer.current) clearTimeout(liveTimer.current);
+    const q = v.trim();
+    if (q.length < 3) {
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const seq = ++liveSeq.current;
+    liveTimer.current = setTimeout(async () => {
+      const res = await searchFoodsLive(q);
+      if (seq !== liveSeq.current) return; // a newer keystroke superseded this
+      setLiveResults(res);
+      setSearching(false);
+    }, 350);
+  }
 
   // Manual + save-favorite panels
   const [manual, setManual] = useState(false);
@@ -45,7 +84,7 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node))
-        setResults([]);
+        clearResults();
     }
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
@@ -68,6 +107,7 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
     setFood(null);
     setQuery("");
     setPortion("0");
+    clearResults();
   }
 
   function addManual() {
@@ -186,32 +226,47 @@ export default function MealComposer({ favorites }: { favorites: Favorite[] }) {
         <input
           type="text"
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setResults(searchFoods(e.target.value));
-          }}
-          placeholder="Search e.g. chicken, rice, banana…"
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Search e.g. chicken, big mac, latte…"
           className="rounded-xl border border-line bg-paper-bright px-4 py-2.5 text-[0.95rem] text-ink placeholder:text-faint transition-colors focus:border-ember focus:outline-none"
         />
-        {results.length > 0 && (
-          <ul className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-xl border border-line bg-card p-1.5 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.5)]">
-            {results.map((f) => (
-              <li key={f.name}>
+        {(results.length > 0 || searching) && (
+          <ul className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-xl border border-line bg-card p-1.5 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.5)]">
+            {results.map((f, i) => (
+              <li key={`${f.name}-${i}`}>
                 <button
                   type="button"
                   onClick={() => {
                     setFood(f);
                     setPortion("0");
                     setQuery("");
-                    setResults([]);
+                    clearResults();
                   }}
                   className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-paper"
                 >
-                  <span className="font-medium text-ink">{f.name}</span>
-                  <span className="text-xs text-faint">{f.per100.kcal} kcal/100g</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate font-medium text-ink">{f.name}</span>
+                    {f.source === "fastfood" && (
+                      <span className="shrink-0 rounded-full bg-ember-wash px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-ember">
+                        Fast food
+                      </span>
+                    )}
+                    {f.source === "usda" && (
+                      <span className="shrink-0 rounded-full bg-paper px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-muted">
+                        USDA
+                      </span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-xs text-faint">{f.per100.kcal} kcal/100g</span>
                 </button>
               </li>
             ))}
+            {searching && (
+              <li className="flex items-center gap-2 px-3 py-2 text-xs text-faint">
+                <span className="size-3 animate-spin rounded-full border-2 border-line border-t-ember" />
+                Searching the USDA database…
+              </li>
+            )}
           </ul>
         )}
 

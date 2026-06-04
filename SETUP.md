@@ -236,6 +236,16 @@ food estimator or add custom items), see a running total, set daily targets
 (auto-suggested from your onboarding age/sex/height/weight, editable), and log.
 Nutrition also feeds the dashboard summary + a "Calories today" stat.
 
+The food search returns instant matches from the bundled library (incl. a
+curated **fast-food** set — Big Mac, Whopper, Chipotle, etc.) and also searches
+the live **USDA FoodData Central** database (~2M foods) as you type. USDA works
+out of the box on the shared `DEMO_KEY`, but it's heavily rate-limited — for
+real use grab a free key at
+[fdc.nal.usda.gov/api-key-signup](https://fdc.nal.usda.gov/api-key-signup.html)
+and add it as a **server-only** env var `FDC_API_KEY` (Vercel → Environment
+Variables, and `.env.local` for local dev). It's read only server-side in
+`src/lib/usda.ts`.
+
 For **favorites** (save a meal/item and re-add it later), also run
 [`supabase/meal-favorites.sql`](supabase/meal-favorites.sql).
 
