@@ -3,6 +3,7 @@ import { Fraunces, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import ThemeToggle from "@/components/theme-toggle";
 import ServiceWorker from "@/components/service-worker";
+import UpdateNotice from "@/components/update-notice";
 import { THEME_SCRIPT } from "@/lib/theme-script";
 
 // Display: characterful old-style serif with optical sizing + true italics.
@@ -65,6 +66,7 @@ export default function RootLayout({
         {children}
         <ThemeToggle />
         <ServiceWorker />
+        <UpdateNotice />
       </body>
     </html>
   );
