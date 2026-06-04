@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { sendMessage, markRead } from "@/app/app/chat/actions";
+import { sendMessage, markRead, fetchMessagesSince } from "@/app/app/chat/actions";
 import { dayLabel, timeLabel, type Message } from "@/lib/chat";
 
 export default function ChatThread({
@@ -22,27 +22,75 @@ export default function ChatThread({
   const [pending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Track the newest message timestamp so the poll only asks for newer ones.
+  const latestRef = useRef<string>(initial.length ? initial[initial.length - 1].created_at : "1970-01-01");
+
+  const addIncoming = (incoming: Message[]) => {
+    if (incoming.length === 0) return;
+    setMessages((prev) => {
+      const have = new Set(prev.map((m) => m.id));
+      const fresh = incoming.filter((m) => !have.has(m.id));
+      if (fresh.length === 0) return prev;
+      return [...prev, ...fresh];
+    });
+    void markRead(otherId);
+  };
+
   // Live delivery: subscribe to messages addressed to me from this friend.
+  // The realtime socket must carry the user's JWT, or RLS hides the rows.
   useEffect(() => {
     void markRead(otherId);
     const supabase = createClient();
-    const channel = supabase
-      .channel(`dm:${otherId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${meId}` },
-        (payload) => {
-          const m = payload.new as Message;
-          if (m.sender_id !== otherId) return;
-          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-          void markRead(otherId);
-        },
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) await supabase.realtime.setAuth(session.access_token);
+      channel = supabase
+        .channel(`dm:${meId}:${otherId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${meId}` },
+          (payload) => {
+            const m = payload.new as Message;
+            if (m.sender_id !== otherId) return;
+            addIncoming([m]);
+          },
+        )
+        .subscribe();
+    })();
+
     return () => {
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meId, otherId]);
+
+  // Polling fallback (every 5s while the tab is visible) — guarantees delivery
+  // even if Realtime is misconfigured for this project.
+  useEffect(() => {
+    let cancelled = false;
+    async function poll() {
+      if (document.visibilityState !== "visible") return;
+      const fresh = await fetchMessagesSince(otherId, latestRef.current);
+      if (!cancelled) addIncoming(fresh);
+    }
+    const id = window.setInterval(poll, 5000);
+    window.addEventListener("focus", poll);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      window.removeEventListener("focus", poll);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otherId]);
+
+  // Keep the latest-timestamp ref in sync for the poll.
+  useEffect(() => {
+    if (messages.length) latestRef.current = messages[messages.length - 1].created_at;
+  }, [messages]);
 
   // Keep pinned to the latest message.
   useEffect(() => {

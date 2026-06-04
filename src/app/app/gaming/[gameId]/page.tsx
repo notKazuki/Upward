@@ -16,6 +16,8 @@ import {
 } from "@/lib/gaming";
 import GameTile from "@/components/gaming/game-tile";
 import GameSync from "@/components/gaming/game-sync";
+import RrCard from "@/components/gaming/rr-card";
+import { fetchValorantMmr, type ValMmr } from "@/lib/valorant";
 import { serverToday, serverWeekStart } from "@/lib/server-today";
 import { deleteGame, deleteSession } from "../actions";
 
@@ -51,6 +53,16 @@ export default async function GameDetailPage({
   const weekT = sumSessions(sessions.filter((s) => s.played_on >= weekStart));
   const allT = sumSessions(sessions);
   const wr = winRate(allT.wins, allT.losses);
+
+  // Live competitive rank / RR for the Valorant RR tracker.
+  let mmr: ValMmr | null = null;
+  if (g.slug === "valorant" && g.provider === "henrikdev" && g.provider_id) {
+    const [puuid, region] = String(g.provider_id).split("|");
+    if (puuid && region) {
+      const r = await fetchValorantMmr(region, puuid);
+      if (!("error" in r) && r.data.tier) mmr = r.data;
+    }
+  }
 
   const trend = [...sessions]
     .reverse()
@@ -130,6 +142,12 @@ export default async function GameDetailPage({
           </div>
         ))}
       </div>
+
+      {mmr && (
+        <DashboardCard title="Competitive rank">
+          <RrCard mmr={mmr} />
+        </DashboardCard>
+      )}
 
       {(g.slug === "dota-2" || g.slug === "valorant") && (
         <DashboardCard title="Auto-sync">

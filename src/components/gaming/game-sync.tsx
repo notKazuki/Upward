@@ -52,7 +52,7 @@ const CONFIGS: Record<string, SyncConfig> = {
   valorant: {
     provider: "henrikdev",
     intro:
-      "Connect your Riot ID to auto-import recent Competitive matches (win/loss, agent, map, KDA).",
+      "Connect your Riot ID to auto-import your recent matches across all modes (win/loss, agent, map, KDA).",
     placeholder: "Your Riot ID — e.g. Phoenix#NA1",
     help: <RiotHelp />,
     editable: true,
@@ -74,7 +74,7 @@ export function RiotHelp() {
         Enter it as <span className="font-medium text-ink-soft">GameName#TAG</span>{" "}
         — your tag is on your Valorant career page (e.g. <code>Phoenix#NA1</code>).
       </li>
-      <li>You must have played at least one Competitive match this act.</li>
+      <li>Your recent matches across all modes are imported.</li>
       <li>
         Not found? Double-check the spelling and tag — they&rsquo;re
         case-insensitive but must be exact.

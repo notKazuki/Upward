@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-04",
+    "title": "Live chat fix + Valorant rank tracker",
+    "items": [
+      "Fixed: messages from friends now arrive instantly without refreshing.",
+      "Valorant now imports matches from all modes (Competitive, Unrated, Swiftplay, Deathmatch and more), each labelled with its mode.",
+      "New RR tracker on your Valorant page: current rank, Rank Rating, last-game change, and your peak."
+    ]
+  },
+  {
+    "date": "2026-06-04",
     "title": "Chat with friends",
     "items": [
       "Real-time 1:1 direct messages with your friends — new Chat in the sidebar.",
