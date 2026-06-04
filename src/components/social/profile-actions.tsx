@@ -17,12 +17,14 @@ const danger = "cursor-pointer text-sm font-medium text-muted transition-colors 
 
 export default function ProfileActions({
   targetId,
+  username,
   rel,
   outgoingPending,
   incomingPending,
   viewerBlockedTarget,
 }: {
   targetId: string;
+  username: string | null;
   rel: Relationship;
   outgoingPending: boolean;
   incomingPending: boolean;
@@ -59,9 +61,16 @@ export default function ProfileActions({
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       {rel === "friend" ? (
-        <button type="button" disabled={pending} onClick={() => act(() => removeFriend(targetId))} className={ghost}>
-          Friends ✓
-        </button>
+        <>
+          {username && (
+            <Link href={`/app/chat/${username}`} className={solid}>
+              Message
+            </Link>
+          )}
+          <button type="button" disabled={pending} onClick={() => act(() => removeFriend(targetId))} className={ghost}>
+            Friends ✓
+          </button>
+        </>
       ) : incomingPending ? (
         <button type="button" disabled={pending} onClick={() => act(() => sendFriendRequest(targetId))} className={solid}>
           Accept request

@@ -22,7 +22,8 @@ export type IconName =
   | "trendUp"
   | "check"
   | "journal"
-  | "trophy";
+  | "trophy"
+  | "message";
 
 const paths: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -134,6 +135,9 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M6 6H3.5a2.5 2.5 0 0 0 0 5H6M18 6h2.5a2.5 2.5 0 0 1 0 5H18" />
       <path d="M9 20h6M12 14v6" />
     </>
+  ),
+  message: (
+    <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.6 8.6 0 0 1-4-1L3 21l2-5.5A8.5 8.5 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5Z" />
   ),
 };
 

@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-04",
+    "title": "Chat with friends",
+    "items": [
+      "Real-time 1:1 direct messages with your friends — new Chat in the sidebar.",
+      "You can only message accepted friends, enforced at the database level (not just hidden in the UI).",
+      "Also: a gentle 'new version available' notice replaces surprise refreshes after an update."
+    ]
+  },
+  {
+    "date": "2026-06-04",
     "title": "Levels, ranks & achievements",
     "items": [
       "Earn XP from your real activity (capped daily so it can't be farmed) to climb levels and ranks — Base Camp all the way to Peak.",

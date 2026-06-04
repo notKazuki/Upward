@@ -120,6 +120,7 @@ export default async function ProfilePage({
           </div>
           <ProfileActions
             targetId={profile.id}
+            username={profile.username}
             rel={rel}
             outgoingPending={info.outgoingPending}
             incomingPending={info.incomingPending}

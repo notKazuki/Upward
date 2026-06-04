@@ -333,6 +333,12 @@ you've earned + when). The **Progress** page shows your XP level, **rank**
 rank and badges appear on your profile only if you set those sections to
 Friends/Anyone.
 
+**Chat** — run [`supabase/chat.sql`](supabase/chat.sql) (creates `messages` with
+RLS and enables **Realtime**). Then **Chat** (sidebar) lists your conversations
+and `/app/chat/<username>` is a live 1:1 thread. You can only message **accepted
+friends**, and that's enforced in the database (the insert policy checks the
+friendship and that neither side has blocked the other), not just the UI.
+
 ## I. Update log → Discord (optional)
 
 The in-app **What's new** log (spark icon by your avatar) reads
