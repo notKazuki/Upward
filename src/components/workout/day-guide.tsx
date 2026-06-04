@@ -215,6 +215,17 @@ function ProgramRow({
   const [reps, setReps] = useState(ex.reps ?? "");
   const [busy, startTransition] = useTransition();
 
+  // Seed the form from the *latest* saved values each time editing opens — the
+  // row instance persists across saves (keyed by id), so initial useState would
+  // otherwise show the values from when the row first mounted.
+  function startEdit() {
+    setName(ex.name);
+    setTarget(ex.target ?? "");
+    setSets(ex.sets ?? "");
+    setReps(ex.reps ?? "");
+    setEditing(true);
+  }
+
   if (editing) {
     return (
       <li className="space-y-2 bg-paper-bright px-4 py-3">
@@ -262,7 +273,7 @@ function ProgramRow({
           </p>
           {setsText && <p className="text-[0.7rem] uppercase tracking-wide text-faint">sets × reps</p>}
         </div>
-        <button type="button" onClick={() => setEditing(true)} aria-label={`Edit ${ex.name}`} className="grid size-7 cursor-pointer place-items-center rounded-lg text-faint transition-colors hover:bg-card hover:text-ink">
+        <button type="button" onClick={startEdit} aria-label={`Edit ${ex.name}`} className="grid size-7 cursor-pointer place-items-center rounded-lg text-faint transition-colors hover:bg-card hover:text-ink">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
         </button>
         <button

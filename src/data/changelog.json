@@ -1,6 +1,33 @@
 [
   {
     "date": "2026-06-04",
+    "title": "Chat with friends",
+    "items": [
+      "Real-time 1:1 direct messages with your friends — new Chat in the sidebar.",
+      "You can only message accepted friends, enforced at the database level (not just hidden in the UI).",
+      "Also: a gentle 'new version available' notice replaces surprise refreshes after an update."
+    ]
+  },
+  {
+    "date": "2026-06-04",
+    "title": "Levels, ranks & achievements",
+    "items": [
+      "Earn XP from your real activity (capped daily so it can't be farmed) to climb levels and ranks — Base Camp all the way to Peak.",
+      "40 achievements across training, nutrition, journaling, goals, gaming, supplements and social — track them on the new Progress page.",
+      "Show your rank and badges on your profile if you want (Settings → Profile sharing)."
+    ]
+  },
+  {
+    "date": "2026-06-04",
+    "title": "Friends & profile sharing",
+    "items": [
+      "Find people by username, send and accept friend requests, and visit member profiles.",
+      "New per-section privacy controls (Settings → Profile sharing): choose Only me / Friends / Anyone for each area. Everything starts private, and your journal is never shareable.",
+      "Add a bio, and block anyone you'd rather not hear from. (Achievements, ranks and chat are coming next.)"
+    ]
+  },
+  {
+    "date": "2026-06-04",
     "title": "Report card, editable history & more foods",
     "items": [
       "New cross-system report card on Insights — an overall score with where you're winning and where to focus, across training, nutrition, gaming, mind, supplements and goals. Your dashboard now shows the score at a glance.",

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import UnitSettings from "@/components/settings/unit-settings";
+import PrivacySettings from "@/components/social/privacy-settings";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import type { UnitPref } from "@/lib/onboarding";
+import type { PrivacyMap } from "@/lib/social";
 
 export const metadata: Metadata = { title: "Settings — Upward" };
 
@@ -12,10 +15,22 @@ export default async function SettingsPage() {
   const user = await currentUser();
   const { data } = await supabase
     .from("profiles")
-    .select("unit_pref")
+    .select("unit_pref, username")
     .eq("id", user!.id)
     .maybeSingle();
   const pref = (data?.unit_pref as UnitPref | null) ?? "metric";
+  const username = (data?.username as string | null) ?? null;
+
+  // Social columns live in a separate (newer) migration — query them
+  // tolerantly so the page still works before supabase/social.sql is applied.
+  const { data: soc, error: socErr } = await supabase
+    .from("profiles")
+    .select("bio, privacy")
+    .eq("id", user!.id)
+    .maybeSingle();
+  const socialReady = !socErr;
+  const bio = (soc?.bio as string | null) ?? "";
+  const privacy = (soc?.privacy as PrivacyMap | null) ?? {};
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -30,6 +45,29 @@ export default async function SettingsPage() {
 
       <DashboardCard title="Units">
         <UnitSettings current={pref} />
+      </DashboardCard>
+
+      <DashboardCard
+        title="Profile sharing"
+        action={
+          username ? (
+            <Link
+              href={`/app/u/${username}`}
+              className="text-xs font-medium text-muted transition-colors hover:text-ember"
+            >
+              View my profile
+            </Link>
+          ) : undefined
+        }
+      >
+        {socialReady ? (
+          <PrivacySettings bio={bio} privacy={privacy} hasUsername={Boolean(username)} />
+        ) : (
+          <p className="text-sm leading-relaxed text-muted">
+            Run <code className="text-ink">supabase/social.sql</code> in Supabase →{" "}
+            <b>SQL Editor</b> to enable profile sharing and friends.
+          </p>
+        )}
       </DashboardCard>
     </div>
   );

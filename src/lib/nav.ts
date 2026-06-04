@@ -17,4 +17,7 @@ export const navItems: NavItem[] = [
   { label: "Calendar", href: "/app/calendar", icon: "calendar" },
   { label: "Journal", href: "/app/journal", icon: "journal" },
   { label: "Goals", href: "/app/goals", icon: "goals" },
+  { label: "Progress", href: "/app/progress", icon: "trophy" },
+  { label: "Friends", href: "/app/friends", icon: "user" },
+  { label: "Chat", href: "/app/chat", icon: "message" },
 ];
