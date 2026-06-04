@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-06-04",
+    "title": "Levels, ranks & achievements",
+    "items": [
+      "Earn XP from your real activity (capped daily so it can't be farmed) to climb levels and ranks — Base Camp all the way to Peak.",
+      "40 achievements across training, nutrition, journaling, goals, gaming, supplements and social — track them on the new Progress page.",
+      "Show your rank and badges on your profile if you want (Settings → Profile sharing)."
+    ]
+  },
+  {
+    "date": "2026-06-04",
     "title": "Friends & profile sharing",
     "items": [
       "Find people by username, send and accept friend requests, and visit member profiles.",
