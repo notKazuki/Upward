@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-06-04",
+    "title": "Report card, editable history & more foods",
+    "items": [
+      "New cross-system report card on Insights — an overall score with where you're winning and where to focus, across training, nutrition, gaming, mind, supplements and goals. Your dashboard now shows the score at a glance.",
+      "Edit past workouts (day, duration, notes, and every set) and journal entries (date, mood, body) in place — no more delete-and-redo.",
+      "Crop your profile photo to a square before it saves.",
+      "Food search now spans a curated fast-food set (Big Mac, Whopper, Chipotle…) plus the live USDA database of ~2M foods."
+    ]
+  },
+  {
     "date": "2026-06-03",
     "title": "Valorant auto-sync",
     "items": [

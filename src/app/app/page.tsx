@@ -18,6 +18,8 @@ import {
   type WorkoutRow,
 } from "@/lib/dashboard";
 import { buildSummary } from "@/lib/summary";
+import { buildReport } from "@/lib/report";
+import ScoreRing, { ringTone } from "@/components/insights/score-ring";
 import {
   effectiveTargets,
   suggestTargets,
@@ -66,7 +68,7 @@ export default async function DashboardPage() {
   const since = isoDaysAgo(56);
   const today = await serverToday();
 
-  const [wRes, sRes, gRes, pRes, mRes, goalsRes, goalLogsRes, suppRes, suppLogRes] =
+  const [wRes, sRes, gRes, pRes, mRes, goalsRes, goalLogsRes, suppRes, suppLogRes, jRes] =
     await Promise.all([
       supabase
         .from("workouts")
@@ -84,7 +86,7 @@ export default async function DashboardPage() {
             .eq("id", user.id)
             .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
-      supabase.from("meals").select("calories, protein").eq("eaten_on", today),
+      supabase.from("meals").select("eaten_on, calories, protein").gte("eaten_on", since),
       supabase
         .from("goals")
         .select("*")
@@ -92,7 +94,8 @@ export default async function DashboardPage() {
         .order("created_at", { ascending: true }),
       supabase.from("goal_logs").select("*"),
       supabase.from("supplements").select("id"),
-      supabase.from("supplement_logs").select("supplement_id").eq("taken_on", today),
+      supabase.from("supplement_logs").select("supplement_id, taken_on").gte("taken_on", since),
+      supabase.from("journal_entries").select("entry_date, mood").gte("entry_date", since),
     ]);
 
   const workouts = (wRes.error ? [] : (wRes.data ?? [])) as WorkoutRow[];
@@ -110,12 +113,18 @@ export default async function DashboardPage() {
   const workoutDays = profile?.workout_days ?? [];
 
   // Nutrition (today's totals vs effective targets)
-  const mealsToday = (mRes.error ? [] : (mRes.data ?? [])) as {
+  const mealsAll = (mRes.error ? [] : (mRes.data ?? [])) as {
+    eaten_on: string;
     calories: number;
     protein: number;
   }[];
+  const mealsToday = mealsAll.filter((m) => m.eaten_on === today);
   const caloriesToday = mealsToday.reduce((s, m) => s + (m.calories || 0), 0);
   const proteinToday = mealsToday.reduce((s, m) => s + (m.protein || 0), 0);
+  const journal = (jRes.error ? [] : (jRes.data ?? [])) as {
+    entry_date: string;
+    mood: string | null;
+  }[];
   const suggested = suggestTargets({
     dob: profile?.dob ?? null,
     gender: (profile?.gender as Gender | null) ?? null,
@@ -173,10 +182,30 @@ export default async function DashboardPage() {
     (suppRes.error ? [] : (suppRes.data ?? [])).map((s: { id: string }) => s.id),
   );
   const suppTotal = suppIds.size;
-  const suppTaken = (suppLogRes.error ? [] : (suppLogRes.data ?? [])).filter(
-    (l: { supplement_id: string }) => suppIds.has(l.supplement_id),
+  const suppLogsAll = (suppLogRes.error ? [] : (suppLogRes.data ?? [])) as {
+    supplement_id: string;
+    taken_on: string;
+  }[];
+  const suppTaken = suppLogsAll.filter(
+    (l) => l.taken_on === today && suppIds.has(l.supplement_id),
   ).length;
   const suppPct = suppTotal ? Math.round((suppTaken / suppTotal) * 100) : 0;
+
+  // Cross-system report (30-day window) — the glance into the full card.
+  const report = buildReport({
+    todayStr: today,
+    days: 30,
+    workouts,
+    sessions,
+    meals: mealsAll,
+    calTarget: targets.calories,
+    proteinTarget: targets.protein,
+    journal,
+    supplementsCount: suppTotal,
+    supplementLogs: suppLogsAll,
+    goals: activeGoals,
+    goalLogs: allGoalLogs,
+  });
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
@@ -208,21 +237,67 @@ export default async function DashboardPage() {
       {/* Main grid */}
       <div className="u-rise u-d3 grid gap-5 lg:grid-cols-3">
         <DashboardCard
-          title="Your week, summarised"
+          title="Your report card"
           className="lg:col-span-2"
           action={<OpenLink href="/app/insights" />}
         >
-          <p className="text-lg leading-relaxed text-ink-soft">
-            {summary.map((tok, i) =>
-              tok.em ? (
-                <span key={i} className="font-medium text-ember">
-                  {tok.t}
-                </span>
-              ) : (
-                <span key={i}>{tok.t}</span>
-              ),
+          <div className="flex flex-col gap-4">
+            {report.overall !== null && (
+              <div className="flex items-center gap-4">
+                <ScoreRing value={report.overall} tone={ringTone(report.overall)} size={76} />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">
+                      Overall · 30 days
+                    </span>
+                    <span className="rounded-full bg-paper px-2 py-0.5 text-xs font-semibold text-ink-soft">
+                      {report.grade}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+                    {report.headline}
+                  </p>
+                </div>
+              </div>
             )}
-          </p>
+
+            <p className="text-lg leading-relaxed text-ink-soft">
+              {summary.map((tok, i) =>
+                tok.em ? (
+                  <span key={i} className="font-medium text-ember">
+                    {tok.t}
+                  </span>
+                ) : (
+                  <span key={i}>{tok.t}</span>
+                ),
+              )}
+            </p>
+
+            {(report.strengths[0] || report.focus[0]) && (
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                {report.strengths[0] && (
+                  <div className="rounded-xl border border-line bg-paper-bright p-3">
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-ember">
+                      Working
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+                      {report.strengths[0].text}
+                    </p>
+                  </div>
+                )}
+                {report.focus[0] && (
+                  <div className="rounded-xl border border-line bg-paper-bright p-3">
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-danger">
+                      Focus
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+                      {report.focus[0].text}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </DashboardCard>
 
         {/* Gaming weekly goals */}
