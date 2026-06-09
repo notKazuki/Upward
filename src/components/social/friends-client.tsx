@@ -150,14 +150,12 @@ export default function FriendsClient({
           <ul className="space-y-2">
             {friends.map((it) => (
               <Row key={it.friendshipId} profile={it.profile}>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => act(() => removeFriend(it.profile.id))}
-                  className={`${pill} text-muted hover:text-danger`}
-                >
-                  Remove
-                </button>
+                <ConfirmAction
+                  label="Remove"
+                  prompt={`Remove ${profileName(it.profile)} as a friend?`}
+                  pending={pending}
+                  onConfirm={() => act(() => removeFriend(it.profile.id))}
+                />
               </Row>
             ))}
           </ul>
@@ -184,6 +182,56 @@ export default function FriendsClient({
         </DashboardCard>
       )}
     </>
+  );
+}
+
+/** Two-step inline confirm for destructive social actions. */
+function ConfirmAction({
+  label,
+  prompt,
+  pending,
+  onConfirm,
+}: {
+  label: string;
+  prompt: string;
+  pending: boolean;
+  onConfirm: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => setConfirming(true)}
+        className={`${pill} text-muted hover:text-danger`}
+      >
+        {label}
+      </button>
+    );
+  }
+  return (
+    <span className="flex items-center gap-2 text-sm">
+      <span className="hidden text-muted sm:inline">{prompt}</span>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          onConfirm();
+          setConfirming(false);
+        }}
+        className="cursor-pointer font-medium text-danger hover:underline disabled:opacity-60"
+      >
+        Yes
+      </button>
+      <button
+        type="button"
+        onClick={() => setConfirming(false)}
+        className="cursor-pointer text-muted hover:text-ink"
+      >
+        No
+      </button>
+    </span>
   );
 }
 

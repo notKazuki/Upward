@@ -20,6 +20,7 @@ import {
 import { buildSummary } from "@/lib/summary";
 import { buildReport } from "@/lib/report";
 import ScoreRing, { ringTone } from "@/components/insights/score-ring";
+import ProfileSetupCard from "@/components/dashboard/profile-setup-card";
 import {
   effectiveTargets,
   suggestTargets,
@@ -206,6 +207,19 @@ export default async function DashboardPage() {
   ).length;
   const suppPct = suppTotal ? Math.round((suppTaken / suppTotal) * 100) : 0;
 
+  // Profile completeness (separate tolerant query — columns span migrations).
+  const identityRes = user
+    ? await supabase
+        .from("profiles")
+        .select("username, display_name, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null, error: null };
+  const identity = identityRes.error ? null : identityRes.data;
+  const setupNeeded =
+    identity !== null &&
+    (!identity.username || !identity.display_name || !identity.avatar_url);
+
   // Cross-system report (30-day window) — the glance into the full card.
   const report = buildReport({
     todayStr: today,
@@ -232,6 +246,16 @@ export default async function DashboardPage() {
           A calm overview of where you stand.
         </p>
       </div>
+
+      {setupNeeded && identity && (
+        <div className="u-rise u-d2">
+          <ProfileSetupCard
+            hasUsername={Boolean(identity.username)}
+            hasDisplayName={Boolean(identity.display_name)}
+            hasAvatar={Boolean(identity.avatar_url)}
+          />
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="u-rise u-d2 grid grid-cols-2 gap-4 lg:grid-cols-4">

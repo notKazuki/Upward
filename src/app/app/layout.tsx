@@ -79,6 +79,7 @@ export default async function AppLayout({
           email,
           initials: initialsFrom(displayName || username || fullName, email),
           avatarUrl: (profile?.avatar_url as string | null) ?? null,
+          username: username || null,
         }}
       >
         {children}

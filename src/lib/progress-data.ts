@@ -18,6 +18,7 @@ import {
 import {
   earnedIds,
   achievementXp,
+  ACHIEVEMENTS_BY_ID,
   type AchievementStats,
 } from "@/lib/achievements";
 import { suggestTargets, effectiveTargets, type Targets } from "@/lib/nutrition";
@@ -200,6 +201,28 @@ export async function getOwnProgress(): Promise<Progress | null> {
     await db.from("achievements").insert(toInsert.map((id) => ({ user_id: me.id, achievement_id: id })));
     const today = new Date().toISOString().slice(0, 10);
     for (const id of toInsert) have.set(id, today);
+
+    // Bell notifications for fresh unlocks (self-insert; best-effort — skip
+    // the very first sync so a new account isn't spammed with a backlog).
+    if (toInsert.length <= 5) {
+      const rows = toInsert
+        .map((id) => ACHIEVEMENTS_BY_ID.get(id))
+        .filter((a): a is NonNullable<typeof a> => Boolean(a))
+        .map((a) => ({
+          user_id: me.id,
+          type: "achievement",
+          title: `Achievement unlocked: ${a.label}`,
+          body: a.description,
+          href: "/app/progress",
+        }));
+      if (rows.length > 0) {
+        try {
+          await db.from("notifications").insert(rows);
+        } catch {
+          /* notifications table may not exist yet */
+        }
+      }
+    }
   }
   progress.earned = earnedIdsNow.map((id) => ({ id, earned_on: have.get(id) ?? "" }));
   return progress;

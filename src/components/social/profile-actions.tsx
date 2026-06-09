@@ -33,11 +33,13 @@ export default function ProfileActions({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const [confirmUnfriend, setConfirmUnfriend] = useState(false);
 
   function act(fn: () => Promise<unknown>) {
     startTransition(async () => {
       await fn();
       setConfirmBlock(false);
+      setConfirmUnfriend(false);
       router.refresh();
     });
   }
@@ -67,9 +69,26 @@ export default function ProfileActions({
               Message
             </Link>
           )}
-          <button type="button" disabled={pending} onClick={() => act(() => removeFriend(targetId))} className={ghost}>
-            Friends ✓
-          </button>
+          {confirmUnfriend ? (
+            <span className="flex items-center gap-2 text-sm">
+              <span className="text-muted">Remove friend?</span>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => act(() => removeFriend(targetId))}
+                className="cursor-pointer font-medium text-danger hover:underline disabled:opacity-60"
+              >
+                Yes
+              </button>
+              <button type="button" onClick={() => setConfirmUnfriend(false)} className="cursor-pointer text-muted hover:text-ink">
+                No
+              </button>
+            </span>
+          ) : (
+            <button type="button" disabled={pending} onClick={() => setConfirmUnfriend(true)} className={ghost}>
+              Friends ✓
+            </button>
+          )}
         </>
       ) : incomingPending ? (
         <button type="button" disabled={pending} onClick={() => act(() => sendFriendRequest(targetId))} className={solid}>
