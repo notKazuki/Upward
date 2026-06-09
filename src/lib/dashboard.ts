@@ -88,6 +88,10 @@ export function aggregate(
   // The user's local "today" (YYYY-MM-DD). Defaults to the runtime's date, but
   // callers pass a timezone-correct value so week/today don't drift on UTC.
   todayStr: string = fmt(new Date()),
+  // Dates of OTHER tracked activity (meals, journal, supplements, goal
+  // check-ins) so the streak rewards "did anything today", not just
+  // workouts/gaming. Forgiving by design — see review feedback.
+  extraActiveDates: string[] = [],
 ) {
   const today = new Date(`${todayStr}T00:00:00`);
   const weekStart = startOfWeek(today);
@@ -156,9 +160,12 @@ export function aggregate(
     .slice(0, 6);
 
   // --- streak (consecutive active days ending today or yesterday) ---
+  // "Active" = logged anything, anywhere: workout, gaming, meal, journal,
+  // supplement, or goal check-in.
   const activeDates = new Set<string>([
     ...workouts.map((w) => w.performed_on),
     ...sessions.map((s) => s.played_on),
+    ...extraActiveDates,
   ]);
   let streakDays = 0;
   let cursor = new Date(today);
@@ -183,14 +190,21 @@ export function aggregate(
   );
   const daysSinceActivity = daysSince([...activeDates], today);
 
-  // --- neglected split day (longest since logged among split days) ---
+  // --- neglected split day (longest since logged, among days actually trained
+  // before) + untrained split day (never logged at all — phrased differently;
+  // never compute a day-count against nothing, that's how "999 days" leaks).
   let neglectedDay: { day: string; days: number } | null = null;
+  let untrainedDay: string | null = null;
   if (workoutDays.length > 0 && workouts.length > 0) {
     for (const day of workoutDays) {
       const dates = workouts
         .filter((w) => w.category === day)
         .map((w) => w.performed_on);
-      const since = dates.length ? daysSince(dates, today) : 999;
+      if (dates.length === 0) {
+        untrainedDay ??= day;
+        continue;
+      }
+      const since = daysSince(dates, today);
       if ((since ?? 0) >= 7 && (!neglectedDay || since! > neglectedDay.days)) {
         neglectedDay = { day, days: since! };
       }
@@ -234,6 +248,7 @@ export function aggregate(
     daysSinceWorkout,
     daysSinceActivity,
     neglectedDay,
+    untrainedDay,
 
     week: {
       workoutCount: wWeek.length,
@@ -310,7 +325,8 @@ export function statCards(a: Aggregates): StatCard[] {
     cards.push({
       label: "Win rate",
       value: a.week.winRate !== null ? `${a.week.winRate}%` : "—",
-      suffix: "this week",
+      // A bare em-dash reads as broken; say why it's empty.
+      suffix: a.week.winRate !== null ? "this week" : "no matches this week",
       icon: "gaming",
     });
   }

@@ -54,7 +54,7 @@ export function ActivityChart({
   const C = useThemeColors();
   return (
     <Frame>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
         <defs>
           <linearGradient id="activityFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={C.ember} stopOpacity={0.35} />
@@ -89,7 +89,7 @@ export function CategoryChart({
   const palette = [C.ember, C.emberSoft, C.emberPale, C.muted];
   return (
     <Frame>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
         <CartesianGrid stroke={C.line} vertical={false} />
         <XAxis dataKey="category" {...axis(C)} />
         <YAxis {...axis(C)} width={40} allowDecimals={false} />
@@ -113,7 +113,7 @@ export function GamingChart({
   const palette = [C.ember, C.emberSoft, C.emberPale, C.muted];
   return (
     <Frame>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
         <CartesianGrid stroke={C.line} vertical={false} />
         <XAxis dataKey="game" {...axis(C)} />
         <YAxis {...axis(C)} width={40} allowDecimals={false} />

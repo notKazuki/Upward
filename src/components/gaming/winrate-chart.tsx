@@ -19,7 +19,7 @@ export default function WinrateChart({
   const C = useThemeColors();
   return (
     <ChartFrame height={220}>
-      <LineChart data={data} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
           <CartesianGrid stroke={C.line} vertical={false} />
           <XAxis
             dataKey="label"

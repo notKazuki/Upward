@@ -127,7 +127,16 @@ async function loadProgress(db: Db, userId: string): Promise<Progress> {
   const wins = sessions.reduce((a, s) => a + s.wins, 0);
   const losses = sessions.reduce((a, s) => a + s.losses, 0);
   const matches = sessions.reduce((a, s) => a + s.matches, 0);
-  const activeDays = new Set<string>([...workoutDays, ...gamingDays]);
+  // Streak achievements use the same "did anything" definition as the
+  // dashboard streak: any tracked action keeps the day alive.
+  const activeDays = new Set<string>([
+    ...workoutDays,
+    ...gamingDays,
+    ...mealDays.keys(),
+    ...activity.journalDays,
+    ...suppDays.keys(),
+    ...activity.goalCheckinDays,
+  ]);
 
   const baseStats: Omit<AchievementStats, "level"> = {
     workouts: workouts.length,

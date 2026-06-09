@@ -193,6 +193,13 @@ export const EXERCISE_GUIDE: Record<string, Exercise[]> = {
     G("Lateral Raise", "Side delts", "3", "12–15"),
     G("Biceps Curl + Triceps Pushdown", "Arms", "3", "10–12"),
   ],
+  Core: [
+    G("Plank", "Core", "3", "30–60s"),
+    G("Hanging Leg Raise", "Lower abs", "3", "8–12"),
+    G("Cable Crunch", "Abs", "3", "12–15"),
+    G("Russian Twist", "Obliques", "3", "12–15 / side"),
+    G("Back Extension", "Lower back", "3", "12–15"),
+  ],
   // --- General days ---
   Cardio: [
     G("Zone-2 (easy pace)", "Heart, base fitness", "—", "20–45 min"),
@@ -208,15 +215,46 @@ export const EXERCISE_GUIDE: Record<string, Exercise[]> = {
   ],
 };
 
+// Fallback when no keyword matches at all: real movements, not abstract slots
+// ("Secondary compound" means nothing to a beginner).
 const DEFAULT_GUIDE: Exercise[] = [
-  G("Compound lift", "Big muscle group", "3–4", "6–10"),
-  G("Secondary compound", "Supporting muscles", "3", "8–12"),
-  G("Isolation movement", "Target muscle", "3", "12–15"),
-  G("Core / accessory", "Core", "3", "12–15"),
+  G("Barbell Back Squat", "Quads, glutes", "3–4", "6–10"),
+  G("Bench Press", "Chest, triceps", "3", "6–10"),
+  G("Bent-Over Row", "Back, biceps", "3", "8–10"),
+  G("Overhead Press", "Shoulders", "3", "8–10"),
+  G("Plank", "Core", "3", "30–60s"),
 ];
 
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z]+/g, " ").trim();
+
+// Guide keys longest-first so "Chest & Back" wins over "Chest"/"Back" and
+// "Upper Body" over "Upper" when a custom label mentions both words.
+const GUIDE_KEYS = Object.keys(EXERCISE_GUIDE).sort(
+  (a, b) => norm(b).length - norm(a).length,
+);
+
+/**
+ * Match custom day labels ("Push 1", "Leg Day", "Chest+Tris") to the curated
+ * guide by keyword, instead of requiring an exact preset name.
+ */
 export function guideForDay(label: string): Exercise[] {
-  return EXERCISE_GUIDE[label] ?? DEFAULT_GUIDE;
+  const exact = EXERCISE_GUIDE[label];
+  if (exact) return exact;
+  const l = norm(label);
+  if (!l) return DEFAULT_GUIDE;
+  for (const key of GUIDE_KEYS) {
+    const k = norm(key);
+    if (l === k || l.includes(k) || k.includes(l)) return EXERCISE_GUIDE[key];
+  }
+  // Common synonyms that don't literally contain a key.
+  if (/\bleg|quad|glute|hamstring|calv/.test(l)) return EXERCISE_GUIDE.Legs;
+  if (/\bchest|pec|bench/.test(l)) return EXERCISE_GUIDE.Chest;
+  if (/\bback|lat|row/.test(l)) return EXERCISE_GUIDE.Back;
+  if (/\bshoulder|delt/.test(l)) return EXERCISE_GUIDE.Shoulders;
+  if (/\barm|bicep|tricep/.test(l)) return EXERCISE_GUIDE.Arms;
+  if (/\brun|hiit|conditioning|cycle|bike|swim/.test(l)) return EXERCISE_GUIDE.Cardio;
+  if (/\bstretch|yoga|recovery/.test(l)) return EXERCISE_GUIDE.Mobility;
+  return DEFAULT_GUIDE;
 }
 
 // Flat, de-duplicated library built from every day's curated exercises — used

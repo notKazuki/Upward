@@ -137,6 +137,20 @@ export default async function DashboardPage() {
     suggested,
   );
 
+  // Every kind of logged activity counts toward the streak, not just
+  // workouts/gaming — a meal, journal entry, supplement check-off, or goal
+  // check-in keeps the day alive.
+  const extraActiveDates = [
+    ...mealsAll.map((m) => m.eaten_on),
+    ...journal.map((j) => j.entry_date),
+    ...((suppLogRes.error ? [] : (suppLogRes.data ?? [])) as { taken_on: string }[]).map(
+      (l) => l.taken_on,
+    ),
+    ...((goalLogsRes.error ? [] : (goalLogsRes.data ?? [])) as { logged_on: string }[]).map(
+      (l) => l.logged_on,
+    ),
+  ];
+
   const a = aggregate(
     workouts,
     sessions,
@@ -150,6 +164,7 @@ export default async function DashboardPage() {
       proteinTarget: targets.protein,
     },
     today,
+    extraActiveDates,
   );
   const summary = buildSummary(a);
   const cards = statCards(a);

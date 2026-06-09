@@ -128,23 +128,26 @@ export default async function InsightsPage({
     supplementsCount === 0 &&
     goals.length === 0;
 
+  // Every stat names its window so the dashboard's "this week" numbers never
+  // look contradictory next to these.
+  const win = `${meta.days}d`;
   const cards: { label: string; value: string; suffix: string }[] = [
-    { label: "Workouts", value: `${stats.workouts}`, suffix: `${stats.workoutHours}h total` },
+    { label: "Workouts", value: `${stats.workouts}`, suffix: `${stats.workoutHours}h · last ${win}` },
     {
       label: "Active days",
       value: `${stats.activeDays}`,
       suffix: `${stats.consistencyPct}% of ${stats.days} days`,
     },
-    { label: "Matches", value: `${stats.matches}`, suffix: `${stats.gamingHours}h played` },
+    { label: "Matches", value: `${stats.matches}`, suffix: `${stats.gamingHours}h · last ${win}` },
     {
       label: "Win rate",
       value: stats.winRate === null ? "—" : `${stats.winRate}%`,
-      suffix: "across all games",
+      suffix: stats.winRate === null ? `no matches in ${win}` : `all games · ${win}`,
     },
     {
       label: "Avg calories",
       value: stats.avgCalories === null ? "—" : stats.avgCalories.toLocaleString(),
-      suffix: "per logged day",
+      suffix: stats.avgCalories === null ? `no meals in ${win}` : `per logged day · ${win}`,
     },
   ];
 
