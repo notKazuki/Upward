@@ -28,6 +28,7 @@ type Db = Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createAdm
 
 export type Progress = {
   xp: number;
+  xpToday: number;
   level: LevelInfo;
   rank: Rank;
   next: Rank | null;
@@ -165,9 +166,33 @@ async function loadProgress(db: Db, userId: string): Promise<Progress> {
   ids = earnedIds(stats);
   xp = xpBase + achievementXp(ids);
 
+  // XP earned today — the same engine restricted to today's activity, so the
+  // daily caps read as a goal instead of an invisible limit.
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const todayActivity: DailyActivity = {
+    workoutDays: workoutDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    mealDays: mealDays.has(todayStr)
+      ? new Map([[todayStr, mealDays.get(todayStr)!]])
+      : new Map(),
+    journalDays: activity.journalDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    supplementDays: suppDays.has(todayStr)
+      ? new Map([[todayStr, suppDays.get(todayStr)!]])
+      : new Map(),
+    gamingDays: gamingDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    goalCheckinDays: activity.goalCheckinDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    goalsCompleted: 0,
+    supplementsInStack: suppCount,
+  };
+  const xpToday = computeXp(todayActivity, {
+    calories: targets.calories,
+    protein: targets.protein,
+  });
+
   const level = levelForXp(xp);
   return {
     xp,
+    xpToday,
     level,
     rank: rankForLevel(level.level),
     next: nextRank(level.level),

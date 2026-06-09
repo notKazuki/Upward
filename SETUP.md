@@ -328,7 +328,7 @@ shareable**. Set a **username** (Account) to be discoverable.
 **Levels, ranks & achievements** — also run
 [`supabase/achievements.sql`](supabase/achievements.sql) (records which badges
 you've earned + when). The **Progress** page shows your XP level, **rank**
-(Base Camp → Peak), and 40 achievements. XP is computed from real activity
+(Base Camp → Peak), and 48 achievements. XP is computed from real activity
 (capped per day so it can't be farmed); earning badges grants bonus XP. Your
 rank and badges appear on your profile only if you set those sections to
 Friends/Anyone.

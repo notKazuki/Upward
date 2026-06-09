@@ -31,8 +31,16 @@ function LevelRing({ level, progress, color }: { level: number; progress: number
   );
 }
 
-export default function RankHero({ progress, name }: { progress: Progress; name?: string }) {
-  const { level, rank, next, xp } = progress;
+export default function RankHero({
+  progress,
+  name,
+  showToday = false,
+}: {
+  progress: Progress;
+  name?: string;
+  showToday?: boolean;
+}) {
+  const { level, rank, next, xp, xpToday } = progress;
   const levelsToNext = next ? next.minLevel - level.level : 0;
 
   return (
@@ -47,6 +55,11 @@ export default function RankHero({ progress, name }: { progress: Progress; name?
             >
               {rank.name}
             </span>
+            {showToday && (
+              <span className="rounded-full bg-paper px-2.5 py-0.5 text-xs font-medium text-ink-soft">
+                +{xpToday.toLocaleString()} XP today
+              </span>
+            )}
             {name && <span className="text-sm text-muted">{name}</span>}
           </div>
           <p className="mt-2 font-display text-2xl text-ink">{xp.toLocaleString()} XP</p>

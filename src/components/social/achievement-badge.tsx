@@ -4,10 +4,13 @@ export default function AchievementBadge({
   achievement,
   earned,
   earnedOn,
+  progress,
 }: {
   achievement: Achievement;
   earned: boolean;
   earnedOn?: string;
+  /** Progress toward a locked badge (omit for earned or compound badges). */
+  progress?: { current: number; target: number; pct: number } | null;
 }) {
   const tier = TIERS[achievement.tier];
   const date =
@@ -42,12 +45,25 @@ export default function AchievementBadge({
           </svg>
         )}
       </span>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className={`truncate text-sm font-medium ${earned ? "text-ink" : "text-faint"}`}>
           {achievement.label}
         </p>
         <p className="truncate text-xs text-muted">{achievement.description}</p>
         {date && <p className="text-[0.7rem] text-faint">Earned {date}</p>}
+        {!earned && progress && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-line">
+              <div
+                className="h-full rounded-full transition-[width] duration-500"
+                style={{ width: `${progress.pct}%`, backgroundColor: tier.color }}
+              />
+            </div>
+            <span className="shrink-0 text-[0.65rem] tabular-nums text-faint">
+              {progress.current.toLocaleString()}/{progress.target.toLocaleString()}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
