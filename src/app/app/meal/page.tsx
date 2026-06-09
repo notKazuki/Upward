@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import DashboardCard from "@/components/dashboard/card";
 import MealComposer from "@/components/meal/meal-composer";
+import MealDay from "@/components/meal/meal-day";
 import TargetsEditor from "@/components/meal/targets-editor";
 import GoalSelector from "@/components/meal/goal-selector";
 import { createClient } from "@/lib/supabase/server";
@@ -9,7 +10,6 @@ import type { Gender } from "@/lib/onboarding";
 import {
   effectiveTargets,
   MACROS,
-  MEAL_TYPES,
   pct,
   suggestTargets,
   sumMeals,
@@ -19,7 +19,6 @@ import {
   type Targets,
 } from "@/lib/nutrition";
 import { serverToday } from "@/lib/server-today";
-import { deleteMeal } from "./actions";
 
 export const metadata: Metadata = { title: "Meal — Upward" };
 
@@ -168,62 +167,8 @@ export default async function MealPage() {
           <MealComposer favorites={favorites} />
         </DashboardCard>
 
-        <DashboardCard title="Today" className="lg:col-span-3">
-          {meals.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-12 text-center">
-              <p className="font-display text-xl text-ink">Nothing logged yet</p>
-              <p className="max-w-xs text-sm text-muted">
-                Add your first meal on the left — totals and macros update as you
-                go.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-5">
-              {MEAL_TYPES.map((mt) => {
-                const items = meals.filter((m) => m.meal_type === mt.id);
-                if (items.length === 0) return null;
-                const groupCals = items.reduce((a, m) => a + m.calories, 0);
-                return (
-                  <div key={mt.id}>
-                    <div className="mb-2 flex items-baseline justify-between">
-                      <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">
-                        {mt.label}
-                      </h3>
-                      <span className="text-xs text-muted">{groupCals} kcal</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {items.map((m) => (
-                        <li
-                          key={m.id}
-                          className="flex items-start justify-between gap-4 rounded-xl border border-line bg-paper-bright px-4 py-2.5"
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate font-medium text-ink">
-                              {m.name}
-                            </p>
-                            <p className="text-xs text-muted">
-                              {m.calories} kcal · P{m.protein} · C{m.carbs} · F
-                              {m.fat}
-                            </p>
-                          </div>
-                          <form action={deleteMeal}>
-                            <input type="hidden" name="id" value={m.id} />
-                            <button
-                              type="submit"
-                              aria-label={`Delete ${m.name}`}
-                              className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg text-faint transition-colors hover:bg-card hover:text-danger"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" /></svg>
-                            </button>
-                          </form>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        <DashboardCard title="Logged meals" className="lg:col-span-3">
+          <MealDay initial={meals} />
         </DashboardCard>
       </div>
     </div>

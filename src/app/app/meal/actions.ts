@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import type { FoodItem, Goal, MealType, Targets } from "@/lib/nutrition";
+import type { FoodItem, Goal, Meal, MealType, Targets } from "@/lib/nutrition";
 import { searchUsda } from "@/lib/usda";
 import type { Food } from "@/lib/food-db";
 
@@ -13,6 +13,75 @@ export async function searchFoodsLive(query: string): Promise<Food[]> {
   const user = await currentUser();
   if (!user) return [];
   return searchUsda(query, 8);
+}
+
+/** All meals logged on a given day — powers the history browser. */
+export async function listMealsForDay(date: string): Promise<Meal[]> {
+  const user = await currentUser();
+  if (!user || !date) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("meals")
+    .select("*")
+    .eq("eaten_on", date)
+    .order("created_at", { ascending: true });
+  return (data ?? []) as Meal[];
+}
+
+/** Edit a logged meal item — name, type, macros, or even the day it was eaten. */
+export async function updateMeal(input: {
+  id: string;
+  name: string;
+  mealType: string;
+  date: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}): Promise<{ ok?: boolean; error?: string }> {
+  const user = await currentUser();
+  if (!user) return { error: "Session expired." };
+  const id = input.id?.trim();
+  if (!id) return { error: "Missing meal." };
+  const name = (input.name ?? "").trim().slice(0, 80);
+  if (!name) return { error: "Give the item a name." };
+  const mealType = input.mealType as MealType;
+  if (!VALID.includes(mealType)) return { error: "Pick a meal type." };
+  if (!input.date) return { error: "Pick a date." };
+  const n = (v: unknown) => {
+    const x = Math.round(Number(v));
+    return Number.isFinite(x) && x >= 0 ? x : 0;
+  };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("meals")
+    .update({
+      name,
+      meal_type: mealType,
+      eaten_on: input.date,
+      calories: n(input.calories),
+      protein: n(input.protein),
+      carbs: n(input.carbs),
+      fat: n(input.fat),
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) return { error: "Couldn't save your changes." };
+  revalidatePath("/app/meal");
+  revalidatePath("/app");
+  return { ok: true };
+}
+
+/** Callable delete (the form-action variant stays for the server-rendered list). */
+export async function removeMeal(id: string): Promise<{ ok?: boolean }> {
+  const user = await currentUser();
+  if (!user || !id) return {};
+  const supabase = await createClient();
+  await supabase.from("meals").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/app/meal");
+  revalidatePath("/app");
+  return { ok: true };
 }
 
 const GOALS: Goal[] = ["lose", "maintain", "gain"];
