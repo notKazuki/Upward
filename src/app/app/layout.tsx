@@ -60,6 +60,14 @@ export default async function AppLayout({
     .maybeSingle();
   const displayName = ((dn.data?.display_name as string | null) ?? "").trim();
 
+  // Admin flag (separate tolerant query — column arrives with admin.sql).
+  const adminRes = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isAdmin = !adminRes.error && Boolean(adminRes.data?.is_admin);
+
   // Prefer the display name, then the username, then first name / email.
   const name =
     displayName ||
@@ -80,6 +88,7 @@ export default async function AppLayout({
           initials: initialsFrom(displayName || username || fullName, email),
           avatarUrl: (profile?.avatar_url as string | null) ?? null,
           username: username || null,
+          isAdmin,
         }}
       >
         {children}

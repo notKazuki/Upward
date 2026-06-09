@@ -84,7 +84,8 @@ export default function PrivacySettings({
       <div>
         <p className="mb-1 text-sm font-medium text-ink-soft">What others can see</p>
         <p className="mb-3 text-xs text-muted">
-          Everything is private by default. Your journal is never shared.
+          Everything is private by default. Journal photos are never shared —
+          only entry text and mood, and only if you allow it.
         </p>
         <ul className="space-y-2">
           {SECTIONS.map((s) => {

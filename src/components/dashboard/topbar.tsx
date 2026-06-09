@@ -14,6 +14,7 @@ export type SessionUser = {
   initials: string;
   avatarUrl: string | null;
   username: string | null;
+  isAdmin: boolean;
 };
 
 export default function Topbar({
@@ -146,6 +147,17 @@ function ProfileMenu({ user }: { user: SessionUser }) {
               <Icon name="settings" size={18} />
               Settings
             </Link>
+            {user.isAdmin && (
+              <Link
+                href="/app/dev"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ember transition-colors hover:bg-paper"
+              >
+                <Icon name="dashboard" size={18} />
+                Dev panel
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-line p-1.5">
