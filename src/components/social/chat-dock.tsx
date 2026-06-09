@@ -32,11 +32,21 @@ export default function ChatDock() {
   }
 
   useEffect(() => {
-    void refresh();
+    let cancelled = false;
+    void (async () => {
+      const res = await listConversations();
+      if (cancelled) return;
+      setConvos(res.conversations);
+      setMeId(res.meId);
+      setTotalUnread(res.totalUnread);
+    })();
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
     }, 45_000);
-    return () => window.clearInterval(id);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, []);
 
   async function openThread(c: Conversation) {
@@ -73,7 +83,7 @@ export default function ChatDock() {
           <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.6 8.6 0 0 1-4-1L3 21l2-5.5A8.5 8.5 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5Z" />
         </svg>
         {totalUnread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-ember px-1 text-[0.6rem] font-semibold leading-4 text-paper-bright">
+          <span className="u-badge-pulse absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-ember px-1 text-[0.6rem] font-semibold leading-4 text-paper-bright">
             {totalUnread > 9 ? "9+" : totalUnread}
           </span>
         )}

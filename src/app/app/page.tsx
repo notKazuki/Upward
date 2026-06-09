@@ -239,7 +239,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="u-rise u-d1">
-        <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">
+        <h1 className="u-gradient-text font-display text-[2rem] font-normal tracking-tight">
           Dashboard
         </h1>
         <p className="mt-1 text-sm text-muted">
@@ -260,7 +260,7 @@ export default async function DashboardPage() {
       {/* Stat cards */}
       <div className="u-rise u-d2 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-line bg-card p-5">
+          <div key={s.label} className="u-glow-border u-hover-glow rounded-2xl border border-line bg-card p-5">
             <div className="flex items-center gap-2 text-faint">
               <Icon name={s.icon as IconName} size={16} />
               <span className="text-xs font-semibold uppercase tracking-[0.12em]">

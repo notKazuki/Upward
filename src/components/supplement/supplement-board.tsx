@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Icon from "@/components/icons";
 import {
   addSupplement,
@@ -11,7 +11,6 @@ import {
 } from "@/app/app/supplement/actions";
 import {
   TIMINGS,
-  timingLabel,
   todayYmd,
   weekdayLetter,
   type Supplement,
@@ -33,7 +32,7 @@ export default function SupplementBoard({
   days: string[];
 }) {
   const today = todayYmd();
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   // Optimistic overrides for checkboxes, keyed by `${supplementId}|${date}` —
   // today's row and the history dots both toggle through this.
   const [optimistic, setOptimistic] = useState<Record<string, boolean>>({});
@@ -47,7 +46,11 @@ export default function SupplementBoard({
   // Drop an optimistic override only once the refreshed server data agrees with
   // it. Clearing it eagerly (right after the action) raced the revalidation and
   // briefly showed the stale value — the "check → uncheck → check" flicker.
-  useEffect(() => {
+  // Reconciled during render (React's blessed "adjust state on prop change"
+  // pattern) instead of an effect.
+  const [seenServerData, setSeenServerData] = useState(takenBySupplement);
+  if (seenServerData !== takenBySupplement) {
+    setSeenServerData(takenBySupplement);
     setOptimistic((prev) => {
       if (Object.keys(prev).length === 0) return prev;
       let changed = false;
@@ -62,7 +65,7 @@ export default function SupplementBoard({
       }
       return changed ? next : prev;
     });
-  }, [takenBySupplement]);
+  }
 
   function toggle(id: string, date: string = today) {
     const next = !isTaken(id, date);

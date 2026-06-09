@@ -37,13 +37,20 @@ export default function NotificationsBell() {
 
   // Initial load + light polling while the tab is visible.
   useEffect(() => {
-    void refresh();
+    let cancelled = false;
+    void (async () => {
+      const res = await listNotifications();
+      if (cancelled) return;
+      setItems(res.items);
+      setUnread(res.unread);
+    })();
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
     }, 60_000);
     const onFocus = () => void refresh();
     window.addEventListener("focus", onFocus);
     return () => {
+      cancelled = true;
       window.clearInterval(id);
       window.removeEventListener("focus", onFocus);
     };
@@ -91,7 +98,7 @@ export default function NotificationsBell() {
           <path d="M13.7 21a2 2 0 0 1-3.4 0" />
         </svg>
         {unread > 0 && (
-          <span className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-full bg-ember px-1 text-[0.6rem] font-semibold leading-4 text-paper-bright">
+          <span className="u-badge-pulse absolute right-1 top-1 grid min-w-4 place-items-center rounded-full bg-ember px-1 text-[0.6rem] font-semibold leading-4 text-paper-bright">
             {unread > 9 ? "9+" : unread}
           </span>
         )}

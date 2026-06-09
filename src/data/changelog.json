@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-06-09",
+    "title": "Notifications, mini chat, leaderboard & a big tune-up",
+    "items": [
+      "New notification bell — achievement unlocks, friend requests and announcements land top-right; plus a mini chat dock next to the theme toggle.",
+      "Friends leaderboard: weekly XP, streaks, workouts and win rate. Profiles can now share recent workouts (with sets), meals, goals — and journal entries (text & mood only) if you allow it.",
+      "Streaks now count ANY logged activity (meals, journal, supplements, goals too), achievements show progress bars with a 'nearly there' shelf and 8 new early badges, and you can edit past meals and supplement days (including 'took a different amount').",
+      "Fixed: the '999 days' message, clipped chart axes, placeholder workout suggestions for custom split days, and confusing empty stats."
+    ]
+  },
+  {
     "date": "2026-06-04",
     "title": "Live chat fix + Valorant rank tracker",
     "items": [
