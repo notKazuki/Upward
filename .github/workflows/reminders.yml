@@ -1,0 +1,35 @@
+name: Send reminders
+
+# Fires the app's /api/cron endpoint every 15 minutes so timezone-aware
+# reminders (supplements, streak-at-risk, weekly digest) go out as web push.
+#
+# Setup (once): add two repo secrets —
+#   APP_URL     = your deployed origin, e.g. https://upward-xyz.vercel.app
+#   CRON_SECRET = the same value as the CRON_SECRET env var in Vercel
+# Without them this workflow exits quietly.
+#
+# Note: GitHub schedules can lag 5–15 minutes under load — fine for reminders.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: reminders
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the cron endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "APP_URL / CRON_SECRET not set — skipping (add them in repo Settings → Secrets)."
+            exit 0
+          fi
+          curl -fsS --max-time 55 "$APP_URL/api/cron?key=$CRON_SECRET"
