@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import UnitSettings from "@/components/settings/unit-settings";
+import PushSettings from "@/components/settings/push-settings";
 import PrivacySettings from "@/components/social/privacy-settings";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
@@ -45,6 +46,10 @@ export default async function SettingsPage() {
 
       <DashboardCard title="Units">
         <UnitSettings current={pref} />
+      </DashboardCard>
+
+      <DashboardCard title="Notifications">
+        <PushSettings vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null} />
       </DashboardCard>
 
       <DashboardCard
