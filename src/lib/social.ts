@@ -1,5 +1,6 @@
 // Social foundation — shared types + the per-section privacy model.
-// Journal is intentionally absent: it is never shareable.
+// Everything defaults to private. Journal photos are never shared (entries can
+// be, text + mood only, if the user opts in).
 
 export type Visibility = "private" | "friends" | "public";
 
@@ -10,7 +11,8 @@ export type SectionId =
   | "workouts"
   | "nutrition"
   | "gaming"
-  | "goals";
+  | "goals"
+  | "journal";
 
 export type PrivacyMap = Partial<Record<SectionId, Visibility>>;
 
@@ -19,10 +21,11 @@ export const SECTIONS: { id: SectionId; label: string; hint: string }[] = [
   { id: "stats", label: "Activity overview", hint: "Streak, active days, this-week totals" },
   { id: "rank", label: "Level & rank", hint: "Your XP level and rank tier" },
   { id: "achievements", label: "Achievements", hint: "Badges you've earned" },
-  { id: "workouts", label: "Workouts", hint: "Training frequency and volume" },
-  { id: "nutrition", label: "Nutrition", hint: "Calorie & protein consistency" },
+  { id: "workouts", label: "Workouts", hint: "Recent sessions, sets and volume" },
+  { id: "nutrition", label: "Nutrition", hint: "Recent meals & macro consistency" },
   { id: "gaming", label: "Gaming", hint: "Games, matches and win rate" },
   { id: "goals", label: "Goals", hint: "Active goals and progress" },
+  { id: "journal", label: "Journal", hint: "Recent entries — text & mood only, photos stay private" },
 ];
 
 export const VISIBILITY_OPTIONS: { id: Visibility; label: string }[] = [

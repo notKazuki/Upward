@@ -117,3 +117,45 @@ export async function toggleTaken(
   revalidatePath("/app/supplement");
   return { ok: true };
 }
+
+/**
+ * Record what was actually consumed on a day when it differed from the usual
+ * dose ("took 10 g instead of 5 g"). Empty string clears the override. Marks
+ * the day taken if it wasn't yet.
+ */
+export async function setDoseTaken(
+  supplementId: string,
+  date: string,
+  dose: string,
+): Promise<Result> {
+  const supabase = await createClient();
+  const user = await currentUser();
+  if (!user) return { error: "Session expired." };
+  if (!supplementId || !date) return { error: "Missing data." };
+  const value = clean(dose, 40);
+
+  const { data: existing } = await supabase
+    .from("supplement_logs")
+    .select("id")
+    .eq("supplement_id", supplementId)
+    .eq("taken_on", date)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const res = existing
+    ? await supabase
+        .from("supplement_logs")
+        .update({ dose_taken: value })
+        .eq("id", existing.id)
+    : await supabase.from("supplement_logs").insert({
+        user_id: user.id,
+        supplement_id: supplementId,
+        taken_on: date,
+        dose_taken: value,
+      });
+  if (res.error) {
+    return { error: "Couldn't save. Make sure you've run supabase/supplement-dose.sql." };
+  }
+  revalidatePath("/app/supplement");
+  return { ok: true };
+}

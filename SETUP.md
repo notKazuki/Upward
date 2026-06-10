@@ -328,7 +328,7 @@ shareable**. Set a **username** (Account) to be discoverable.
 **Levels, ranks & achievements** — also run
 [`supabase/achievements.sql`](supabase/achievements.sql) (records which badges
 you've earned + when). The **Progress** page shows your XP level, **rank**
-(Base Camp → Peak), and 40 achievements. XP is computed from real activity
+(Base Camp → Peak), and 48 achievements. XP is computed from real activity
 (capped per day so it can't be farmed); earning badges grants bonus XP. Your
 rank and badges appear on your profile only if you set those sections to
 Friends/Anyone.
@@ -337,7 +337,34 @@ Friends/Anyone.
 RLS and enables **Realtime**). Then **Chat** (sidebar) lists your conversations
 and `/app/chat/<username>` is a live 1:1 thread. You can only message **accepted
 friends**, and that's enforced in the database (the insert policy checks the
-friendship and that neither side has blocked the other), not just the UI.
+friendship and that neither side has blocked the other), not just the UI. A
+**mini chat dock** (message icon beside the theme toggle) opens a compact
+version from anywhere in the app.
+
+**Notifications** — run [`supabase/notifications.sql`](supabase/notifications.sql).
+The bell (top right) collects achievement unlocks, friend requests/accepts, and
+admin announcements.
+
+**Shared profile feeds & leaderboard** — profiles can now show recent workouts
+(with sets), meal days, goal progress, and **journal entries** (text + mood
+only — photos never leave the private bucket), each behind its own privacy
+toggle, default private. `/app/leaderboard` races you against your friends on
+weekly XP, streak, workouts and win rate.
+
+**Dev panel (admins)** — run [`supabase/admin.sql`](supabase/admin.sql) (adds
+`profiles.is_admin` with a trigger that blocks self-granting, and seeds
+`@kaz`). Admins get a **Dev panel** entry in the avatar menu: app-wide stats,
+member directory, announcements to every bell, and grant/revoke admin.
+
+**Supplement doses** — run [`supabase/supplement-dose.sql`](supabase/supplement-dose.sql)
+to enable per-day "took a different amount" overrides.
+
+**Database advisor fixes** — [`supabase/zz-advisor-fixes.sql`](supabase/zz-advisor-fixes.sql)
+rewrites every RLS policy to use `(select auth.uid())` (Supabase's
+`auth_rls_initplan` performance lint). It runs last and is a no-op once
+applied. Note: some Supabase **Advisors** items are dashboard toggles that SQL
+can't fix (e.g. *leaked password protection*) — check Advisors after applying
+and flip those by hand.
 
 ## I. Update log → Discord (optional)
 

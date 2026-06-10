@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, isAdminConfigured } from "@/lib/supabase/admin";
 import { currentUser } from "@/lib/auth";
+import { notifyUser } from "@/lib/notify";
 import {
   SECTIONS,
   VISIBILITY_OPTIONS,
@@ -17,6 +18,19 @@ export type UserStatus = "self" | "friend" | "outgoing" | "incoming" | "none";
 export type UserResult = PublicProfile & { status: UserStatus };
 
 const PCOLS = "id, username, display_name, avatar_url, bio";
+
+/** The current user's public-facing name + profile link, for notifications. */
+async function myIdentity(meId: string): Promise<{ name: string; href?: string }> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("username, display_name")
+    .eq("id", meId)
+    .maybeSingle();
+  const username = (data?.username as string | null) ?? null;
+  const name = (data?.display_name as string | null) || username || "Someone";
+  return { name, href: username ? `/app/u/${username}` : "/app/friends" };
+}
 
 /** Search members by username. Excludes self and anyone blocked either way. */
 export async function searchUsers(query: string): Promise<UserResult[]> {
@@ -95,6 +109,12 @@ export async function sendFriendRequest(targetId: string): Promise<{ ok?: boolea
       .update({ status: "accepted", updated_at: new Date().toISOString() })
       .eq("id", incoming.id)
       .eq("addressee_id", me.id);
+    const who = await myIdentity(me.id);
+    await notifyUser(targetId, {
+      type: "friend_accept",
+      title: `${who.name} accepted your friend request`,
+      href: who.href,
+    });
     revalidatePath("/app/friends");
     return { ok: true };
   }
@@ -107,6 +127,12 @@ export async function sendFriendRequest(targetId: string): Promise<{ ok?: boolea
     if (error.code === "23505") return { ok: true };
     return { error: "Couldn't send the request. Make sure you've run supabase/social.sql." };
   }
+  const who = await myIdentity(me.id);
+  await notifyUser(targetId, {
+    type: "friend_request",
+    title: `${who.name} sent you a friend request`,
+    href: "/app/friends",
+  });
   revalidatePath("/app/friends");
   return { ok: true };
 }
@@ -119,11 +145,25 @@ export async function respondToRequest(
   if (!me || !friendshipId) return {};
   const supabase = await createClient();
   if (accept) {
+    const { data: row } = await supabase
+      .from("friendships")
+      .select("requester_id")
+      .eq("id", friendshipId)
+      .eq("addressee_id", me.id)
+      .maybeSingle();
     await supabase
       .from("friendships")
       .update({ status: "accepted", updated_at: new Date().toISOString() })
       .eq("id", friendshipId)
       .eq("addressee_id", me.id);
+    if (row?.requester_id) {
+      const who = await myIdentity(me.id);
+      await notifyUser(row.requester_id as string, {
+        type: "friend_accept",
+        title: `${who.name} accepted your friend request`,
+        href: who.href,
+      });
+    }
   } else {
     await supabase.from("friendships").delete().eq("id", friendshipId).eq("addressee_id", me.id);
   }

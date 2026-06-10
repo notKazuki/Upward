@@ -13,6 +13,8 @@ export default async function SupplementPage() {
   const days = daysEnding(await serverToday(), 7);
   const since = days[0];
 
+  // dose_taken arrives with a newer migration — fall back without it so the
+  // page keeps working before supabase/supplement-dose.sql is applied.
   const [suppRes, logRes] = await Promise.all([
     supabase
       .from("supplements")
@@ -20,16 +22,28 @@ export default async function SupplementPage() {
       .order("created_at", { ascending: true }),
     supabase
       .from("supplement_logs")
-      .select("supplement_id, taken_on, id")
+      .select("supplement_id, taken_on, id, dose_taken")
       .gte("taken_on", since),
   ]);
+  const logsFallback = logRes.error
+    ? await supabase
+        .from("supplement_logs")
+        .select("supplement_id, taken_on, id")
+        .gte("taken_on", since)
+    : null;
 
   const tableMissing = Boolean(suppRes.error);
   const supplements = (suppRes.data ?? []) as Supplement[];
-  const logs = (logRes.data ?? []) as SupplementLog[];
+  const logs = ((logRes.error ? logsFallback?.data : logRes.data) ?? []) as (SupplementLog & {
+    dose_taken?: string | null;
+  })[];
 
   const takenBySupplement: Record<string, string[]> = {};
-  for (const l of logs) (takenBySupplement[l.supplement_id] ??= []).push(l.taken_on);
+  const doseByKey: Record<string, string> = {};
+  for (const l of logs) {
+    (takenBySupplement[l.supplement_id] ??= []).push(l.taken_on);
+    if (l.dose_taken) doseByKey[`${l.supplement_id}|${l.taken_on}`] = l.dose_taken;
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -53,6 +67,7 @@ export default async function SupplementPage() {
         <SupplementBoard
           supplements={supplements}
           takenBySupplement={takenBySupplement}
+          doseByKey={doseByKey}
           days={days}
         />
       )}

@@ -18,6 +18,7 @@ import {
 import {
   earnedIds,
   achievementXp,
+  ACHIEVEMENTS_BY_ID,
   type AchievementStats,
 } from "@/lib/achievements";
 import { suggestTargets, effectiveTargets, type Targets } from "@/lib/nutrition";
@@ -27,6 +28,7 @@ type Db = Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createAdm
 
 export type Progress = {
   xp: number;
+  xpToday: number;
   level: LevelInfo;
   rank: Rank;
   next: Rank | null;
@@ -127,7 +129,16 @@ async function loadProgress(db: Db, userId: string): Promise<Progress> {
   const wins = sessions.reduce((a, s) => a + s.wins, 0);
   const losses = sessions.reduce((a, s) => a + s.losses, 0);
   const matches = sessions.reduce((a, s) => a + s.matches, 0);
-  const activeDays = new Set<string>([...workoutDays, ...gamingDays]);
+  // Streak achievements use the same "did anything" definition as the
+  // dashboard streak: any tracked action keeps the day alive.
+  const activeDays = new Set<string>([
+    ...workoutDays,
+    ...gamingDays,
+    ...mealDays.keys(),
+    ...activity.journalDays,
+    ...suppDays.keys(),
+    ...activity.goalCheckinDays,
+  ]);
 
   const baseStats: Omit<AchievementStats, "level"> = {
     workouts: workouts.length,
@@ -155,9 +166,33 @@ async function loadProgress(db: Db, userId: string): Promise<Progress> {
   ids = earnedIds(stats);
   xp = xpBase + achievementXp(ids);
 
+  // XP earned today — the same engine restricted to today's activity, so the
+  // daily caps read as a goal instead of an invisible limit.
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const todayActivity: DailyActivity = {
+    workoutDays: workoutDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    mealDays: mealDays.has(todayStr)
+      ? new Map([[todayStr, mealDays.get(todayStr)!]])
+      : new Map(),
+    journalDays: activity.journalDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    supplementDays: suppDays.has(todayStr)
+      ? new Map([[todayStr, suppDays.get(todayStr)!]])
+      : new Map(),
+    gamingDays: gamingDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    goalCheckinDays: activity.goalCheckinDays.has(todayStr) ? new Set([todayStr]) : new Set(),
+    goalsCompleted: 0,
+    supplementsInStack: suppCount,
+  };
+  const xpToday = computeXp(todayActivity, {
+    calories: targets.calories,
+    protein: targets.protein,
+  });
+
   const level = levelForXp(xp);
   return {
     xp,
+    xpToday,
     level,
     rank: rankForLevel(level.level),
     next: nextRank(level.level),
@@ -191,6 +226,28 @@ export async function getOwnProgress(): Promise<Progress | null> {
     await db.from("achievements").insert(toInsert.map((id) => ({ user_id: me.id, achievement_id: id })));
     const today = new Date().toISOString().slice(0, 10);
     for (const id of toInsert) have.set(id, today);
+
+    // Bell notifications for fresh unlocks (self-insert; best-effort — skip
+    // the very first sync so a new account isn't spammed with a backlog).
+    if (toInsert.length <= 5) {
+      const rows = toInsert
+        .map((id) => ACHIEVEMENTS_BY_ID.get(id))
+        .filter((a): a is NonNullable<typeof a> => Boolean(a))
+        .map((a) => ({
+          user_id: me.id,
+          type: "achievement",
+          title: `Achievement unlocked: ${a.label}`,
+          body: a.description,
+          href: "/app/progress",
+        }));
+      if (rows.length > 0) {
+        try {
+          await db.from("notifications").insert(rows);
+        } catch {
+          /* notifications table may not exist yet */
+        }
+      }
+    }
   }
   progress.earned = earnedIdsNow.map((id) => ({ id, earned_on: have.get(id) ?? "" }));
   return progress;

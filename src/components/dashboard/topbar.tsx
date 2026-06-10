@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/icons";
 import Changelog from "@/components/dashboard/changelog";
+import NotificationsBell from "@/components/dashboard/notifications-bell";
 import { createClient } from "@/lib/supabase/client";
 
 export type SessionUser = {
@@ -12,6 +13,8 @@ export type SessionUser = {
   email: string;
   initials: string;
   avatarUrl: string | null;
+  username: string | null;
+  isAdmin: boolean;
 };
 
 export default function Topbar({
@@ -43,6 +46,7 @@ export default function Topbar({
 
       <div className="flex items-center gap-1">
         <Changelog />
+        <NotificationsBell />
         <ProfileMenu user={user} />
       </div>
     </header>
@@ -117,6 +121,15 @@ function ProfileMenu({ user }: { user: SessionUser }) {
 
           <div className="p-1.5">
             <Link
+              href={user.username ? `/app/u/${user.username}` : "/app/account"}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-paper"
+            >
+              <Icon name="user" size={18} />
+              Profile
+            </Link>
+            <Link
               href="/app/account"
               role="menuitem"
               onClick={() => setOpen(false)}
@@ -134,6 +147,17 @@ function ProfileMenu({ user }: { user: SessionUser }) {
               <Icon name="settings" size={18} />
               Settings
             </Link>
+            {user.isAdmin && (
+              <Link
+                href="/app/dev"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ember transition-colors hover:bg-paper"
+              >
+                <Icon name="dashboard" size={18} />
+                Dev panel
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-line p-1.5">

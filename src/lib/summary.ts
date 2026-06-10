@@ -117,6 +117,14 @@ export function buildSummary(a: Aggregates): Token[] {
     ]));
   }
 
+  /* Split day never trained at all (no day-math against nothing) */
+  if (a.untrainedDay) {
+    add(62, pick(rng, [
+      [t("You haven't logged a "), em(a.untrainedDay), t(" day yet — give it its first session. ")],
+      [em(a.untrainedDay), t(" is still untouched in your split. ")],
+    ]));
+  }
+
   /* Gaming win-rate trend */
   if (a.hasGaming && a.week.winRate !== null && a.lastWeek.winRate !== null) {
     const d = a.week.winRate - a.lastWeek.winRate;

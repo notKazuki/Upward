@@ -51,14 +51,14 @@ export default async function AppLayout({
   const email = user.email ?? "";
   const username = (profile?.username as string | undefined) ?? "";
 
-  // Display name (freely editable) is fetched separately so a missing column
-  // (migration not yet run) doesn't break the layout.
-  const dn = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  // Display name + admin flag are fetched separately (and in parallel) so a
+  // missing column from a not-yet-run migration doesn't break the layout.
+  const [dn, adminRes] = await Promise.all([
+    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
+  ]);
   const displayName = ((dn.data?.display_name as string | null) ?? "").trim();
+  const isAdmin = !adminRes.error && Boolean(adminRes.data?.is_admin);
 
   // Prefer the display name, then the username, then first name / email.
   const name =
@@ -79,6 +79,8 @@ export default async function AppLayout({
           email,
           initials: initialsFrom(displayName || username || fullName, email),
           avatarUrl: (profile?.avatar_url as string | null) ?? null,
+          username: username || null,
+          isAdmin,
         }}
       >
         {children}

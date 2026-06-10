@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import RankHero from "@/components/social/rank-hero";
 import AchievementBadge from "@/components/social/achievement-badge";
 import { getOwnProgress } from "@/lib/progress-data";
-import { ACHIEVEMENTS, type Achievement } from "@/lib/achievements";
+import {
+  ACHIEVEMENTS,
+  achievementProgress,
+  type Achievement,
+  type AchievementCategory,
+} from "@/lib/achievements";
 
 export const metadata: Metadata = { title: "Progress — Upward" };
 
-const CATEGORY_ORDER: Achievement["category"][] = [
+const CATEGORY_ORDER: AchievementCategory[] = [
   "Training",
   "Nutrition",
   "Mind",
@@ -18,7 +24,12 @@ const CATEGORY_ORDER: Achievement["category"][] = [
   "Rank",
 ];
 
-export default async function ProgressPage() {
+export default async function ProgressPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cat?: string }>;
+}) {
+  const sp = await searchParams;
   const progress = await getOwnProgress();
 
   if (!progress) {
@@ -38,21 +49,71 @@ export default async function ProgressPage() {
   const earned = new Map(progress.earned.map((e) => [e.id, e.earned_on]));
   const totalEarned = progress.earned.length;
 
-  const groups = CATEGORY_ORDER.map((cat) => ({
-    category: cat,
-    items: ACHIEVEMENTS.filter((a) => a.category === cat),
-  })).filter((g) => g.items.length > 0);
+  // "Nearly there": closest locked, progress-trackable badges.
+  const nearly = ACHIEVEMENTS.filter((a) => !earned.has(a.id))
+    .map((a) => ({ a, p: achievementProgress(a, progress.stats) }))
+    .filter((x): x is { a: Achievement; p: NonNullable<ReturnType<typeof achievementProgress>> } => x.p !== null && x.p.pct > 0)
+    .sort((x, y) => y.p.pct - x.p.pct)
+    .slice(0, 3);
+
+  const activeCat = CATEGORY_ORDER.find((c) => c === sp.cat) ?? null;
+  const cats = activeCat ? [activeCat] : CATEGORY_ORDER;
+  const groups = cats
+    .map((cat) => ({ category: cat, items: ACHIEVEMENTS.filter((a) => a.category === cat) }))
+    .filter((g) => g.items.length > 0);
+
+  const countFor = (cat: AchievementCategory) =>
+    ACHIEVEMENTS.filter((a) => a.category === cat && earned.has(a.id)).length;
+  const totalFor = (cat: AchievementCategory) =>
+    ACHIEVEMENTS.filter((a) => a.category === cat).length;
 
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <Header />
-      <RankHero progress={progress} />
+      <RankHero progress={progress} showToday />
 
-      <div className="flex items-center justify-between">
+      {nearly.length > 0 && (
+        <DashboardCard title="Nearly there">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {nearly.map(({ a, p }) => (
+              <AchievementBadge key={a.id} achievement={a} earned={false} progress={p} />
+            ))}
+          </div>
+        </DashboardCard>
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-xl text-ink">Achievements</h2>
         <span className="text-sm text-muted">
           {totalEarned} / {ACHIEVEMENTS.length} earned
         </span>
+      </div>
+
+      {/* Category tabs */}
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href="/app/progress"
+          className={`cursor-pointer rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+            activeCat === null
+              ? "border-ember bg-ember/10 text-ink"
+              : "border-line bg-paper-bright text-ink-soft hover:border-ember/50"
+          }`}
+        >
+          All
+        </Link>
+        {CATEGORY_ORDER.map((c) => (
+          <Link
+            key={c}
+            href={`/app/progress?cat=${c}`}
+            className={`cursor-pointer rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              activeCat === c
+                ? "border-ember bg-ember/10 text-ink"
+                : "border-line bg-paper-bright text-ink-soft hover:border-ember/50"
+            }`}
+          >
+            {c} <span className="text-faint">{countFor(c)}/{totalFor(c)}</span>
+          </Link>
+        ))}
       </div>
 
       {groups.map((g) => (
@@ -64,6 +125,7 @@ export default async function ProgressPage() {
                 achievement={a}
                 earned={earned.has(a.id)}
                 earnedOn={earned.get(a.id)}
+                progress={earned.has(a.id) ? null : achievementProgress(a, progress.stats)}
               />
             ))}
           </div>

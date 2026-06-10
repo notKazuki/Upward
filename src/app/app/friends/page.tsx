@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import FriendsClient from "@/components/social/friends-client";
 import { createClient } from "@/lib/supabase/server";
@@ -70,11 +71,19 @@ export default async function FriendsPage() {
 
 function Header() {
   return (
-    <div>
-      <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">Friends</h1>
-      <p className="mt-1 text-sm text-muted">
-        Find people by username, send requests, and see who you&rsquo;re connected with.
-      </p>
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">Friends</h1>
+        <p className="mt-1 text-sm text-muted">
+          Find people by username, send requests, and see who you&rsquo;re connected with.
+        </p>
+      </div>
+      <Link
+        href="/app/leaderboard"
+        className="cursor-pointer rounded-full border border-line bg-paper-bright px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-ember hover:text-ember"
+      >
+        Leaderboard →
+      </Link>
     </div>
   );
 }

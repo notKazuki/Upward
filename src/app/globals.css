@@ -290,6 +290,113 @@ body {
 }
 
 /* ------------------------------------------------------------------ *
+ * Glow & gradient polish
+ * ------------------------------------------------------------------ */
+/* Rotating angle for the hover outline gradient. */
+@property --u-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes u-spin-angle {
+  to {
+    --u-angle: 360deg;
+  }
+}
+
+/* Hover outline glowing gradient: a conic gradient ring (masked to the
+ * border) that fades in and slowly rotates while hovered. Pure overlay —
+ * zero layout shift. */
+.u-glow-border {
+  position: relative;
+}
+.u-glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--u-angle),
+    transparent 0%,
+    color-mix(in srgb, var(--color-ember) 70%, transparent) 12%,
+    transparent 28%,
+    transparent 55%,
+    color-mix(in srgb, var(--color-ember) 45%, transparent) 70%,
+    transparent 85%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.u-glow-border:hover::before {
+  opacity: 1;
+  animation: u-spin-angle 5s linear infinite;
+}
+
+/* Soft ambient glow + gentle lift on hover (transform only — no reflow). */
+.u-hover-glow {
+  transition:
+    transform 0.25s var(--ease-out-soft),
+    box-shadow 0.25s var(--ease-out-soft);
+}
+.u-hover-glow:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 32px -16px color-mix(in srgb, var(--color-ember) 35%, transparent),
+    0 4px 16px -8px rgba(0, 0, 0, 0.25);
+}
+
+/* Animated gradient text for hero headings. */
+@keyframes u-gradient-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.u-gradient-text {
+  background: linear-gradient(
+    100deg,
+    var(--color-ink) 30%,
+    var(--color-ember) 50%,
+    var(--color-ink) 70%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: u-gradient-pan 7s ease-in-out infinite;
+}
+
+/* Gentle pulse for live badges (unread counts). */
+@keyframes u-badge-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-ember) 45%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+.u-badge-pulse {
+  animation: u-badge-pulse 2.4s ease-out infinite;
+}
+
+/* ------------------------------------------------------------------ *
  * Accessibility — honour reduced motion
  * ------------------------------------------------------------------ */
 /* Reduced motion: drop sliding/drifting MOTION, but keep gentle opacity
@@ -309,5 +416,19 @@ body {
   }
   .u-aurora {
     animation: none;
+  }
+  /* Glow polish: keep the static glow, stop the motion. */
+  .u-glow-border:hover::before {
+    animation: none;
+  }
+  .u-gradient-text {
+    animation: none;
+  }
+  .u-badge-pulse {
+    animation: none;
+  }
+  .u-hover-glow,
+  .u-hover-glow:hover {
+    transform: none;
   }
 }

@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Icon from "@/components/icons";
 import {
   addSupplement,
   deleteSupplement,
+  setDoseTaken,
   toggleTaken,
   updateSupplement,
 } from "@/app/app/supplement/actions";
 import {
   TIMINGS,
-  timingLabel,
   todayYmd,
   weekdayLetter,
   type Supplement,
@@ -23,46 +23,55 @@ const inputCls =
 export default function SupplementBoard({
   supplements,
   takenBySupplement,
+  doseByKey,
   days,
 }: {
   supplements: Supplement[];
   takenBySupplement: Record<string, string[]>;
+  doseByKey: Record<string, string>;
   days: string[];
 }) {
   const today = todayYmd();
-  const [pending, startTransition] = useTransition();
-  // Optimistic overrides for today's checkbox, keyed by supplement id.
+  const [, startTransition] = useTransition();
+  // Optimistic overrides for checkboxes, keyed by `${supplementId}|${date}` —
+  // today's row and the history dots both toggle through this.
   const [optimistic, setOptimistic] = useState<Record<string, boolean>>({});
 
   function isTaken(id: string, date: string): boolean {
-    if (date === today && id in optimistic) return optimistic[id];
+    const key = `${id}|${date}`;
+    if (key in optimistic) return optimistic[key];
     return (takenBySupplement[id] ?? []).includes(date);
   }
 
   // Drop an optimistic override only once the refreshed server data agrees with
   // it. Clearing it eagerly (right after the action) raced the revalidation and
   // briefly showed the stale value — the "check → uncheck → check" flicker.
-  useEffect(() => {
+  // Reconciled during render (React's blessed "adjust state on prop change"
+  // pattern) instead of an effect.
+  const [seenServerData, setSeenServerData] = useState(takenBySupplement);
+  if (seenServerData !== takenBySupplement) {
+    setSeenServerData(takenBySupplement);
     setOptimistic((prev) => {
       if (Object.keys(prev).length === 0) return prev;
       let changed = false;
       const next = { ...prev };
-      for (const id of Object.keys(prev)) {
-        const serverTaken = (takenBySupplement[id] ?? []).includes(today);
-        if (serverTaken === prev[id]) {
-          delete next[id];
+      for (const key of Object.keys(prev)) {
+        const [id, date] = key.split("|");
+        const serverTaken = (takenBySupplement[id] ?? []).includes(date);
+        if (serverTaken === prev[key]) {
+          delete next[key];
           changed = true;
         }
       }
       return changed ? next : prev;
     });
-  }, [takenBySupplement, today]);
+  }
 
-  function toggle(id: string) {
-    const next = !isTaken(id, today);
-    setOptimistic((o) => ({ ...o, [id]: next }));
+  function toggle(id: string, date: string = today) {
+    const next = !isTaken(id, date);
+    setOptimistic((o) => ({ ...o, [`${id}|${date}`]: next }));
     startTransition(() => {
-      void toggleTaken(id, today);
+      void toggleTaken(id, date);
     });
   }
 
@@ -118,9 +127,10 @@ export default function SupplementBoard({
                     key={s.id}
                     supplement={s}
                     takenToday={isTaken(s.id, today)}
+                    doseToday={doseByKey[`${s.id}|${today}`] ?? null}
                     days={days}
                     isTaken={isTaken}
-                    onToggle={() => toggle(s.id)}
+                    onToggle={(date) => toggle(s.id, date)}
                   />
                 ))}
               </ul>
@@ -135,15 +145,17 @@ export default function SupplementBoard({
 function SupplementRow({
   supplement: s,
   takenToday,
+  doseToday,
   days,
   isTaken,
   onToggle,
 }: {
   supplement: Supplement;
   takenToday: boolean;
+  doseToday: string | null;
   days: string[];
   isTaken: (id: string, date: string) => boolean;
-  onToggle: () => void;
+  onToggle: (date?: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const today = todayYmd();
@@ -160,7 +172,7 @@ function SupplementRow({
     <li className="flex items-center gap-3 rounded-xl border border-line bg-paper-bright px-3 py-2.5">
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => onToggle()}
         aria-pressed={takenToday}
         aria-label={`Mark ${s.name} ${takenToday ? "not taken" : "taken"} today`}
         className={`grid size-7 shrink-0 cursor-pointer place-items-center rounded-md border transition-colors ${
@@ -179,22 +191,27 @@ function SupplementRow({
           {s.name}
           {s.dose && <span className="ml-2 text-sm font-normal text-muted">{s.dose}</span>}
         </p>
+        {takenToday && <DoseChip supplement={s} doseToday={doseToday} />}
       </div>
 
-      {/* 7-day history dots */}
-      <div className="hidden items-center gap-1 sm:flex" aria-hidden>
+      {/* 7-day history — click a day to fix a missed (or wrong) check-off */}
+      <div className="hidden items-center gap-1 sm:flex">
         {days.map((d) => {
           const on = isTaken(s.id, d);
           return (
-            <span
+            <button
               key={d}
-              title={d}
-              className={`grid size-5 place-items-center rounded-full text-[0.6rem] font-medium ${
+              type="button"
+              onClick={() => onToggle(d)}
+              title={`${d} — click to mark ${on ? "not taken" : "taken"}`}
+              aria-label={`${s.name} on ${d}: ${on ? "taken" : "not taken"} — toggle`}
+              aria-pressed={on}
+              className={`grid size-5 cursor-pointer place-items-center rounded-full text-[0.6rem] font-medium transition-colors hover:ring-1 hover:ring-ember ${
                 on ? "bg-ember/20 text-ember" : "bg-line text-faint"
               } ${d === today ? "ring-1 ring-ember/50" : ""}`}
             >
               {weekdayLetter(d)}
-            </span>
+            </button>
           );
         })}
       </div>
@@ -218,6 +235,82 @@ function SupplementRow({
         </button>
       </form>
     </li>
+  );
+}
+
+/** "Took a different amount today" — per-day dose override on the log. */
+function DoseChip({
+  supplement: s,
+  doseToday,
+}: {
+  supplement: Supplement;
+  doseToday: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(doseToday ?? "");
+  const [saved, setSaved] = useState<string | null>(doseToday);
+  const [pending, startTransition] = useTransition();
+  const today = todayYmd();
+
+  function save() {
+    const v = value.trim();
+    startTransition(async () => {
+      const res = await setDoseTaken(s.id, today, v);
+      if (!res.error) {
+        setSaved(v || null);
+        setOpen(false);
+      }
+    });
+  }
+
+  if (open) {
+    return (
+      <span className="mt-1 flex items-center gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && save()}
+          placeholder={s.dose ? `usually ${s.dose}` : "amount taken"}
+          autoFocus
+          className="w-36 rounded-lg border border-line bg-card px-2.5 py-1 text-xs text-ink placeholder:text-faint focus:border-ember focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={pending}
+          className="cursor-pointer text-xs font-medium text-ember hover:text-ink disabled:opacity-60"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="cursor-pointer text-xs text-muted hover:text-ink"
+        >
+          Cancel
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        setValue(saved ?? "");
+        setOpen(true);
+      }}
+      className="mt-0.5 cursor-pointer text-xs text-faint transition-colors hover:text-ember"
+    >
+      {saved ? (
+        <>
+          Took <span className="font-medium text-ember">{saved}</span> today · edit
+        </>
+      ) : (
+        "Took a different amount?"
+      )}
+    </button>
   );
 }
 

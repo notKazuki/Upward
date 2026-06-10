@@ -9,6 +9,7 @@ import {
   type PublicProfile,
   type Relationship,
 } from "@/lib/social";
+import { progressPct, type Goal, type GoalLog } from "@/lib/goals";
 
 type Admin = ReturnType<typeof createAdminClient>;
 function admin(): Admin | null {
@@ -190,6 +191,168 @@ export async function buildSharedStats(
       active: gs.filter((g) => g.status === "active").length,
       completed: gs.filter((g) => g.status === "completed").length,
     };
+  }
+
+  return out;
+}
+
+// --- shared detail feeds (what friends actually see) ------------------------
+export type SharedWorkout = {
+  performed_on: string;
+  title: string;
+  category: string;
+  duration_min: number | null;
+  exercises: { exercise: string; sets: string[] }[];
+};
+export type SharedMealDay = { eaten_on: string; items: number; calories: number; protein: number };
+export type SharedGoal = { title: string; pct: number; status: string };
+export type SharedJournalEntry = { entry_date: string; mood: string | null; body: string | null };
+
+export type SharedDetails = {
+  workouts?: SharedWorkout[];
+  mealDays?: SharedMealDay[];
+  goalsList?: SharedGoal[];
+  journal?: SharedJournalEntry[];
+};
+
+/**
+ * The richer feeds shown on a profile — recent workouts (with sets), recent
+ * meal days, goal progress, and journal entries (text + mood only; photos are
+ * never shared). Each list is fetched only if the section's privacy allows.
+ */
+export async function buildSharedDetails(
+  target: ProfileRow,
+  rel: Relationship,
+): Promise<SharedDetails> {
+  const db = admin();
+  const out: SharedDetails = {};
+  if (!db) return out;
+  const privacy = target.privacy ?? {};
+  const show = (s: Parameters<typeof canView>[1]) => canView(privacy, s, rel);
+
+  const [wRes, mRes, gRes, glRes, jRes] = await Promise.all([
+    show("workouts")
+      ? db
+          .from("workouts")
+          .select("id, performed_on, title, category, duration_min")
+          .eq("user_id", target.id)
+          .order("performed_on", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: [] }),
+    show("nutrition")
+      ? db
+          .from("meals")
+          .select("eaten_on, calories, protein")
+          .eq("user_id", target.id)
+          .order("eaten_on", { ascending: false })
+          .limit(120)
+      : Promise.resolve({ data: [] }),
+    show("goals")
+      ? db
+          .from("goals")
+          .select("*")
+          .eq("user_id", target.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: true })
+          .limit(6)
+      : Promise.resolve({ data: [] }),
+    show("goals")
+      ? db.from("goal_logs").select("goal_id, logged_on, value").eq("user_id", target.id)
+      : Promise.resolve({ data: [] }),
+    show("journal")
+      ? db
+          .from("journal_entries")
+          .select("entry_date, mood, body")
+          .eq("user_id", target.id)
+          .order("entry_date", { ascending: false })
+          .limit(3)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  // Workouts + their sets.
+  const workouts = (wRes.data ?? []) as {
+    id: string;
+    performed_on: string;
+    title: string;
+    category: string;
+    duration_min: number | null;
+  }[];
+  if (workouts.length > 0) {
+    const { data: setRows } = await db
+      .from("workout_sets")
+      .select("workout_id, exercise, set_index, weight, reps")
+      .in("workout_id", workouts.map((w) => w.id))
+      .order("set_index", { ascending: true });
+    const byWorkout = new Map<string, { exercise: string; sets: string[] }[]>();
+    for (const s of (setRows ?? []) as { workout_id: string; exercise: string; weight: number | null; reps: number | null }[]) {
+      const list = byWorkout.get(s.workout_id) ?? [];
+      let entry = list.find((e) => e.exercise === s.exercise);
+      if (!entry) {
+        entry = { exercise: s.exercise, sets: [] };
+        list.push(entry);
+      }
+      const label =
+        s.weight != null && s.reps != null
+          ? `${s.weight}×${s.reps}`
+          : s.reps != null
+            ? `${s.reps}`
+            : s.weight != null
+              ? `${s.weight}`
+              : "";
+      if (label) entry.sets.push(label);
+      byWorkout.set(s.workout_id, list);
+    }
+    out.workouts = workouts.map((w) => ({
+      performed_on: w.performed_on,
+      title: w.title,
+      category: w.category,
+      duration_min: w.duration_min,
+      exercises: byWorkout.get(w.id) ?? [],
+    }));
+  } else if (show("workouts")) {
+    out.workouts = [];
+  }
+
+  // Meals grouped into days (last 5 logged days).
+  if (show("nutrition")) {
+    const byDay = new Map<string, { items: number; calories: number; protein: number }>();
+    for (const m of (mRes.data ?? []) as { eaten_on: string; calories: number; protein: number }[]) {
+      const cur = byDay.get(m.eaten_on) ?? { items: 0, calories: 0, protein: 0 };
+      cur.items += 1;
+      cur.calories += m.calories || 0;
+      cur.protein += m.protein || 0;
+      byDay.set(m.eaten_on, cur);
+    }
+    out.mealDays = [...byDay.entries()]
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 5)
+      .map(([eaten_on, v]) => ({ eaten_on, ...v }));
+  }
+
+  // Goals with progress.
+  if (show("goals")) {
+    const goalLogs = (glRes.data ?? []) as GoalLog[];
+    const logsByGoal = new Map<string, GoalLog[]>();
+    for (const l of goalLogs) {
+      const arr = logsByGoal.get(l.goal_id) ?? [];
+      arr.push(l);
+      logsByGoal.set(l.goal_id, arr);
+    }
+    out.goalsList = ((gRes.data ?? []) as Goal[]).map((g) => ({
+      title: g.title,
+      pct: progressPct(g, logsByGoal.get(g.id) ?? []),
+      status: g.status,
+    }));
+  }
+
+  // Journal — text + mood only by design; photos never leave the private bucket.
+  if (show("journal")) {
+    out.journal = ((jRes.data ?? []) as SharedJournalEntry[]).map((e) => ({
+      entry_date: e.entry_date,
+      mood: e.mood,
+      body: e.body ? e.body.slice(0, 600) : null,
+    }));
   }
 
   return out;

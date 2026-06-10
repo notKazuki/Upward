@@ -20,6 +20,7 @@ import {
 import { buildSummary } from "@/lib/summary";
 import { buildReport } from "@/lib/report";
 import ScoreRing, { ringTone } from "@/components/insights/score-ring";
+import ProfileSetupCard from "@/components/dashboard/profile-setup-card";
 import {
   effectiveTargets,
   suggestTargets,
@@ -137,6 +138,20 @@ export default async function DashboardPage() {
     suggested,
   );
 
+  // Every kind of logged activity counts toward the streak, not just
+  // workouts/gaming — a meal, journal entry, supplement check-off, or goal
+  // check-in keeps the day alive.
+  const extraActiveDates = [
+    ...mealsAll.map((m) => m.eaten_on),
+    ...journal.map((j) => j.entry_date),
+    ...((suppLogRes.error ? [] : (suppLogRes.data ?? [])) as { taken_on: string }[]).map(
+      (l) => l.taken_on,
+    ),
+    ...((goalLogsRes.error ? [] : (goalLogsRes.data ?? [])) as { logged_on: string }[]).map(
+      (l) => l.logged_on,
+    ),
+  ];
+
   const a = aggregate(
     workouts,
     sessions,
@@ -150,6 +165,7 @@ export default async function DashboardPage() {
       proteinTarget: targets.protein,
     },
     today,
+    extraActiveDates,
   );
   const summary = buildSummary(a);
   const cards = statCards(a);
@@ -191,6 +207,19 @@ export default async function DashboardPage() {
   ).length;
   const suppPct = suppTotal ? Math.round((suppTaken / suppTotal) * 100) : 0;
 
+  // Profile completeness (separate tolerant query — columns span migrations).
+  const identityRes = user
+    ? await supabase
+        .from("profiles")
+        .select("username, display_name, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null, error: null };
+  const identity = identityRes.error ? null : identityRes.data;
+  const setupNeeded =
+    identity !== null &&
+    (!identity.username || !identity.display_name || !identity.avatar_url);
+
   // Cross-system report (30-day window) — the glance into the full card.
   const report = buildReport({
     todayStr: today,
@@ -210,7 +239,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="u-rise u-d1">
-        <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">
+        <h1 className="u-gradient-text font-display text-[2rem] font-normal tracking-tight">
           Dashboard
         </h1>
         <p className="mt-1 text-sm text-muted">
@@ -218,10 +247,20 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {setupNeeded && identity && (
+        <div className="u-rise u-d2">
+          <ProfileSetupCard
+            hasUsername={Boolean(identity.username)}
+            hasDisplayName={Boolean(identity.display_name)}
+            hasAvatar={Boolean(identity.avatar_url)}
+          />
+        </div>
+      )}
+
       {/* Stat cards */}
       <div className="u-rise u-d2 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-line bg-card p-5">
+          <div key={s.label} className="u-glow-border u-hover-glow rounded-2xl border border-line bg-card p-5">
             <div className="flex items-center gap-2 text-faint">
               <Icon name={s.icon as IconName} size={16} />
               <span className="text-xs font-semibold uppercase tracking-[0.12em]">
