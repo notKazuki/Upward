@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import { profilesByIds } from "@/lib/social-data";
+import { sendPushToUser } from "@/lib/push";
 import type { PublicProfile } from "@/lib/social";
 import type { Message } from "@/lib/chat";
 
@@ -113,6 +114,26 @@ export async function sendMessage(
     // RLS rejects non-friends / blocked, or the table isn't created yet.
     return { error: "Couldn't send. You can only message friends." };
   }
+
+  // Real push to the recipient's devices (best-effort). Tag per-sender so a
+  // burst of messages replaces one notification instead of stacking ten.
+  void (async () => {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", me.id)
+      .maybeSingle();
+    const senderName =
+      (prof?.display_name as string | null) || (prof?.username as string | null) || "New message";
+    await sendPushToUser(recipientId, {
+      title: senderName,
+      body: text.length > 120 ? `${text.slice(0, 117)}…` : text,
+      // Deep-link the recipient straight into the thread with the sender.
+      href: prof?.username ? `/app/chat/${prof.username}` : "/app/chat",
+      tag: `dm-${me.id}`,
+    });
+  })();
+
   return { ok: true, message: data as Message };
 }
 

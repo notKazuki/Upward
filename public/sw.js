@@ -22,6 +22,46 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// --- Web push -----------------------------------------------------------
+// Payload: { title, body?, href?, tag? } (JSON). Clicking focuses an existing
+// app tab and navigates it, or opens a new one.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "Upward", body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "Upward";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || "",
+      tag: data.tag || undefined,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { href: data.href || "/app" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const href = (event.notification.data && event.notification.data.href) || "/app";
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        for (const client of clients) {
+          if (new URL(client.url).origin === self.location.origin) {
+            client.navigate(href);
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow(href);
+      }),
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
