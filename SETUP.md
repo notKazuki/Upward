@@ -359,6 +359,31 @@ member directory, announcements to every bell, and grant/revoke admin.
 **Supplement doses** — run [`supabase/supplement-dose.sql`](supabase/supplement-dose.sql)
 to enable per-day "took a different amount" overrides.
 
+## P. Push notifications & reminders
+
+Run [`supabase/push.sql`](supabase/push.sql) (push subscriptions, a `timezone`
+column, and the cron-dedupe table). Then three env/secret steps:
+
+1. **VAPID keys** (already generated into `.env.local`): copy
+   `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` from `.env.local`
+   into **Vercel → Environment Variables** (Production + Preview). Redeploy.
+2. **`CRON_SECRET`**: copy the same value from `.env.local` into Vercel env
+   *and* a **GitHub repo secret** of the same name.
+3. **`APP_URL`** GitHub repo secret = your deployed origin (e.g.
+   `https://upward.vercel.app`).
+
+Then **Settings → Notifications → Enable notifications** on each device you
+want (iPhone needs the PWA installed to the home screen first, iOS 16.4+).
+What pushes: **chat messages** (instant), **supplement reminders** at each
+timing's local hour, a **streak-at-risk nudge** at 9pm, and a **Sunday-evening
+weekly digest** — driven by
+[`.github/workflows/reminders.yml`](.github/workflows/reminders.yml) every 15
+minutes, deduped server-side so nothing double-sends.
+
+The **quick-add palette** needs no setup: press **Ctrl/Cmd-K** (or the floating
+"+") to check off supplements, log a quick workout / match result / journal
+line, copy yesterday's meals, repeat your last workout, or jump to any page.
+
 **Database advisor fixes** — [`supabase/zz-advisor-fixes.sql`](supabase/zz-advisor-fixes.sql)
 rewrites every RLS policy to use `(select auth.uid())` (Supabase's
 `auth_rls_initplan` performance lint). It runs last and is a no-op once

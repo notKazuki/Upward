@@ -1,5 +1,14 @@
 [
   {
+    "date": "2026-06-10",
+    "title": "Real notifications, reminders & quick-add",
+    "items": [
+      "Push notifications on your phone and desktop — enable them in Settings → Notifications. Chat messages arrive instantly; on iPhone, install Upward to your home screen first.",
+      "Smart reminders in your timezone: supplements at their timing windows, a 9pm nudge when your streak is about to break, and a Sunday-evening weekly summary.",
+      "Quick-add (Ctrl/Cmd-K or the floating +): check off supplements, log a workout, match result or journal line, copy yesterday's meals, or repeat your last workout — from anywhere, in two taps."
+    ]
+  },
+  {
     "date": "2026-06-09",
     "title": "Notifications, mini chat, leaderboard & a big tune-up",
     "items": [

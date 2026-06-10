@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Atmosphere from "@/components/atmosphere";
 import ChatDock from "@/components/social/chat-dock";
+import QuickAdd from "@/components/quick-add";
 import Sidebar from "./sidebar";
 import Topbar, { type SessionUser } from "./topbar";
 
@@ -62,6 +63,7 @@ export default function DashboardShell({
       </div>
 
       <ChatDock />
+      <QuickAdd />
     </div>
   );
 }
