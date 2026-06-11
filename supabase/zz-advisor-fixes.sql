@@ -13,7 +13,7 @@ declare
   p record;
   new_qual text;
   new_check text;
-  cmd text;
+  stmt text;
 begin
   for p in
     select schemaname, tablename, policyname, cmd as pcmd, qual, with_check, roles
@@ -36,21 +36,21 @@ begin
       'auth.role()', '(select auth.role())'),
       'auth.jwt()',  '(select auth.jwt())');
 
-    cmd := format('drop policy %I on %I.%I', p.policyname, p.schemaname, p.tablename);
-    execute cmd;
+    stmt := format('drop policy %I on %I.%I', p.policyname, p.schemaname, p.tablename);
+    execute stmt;
 
-    cmd := format(
+    stmt := format(
       'create policy %I on %I.%I for %s to %s',
       p.policyname, p.schemaname, p.tablename,
       lower(p.pcmd),
       array_to_string(p.roles, ', ')
     );
     if new_qual is not null then
-      cmd := cmd || format(' using (%s)', new_qual);
+      stmt := stmt || format(' using (%s)', new_qual);
     end if;
     if new_check is not null then
-      cmd := cmd || format(' with check (%s)', new_check);
+      stmt := stmt || format(' with check (%s)', new_check);
     end if;
-    execute cmd;
+    execute stmt;
   end loop;
 end $$;
