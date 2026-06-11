@@ -9,6 +9,7 @@ export type NavItem = {
 /** Primary sidebar navigation. */
 export const navItems: NavItem[] = [
   { label: "Dashboard", href: "/app", icon: "dashboard" },
+  { label: "Character", href: "/app/character", icon: "flame" },
   { label: "Insights", href: "/app/insights", icon: "trendUp" },
   { label: "Workout", href: "/app/workout", icon: "workout" },
   { label: "Meal", href: "/app/meal", icon: "meal" },
