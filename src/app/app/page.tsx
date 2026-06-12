@@ -35,6 +35,8 @@ import {
   type GoalLog,
 } from "@/lib/goals";
 import type { Gender } from "@/lib/onboarding";
+import { buildQuests, type QuestKey, type QuestSignal } from "@/lib/quests";
+import DailyQuests from "@/components/quests/daily-quests";
 
 export const metadata: Metadata = { title: "Dashboard — Upward" };
 
@@ -236,6 +238,49 @@ export default async function DashboardPage() {
     goalLogs: allGoalLogs,
   });
 
+  // Daily quests — derived from today's logs + this week's engagement (no DB).
+  const weekStart = isoDaysAgo(6);
+  const days7 = (dates: string[]) =>
+    new Set(dates.filter((d) => d >= weekStart && d <= today)).size;
+  const questSignals: Record<QuestKey, QuestSignal> = {
+    workout: {
+      active: true,
+      done: workouts.some((w) => w.performed_on === today),
+      engagement: days7(workouts.map((w) => w.performed_on)),
+    },
+    meal: {
+      active: true,
+      done: mealsToday.length > 0,
+      engagement: days7(mealsAll.map((m) => m.eaten_on)),
+    },
+    protein: {
+      active: Boolean(targets.protein),
+      done: Boolean(targets.protein) && proteinToday >= (targets.protein ?? 0) * 0.9,
+      engagement: 0,
+    },
+    supps: {
+      active: suppTotal > 0,
+      done: suppTotal > 0 && suppTaken >= suppTotal,
+      engagement: days7(suppLogsAll.map((l) => l.taken_on)),
+    },
+    gaming: {
+      active: games.length > 0,
+      done: sessions.some((s) => s.played_on === today),
+      engagement: days7(sessions.map((s) => s.played_on)),
+    },
+    journal: {
+      active: true,
+      done: journal.some((j) => j.entry_date === today),
+      engagement: days7(journal.map((j) => j.entry_date)),
+    },
+    goals: {
+      active: activeGoals.length > 0,
+      done: allGoalLogs.some((l) => l.logged_on === today),
+      engagement: days7(allGoalLogs.map((l) => l.logged_on)),
+    },
+  };
+  const questBoard = buildQuests(questSignals);
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="u-rise u-d1">
@@ -272,6 +317,9 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Daily quests */}
+      <DailyQuests board={questBoard} />
 
       {/* Main grid */}
       <div className="u-rise u-d3 grid gap-5 lg:grid-cols-3">

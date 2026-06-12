@@ -3,6 +3,7 @@ import DashboardCard from "@/components/dashboard/card";
 import CharacterSheet from "@/components/character/character-sheet";
 import SkillTrees from "@/components/character/skill-trees";
 import SherpaCard from "@/components/character/sherpa-card";
+import Ascent from "@/components/character/ascent";
 import { getCharacter } from "@/lib/character-data";
 import { getOwnProgress } from "@/lib/progress-data";
 import { buildSkillTrees } from "@/lib/skill-trees";
@@ -44,6 +45,7 @@ export default async function CharacterPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <Header />
+      <Ascent level={progress.level} />
       <SherpaCard brief={sherpa} />
       <CharacterSheet character={character} level={progress.level} rank={progress.rank} />
       <SkillTrees paths={trees} />
