@@ -22,10 +22,10 @@ export default function SeasonCard({ season }: { season: SeasonProgress }) {
           <h3 className="mt-0.5 font-display text-xl text-ink">{s.name}</h3>
           <p className="mt-1 text-sm text-muted">{s.theme}</p>
         </div>
-        <span
-          className="shrink-0 rounded-full border px-3 py-1 text-xs font-medium"
-          style={{ borderColor: `${s.color}55`, color: s.color, backgroundColor: `${s.color}14` }}
-        >
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-paper-bright px-3 py-1 text-xs font-medium text-ink-soft">
+          {/* Season hue rides as an accent dot so the label stays legible across
+              all twelve themes in both light and dark. */}
+          <span className="size-1.5 rounded-full" style={{ backgroundColor: s.color }} />
           {s.daysLeft === 0 ? "Final day" : `${s.daysLeft} day${s.daysLeft === 1 ? "" : "s"} left`}
         </span>
       </div>
@@ -63,43 +63,59 @@ export default function SeasonCard({ season }: { season: SeasonProgress }) {
         </div>
       </div>
 
-      {/* reward tiers */}
+      {/* reward tiers — the one you're climbing toward is highlighted as "next" */}
       <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-        {rewards.map((r) => (
-          <li
-            key={r.tier}
-            className={`flex items-center gap-3 rounded-xl border p-3 ${
-              r.unlocked ? "border-ember/40 bg-ember/5" : "border-line bg-paper-bright/50"
-            }`}
-          >
-            <span
-              className="grid size-8 shrink-0 place-items-center rounded-full"
-              style={{
-                backgroundColor: r.unlocked ? "var(--color-ember)" : "var(--color-paper)",
-                color: r.unlocked ? "var(--color-paper)" : "var(--color-faint)",
-              }}
+        {rewards.map((r) => {
+          const isNext = !r.unlocked && nextReward?.tier === r.tier;
+          return (
+            <li
+              key={r.tier}
+              className={`flex items-center gap-3 rounded-xl border p-3 ${
+                r.unlocked
+                  ? "border-ember/40 bg-ember/5"
+                  : isNext
+                    ? "border-ember/30 ring-1 ring-inset ring-ember/15"
+                    : "border-line bg-paper-bright/50"
+              }`}
             >
-              {r.unlocked ? (
-                <Icon name="check" size={15} />
-              ) : r.pro ? (
-                <Lock color="var(--color-faint)" />
-              ) : (
-                <span className="text-xs font-semibold">{r.tier}</span>
-              )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5">
-                <span className={`truncate text-sm ${r.unlocked ? "text-ink" : "text-ink-soft"}`}>{r.label}</span>
-                {r.pro && (
-                  <span className="shrink-0 rounded-full bg-ember/15 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.08em] text-ember">
-                    Pro
-                  </span>
+              <span
+                className="grid size-8 shrink-0 place-items-center rounded-full"
+                style={{
+                  backgroundColor: r.unlocked
+                    ? "var(--color-ember)"
+                    : isNext
+                      ? "var(--color-ember-wash)"
+                      : "var(--color-paper)",
+                  color: r.unlocked ? "var(--color-paper)" : isNext ? "var(--color-ember)" : "var(--color-faint)",
+                }}
+              >
+                {r.unlocked ? (
+                  <Icon name="check" size={15} />
+                ) : r.pro ? (
+                  <Lock color={isNext ? "var(--color-ember)" : "var(--color-faint)"} />
+                ) : (
+                  <span className="text-xs font-semibold">{r.tier}</span>
                 )}
               </span>
-              <span className="text-xs text-faint">{r.xp.toLocaleString()} XP</span>
-            </span>
-          </li>
-        ))}
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5">
+                  <span className={`truncate text-sm ${r.unlocked || isNext ? "text-ink" : "text-ink-soft"}`}>
+                    {r.label}
+                  </span>
+                  {r.pro && (
+                    <span className="shrink-0 rounded-full bg-ember/15 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.08em] text-ember">
+                      Pro
+                    </span>
+                  )}
+                </span>
+                <span className="text-xs text-faint">
+                  {r.xp.toLocaleString()} XP
+                  {isNext && <span className="font-semibold text-ember"> · next</span>}
+                </span>
+              </span>
+            </li>
+          );
+        })}
       </ul>
 
       {/* footer stats: goal + streak */}
