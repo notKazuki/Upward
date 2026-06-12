@@ -2,6 +2,8 @@
 // Everything defaults to private. Journal photos are never shared (entries can
 // be, text + mood only, if the user opts in).
 
+import type { Cosmetics } from "./cosmetics";
+
 export type Visibility = "private" | "friends" | "public";
 
 export type SectionId =
@@ -73,6 +75,7 @@ export type PublicProfile = {
   display_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  cosmetics?: Cosmetics | null;
 };
 
 export function profileName(p: PublicProfile): string {

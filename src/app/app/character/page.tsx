@@ -33,7 +33,11 @@ export default async function CharacterPage() {
     getCharacter(),
     getOwnProgress(),
     user
-      ? supabase.from("profiles").select("cosmetics").eq("id", user.id).maybeSingle()
+      ? supabase
+          .from("profiles")
+          .select("cosmetics, avatar_url, display_name, username")
+          .eq("id", user.id)
+          .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ]);
 
@@ -55,10 +59,16 @@ export default async function CharacterPage() {
   const sherpa = buildSherpa(character, trees);
 
   const earnedIds = progress.earned.map((e) => e.id);
-  const cosmetics = (cosmeticsRow?.data?.cosmetics as Cosmetics | null) ?? null;
-  const resolved = resolveCosmetics(cosmetics, progress.level.level, new Set(earnedIds));
+  const profileRow = (cosmeticsRow?.data ?? null) as {
+    cosmetics?: Cosmetics | null;
+    avatar_url?: string | null;
+    display_name?: string | null;
+    username?: string | null;
+  } | null;
+  const resolved = resolveCosmetics(profileRow?.cosmetics ?? null, progress.level.level, new Set(earnedIds));
   // Only override the class-coloured crest when a non-default accent is equipped.
   const accentColor = resolved.accentId === "ember" ? undefined : resolved.accentColor;
+  const name = profileRow?.display_name || profileRow?.username || "You";
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -78,6 +88,9 @@ export default async function CharacterPage() {
         earnedIds={earnedIds}
         accentId={resolved.accentId}
         titleId={resolved.title?.id ?? null}
+        frameId={resolved.frameId}
+        avatarUrl={profileRow?.avatar_url ?? null}
+        name={name}
       />
     </div>
   );

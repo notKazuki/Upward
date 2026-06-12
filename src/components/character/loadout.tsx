@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Avatar from "@/components/social/avatar";
 import {
   ACCENTS,
+  FRAMES,
   TITLES,
   accentUnlocked,
+  frameUnlocked,
   titleUnlocked,
   accentHint,
+  frameHint,
   titleHint,
+  frameColorOf,
 } from "@/lib/cosmetics";
 import { saveCosmetics } from "@/app/app/character/cosmetics-actions";
 
@@ -16,41 +21,93 @@ export default function Loadout({
   earnedIds,
   accentId,
   titleId,
+  frameId,
+  avatarUrl,
+  name,
 }: {
   level: number;
   earnedIds: string[];
   accentId: string;
   titleId: string | null;
+  frameId: string;
+  avatarUrl: string | null;
+  name: string;
 }) {
   const earned = new Set(earnedIds);
   const [accent, setAccent] = useState(accentId);
   const [title, setTitle] = useState<string>(titleId ?? "none");
+  const [frame, setFrame] = useState(frameId);
   const [, start] = useTransition();
 
+  function persist(prev: () => void, payload: Parameters<typeof saveCosmetics>[0]) {
+    start(async () => {
+      const r = await saveCosmetics(payload);
+      if (!r.ok) prev();
+    });
+  }
   function pickAccent(id: string) {
     if (id === accent) return;
     const prev = accent;
     setAccent(id);
-    start(async () => {
-      const r = await saveCosmetics({ accent: id });
-      if (!r.ok) setAccent(prev);
-    });
+    persist(() => setAccent(prev), { accent: id });
   }
-
+  function pickFrame(id: string) {
+    if (id === frame) return;
+    const prev = frame;
+    setFrame(id);
+    persist(() => setFrame(prev), { frame: id === "none" ? null : id });
+  }
   function pickTitle(id: string) {
     if (id === title) return;
     const prev = title;
     setTitle(id);
-    start(async () => {
-      const r = await saveCosmetics({ title: id === "none" ? null : id });
-      if (!r.ok) setTitle(prev);
-    });
+    persist(() => setTitle(prev), { title: id === "none" ? null : id });
   }
+
+  const previewProfile = { id: "preview", username: null, display_name: name, avatar_url: avatarUrl, bio: null };
 
   return (
     <div className="u-rise rounded-2xl border border-line bg-card p-6">
       <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">Loadout</h3>
       <p className="mt-1 text-sm text-muted">Earned as you climb. Equip what you like — pure flair.</p>
+
+      {/* Frame — with a live preview of your avatar */}
+      <div className="mt-5 flex flex-wrap items-center gap-5">
+        <Avatar profile={previewProfile} size={56} frameColor={frameColorOf(frame)} />
+        <div className="min-w-0 flex-1">
+          <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-faint">Frame</span>
+          <div className="mt-2.5 flex flex-wrap gap-2.5">
+            {FRAMES.map((f) => {
+              const unlocked = frameUnlocked(f, level);
+              const selected = f.id === frame;
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  disabled={!unlocked}
+                  onClick={() => pickFrame(f.id)}
+                  title={unlocked ? f.label : `${f.label} — ${frameHint(f)}`}
+                  aria-label={unlocked ? `Equip ${f.label} frame` : `${f.label}, locked: ${frameHint(f)}`}
+                  className={`relative grid size-9 place-items-center rounded-full border-2 transition-[transform,border-color] ${
+                    unlocked ? "cursor-pointer hover:scale-105" : "cursor-not-allowed opacity-40"
+                  }`}
+                  style={{ borderColor: selected ? "var(--color-ink)" : "transparent" }}
+                >
+                  <span
+                    className="size-6 rounded-full bg-paper-bright"
+                    style={f.color ? { boxShadow: `inset 0 0 0 2px ${f.color}` } : { boxShadow: "inset 0 0 0 1px var(--color-line)" }}
+                  />
+                  {!unlocked && (
+                    <span className="absolute inset-0 grid place-items-center text-ink">
+                      <LockIcon />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* Accents */}
       <div className="mt-5">

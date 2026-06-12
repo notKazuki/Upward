@@ -17,6 +17,7 @@ import { moodMeta } from "@/lib/journal";
 import { dayColor, displayDay } from "@/lib/workouts";
 import { getProfileProgress } from "@/lib/progress-data";
 import { ACHIEVEMENTS } from "@/lib/achievements";
+import { titleLabelOf, accentColorOf } from "@/lib/cosmetics";
 
 export const metadata: Metadata = { title: "Profile — Upward" };
 
@@ -125,6 +126,14 @@ export default async function ProfilePage({
             <Avatar profile={profile} size={72} />
             <div className="min-w-0">
               <h1 className="font-display text-2xl text-ink">{name}</h1>
+              {titleLabelOf(profile.cosmetics?.title) && (
+                <p
+                  className="font-display text-sm"
+                  style={{ color: accentColorOf(profile.cosmetics?.accent) ?? "var(--color-ember)" }}
+                >
+                  {titleLabelOf(profile.cosmetics?.title)}
+                </p>
+              )}
               {profile.username && <p className="text-sm text-muted">@{profile.username}</p>}
               {memberSince && <p className="mt-0.5 text-xs text-faint">Member since {memberSince}</p>}
             </div>

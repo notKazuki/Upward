@@ -21,7 +21,7 @@ export type ProfileRow = PublicProfile & {
   created_at: string;
 };
 
-const PROFILE_COLS = "id, username, display_name, avatar_url, bio, privacy, created_at";
+const PROFILE_COLS = "id, username, display_name, avatar_url, bio, privacy, created_at, cosmetics";
 
 export async function profileByUsername(username: string): Promise<ProfileRow | null> {
   const db = admin();
