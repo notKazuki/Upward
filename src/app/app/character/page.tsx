@@ -5,6 +5,7 @@ import SkillTrees from "@/components/character/skill-trees";
 import SherpaCard from "@/components/character/sherpa-card";
 import SherpaChat from "@/components/character/sherpa-chat";
 import Ascent from "@/components/character/ascent";
+import SeasonCard from "@/components/character/season-card";
 import Loadout from "@/components/character/loadout";
 import CharacterCard from "@/components/character/character-card";
 import { isAiSherpaConfigured } from "@/lib/sherpa-ai";
@@ -15,6 +16,9 @@ import { getOwnProgress } from "@/lib/progress-data";
 import { buildSkillTrees } from "@/lib/skill-trees";
 import { buildSherpa } from "@/lib/sherpa";
 import { resolveCosmetics, type Cosmetics } from "@/lib/cosmetics";
+import { getSeasonCore } from "@/lib/season-data";
+import { buildSeason } from "@/lib/seasons";
+import { serverToday } from "@/lib/server-today";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 
@@ -34,9 +38,11 @@ function Header() {
 export default async function CharacterPage() {
   const supabase = await createClient();
   const user = await currentUser();
-  const [character, progress, cosmeticsRow] = await Promise.all([
+  const [character, progress, seasonCore, today, cosmeticsRow] = await Promise.all([
     getCharacter(),
     getOwnProgress(),
+    getSeasonCore(),
+    serverToday(),
     user
       ? supabase
           .from("profiles")
@@ -62,6 +68,17 @@ export default async function CharacterPage() {
 
   const trees = buildSkillTrees(progress.stats, new Set(progress.earned.map((e) => e.id)));
   const sherpa = buildSherpa(character, trees);
+  const season = seasonCore
+    ? buildSeason(
+        {
+          seasonXp: seasonCore.seasonXp,
+          activeDays: seasonCore.activeDays,
+          streak: progress.streak.current,
+          bestStreak: progress.streak.best,
+        },
+        today,
+      )
+    : null;
 
   const earnedIds = progress.earned.map((e) => e.id);
   const profileRow = (cosmeticsRow?.data ?? null) as {
@@ -97,6 +114,7 @@ export default async function CharacterPage() {
     <div className="mx-auto max-w-5xl space-y-5">
       <Header />
       <Ascent level={progress.level} />
+      {season && <SeasonCard season={season} />}
       <SherpaCard brief={sherpa} />
       <SherpaChat configured={isAiSherpaConfigured} />
       <CharacterSheet

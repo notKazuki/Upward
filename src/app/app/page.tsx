@@ -37,6 +37,7 @@ import {
 import type { Gender } from "@/lib/onboarding";
 import { buildQuests, type QuestKey, type QuestSignal } from "@/lib/quests";
 import DailyQuests from "@/components/quests/daily-quests";
+import StreakNudge from "@/components/quests/streak-nudge";
 
 export const metadata: Metadata = { title: "Dashboard — Upward" };
 
@@ -317,6 +318,9 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Streak at-risk nudge — only when a live streak hasn't been kept today */}
+      {a.streakDays > 0 && !a.loggedToday && <StreakNudge days={a.streakDays} />}
 
       {/* Daily quests */}
       <DailyQuests board={questBoard} />

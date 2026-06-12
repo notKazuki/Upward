@@ -34,7 +34,26 @@ export type Progress = {
   next: Rank | null;
   stats: AchievementStats;
   earned: { id: string; earned_on: string }[];
+  streak: { current: number; best: number };
 };
+
+/** Consecutive active days ending today (or yesterday — grace for today). */
+function currentStreak(days: Set<string>, todayStr: string): number {
+  if (days.size === 0) return 0;
+  const addDays = (s: string, n: number) => {
+    const d = new Date(`${s}T00:00:00`);
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  let cursor = todayStr;
+  if (!days.has(cursor)) cursor = addDays(cursor, -1); // today not logged yet → grace
+  let n = 0;
+  while (days.has(cursor)) {
+    n++;
+    cursor = addDays(cursor, -1);
+  }
+  return n;
+}
 
 function longestStreak(days: Set<string>): number {
   if (days.size === 0) return 0;
@@ -198,6 +217,7 @@ async function loadProgress(db: Db, userId: string): Promise<Progress> {
     next: nextRank(level.level),
     stats: { ...baseStats, level: level.level },
     earned: ids.map((id) => ({ id, earned_on: "" })),
+    streak: { current: currentStreak(activeDays, todayStr), best: baseStats.longestStreak },
   };
 }
 
