@@ -1,5 +1,16 @@
 [
   {
+    "date": "2026-06-11",
+    "title": "Your life, as an RPG — meet your Character",
+    "items": [
+      "New Character page: five attributes — Strength, Vitality, Focus, Mind and Discipline — computed from everything you track and plotted on a radar, plus a class that reflects who you really are (Titan, Druid, Ranger, Oracle, Monk…) and an overall Power score.",
+      "Skill trees: every attribute is a path of milestones that light up as you earn achievements — so you can see exactly how each one is climbing.",
+      "The Sherpa: your guide reads your character each day and surfaces the single thing that matters most, plus one quest aimed at your closest win.",
+      "The Ascent: watch your climber move up the mountain from Base Camp to Peak as you level — your whole journey at a glance.",
+      "Daily quests on your dashboard: a personalized checklist that completes itself as you log, with a 'Sherpa's focus' nudge toward whatever you've neglected this week."
+    ]
+  },
+  {
     "date": "2026-06-10",
     "title": "Real notifications, reminders & quick-add",
     "items": [
