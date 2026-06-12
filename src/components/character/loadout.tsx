@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import Avatar from "@/components/social/avatar";
 import {
   ACCENTS,
@@ -13,12 +14,14 @@ import {
   frameHint,
   titleHint,
   frameColorOf,
+  PRO_HINT,
 } from "@/lib/cosmetics";
 import { saveCosmetics } from "@/app/app/character/cosmetics-actions";
 
 export default function Loadout({
   level,
   earnedIds,
+  isPro,
   accentId,
   titleId,
   frameId,
@@ -27,6 +30,7 @@ export default function Loadout({
 }: {
   level: number;
   earnedIds: string[];
+  isPro: boolean;
   accentId: string;
   titleId: string | null;
   frameId: string;
@@ -69,7 +73,10 @@ export default function Loadout({
   return (
     <div className="u-rise rounded-2xl border border-line bg-card p-6">
       <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">Loadout</h3>
-      <p className="mt-1 text-sm text-muted">Earned as you climb. Equip what you like — pure flair.</p>
+      <p className="mt-1 text-sm text-muted">
+        Earned as you climb. Equip what you like — pure flair.
+        {!isPro && <span className="text-faint"> Sparkle marks Pro-only flair.</span>}
+      </p>
 
       {/* Frame — with a live preview of your avatar */}
       <div className="mt-5 flex flex-wrap items-center gap-5">
@@ -78,31 +85,28 @@ export default function Loadout({
           <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-faint">Frame</span>
           <div className="mt-2.5 flex flex-wrap gap-2.5">
             {FRAMES.map((f) => {
-              const unlocked = frameUnlocked(f, level);
+              const unlocked = frameUnlocked(f, level, isPro);
+              const proLocked = Boolean(f.pro) && !isPro;
               const selected = f.id === frame;
+              const inner = (
+                <span
+                  className="size-6 rounded-full bg-paper-bright"
+                  style={f.color ? { boxShadow: `inset 0 0 0 2px ${f.color}` } : { boxShadow: "inset 0 0 0 1px var(--color-line)" }}
+                />
+              );
+              if (proLocked) return <ProSwatch key={f.id} label={f.label}>{inner}</ProSwatch>;
               return (
-                <button
+                <Swatch
                   key={f.id}
-                  type="button"
-                  disabled={!unlocked}
+                  unlocked={unlocked}
+                  selected={selected}
+                  label={f.label}
+                  hint={frameHint(f)}
+                  kind="frame"
                   onClick={() => pickFrame(f.id)}
-                  title={unlocked ? f.label : `${f.label} — ${frameHint(f)}`}
-                  aria-label={unlocked ? `Equip ${f.label} frame` : `${f.label}, locked: ${frameHint(f)}`}
-                  className={`relative grid size-9 place-items-center rounded-full border-2 transition-[transform,border-color] ${
-                    unlocked ? "cursor-pointer hover:scale-105" : "cursor-not-allowed opacity-40"
-                  }`}
-                  style={{ borderColor: selected ? "var(--color-ink)" : "transparent" }}
                 >
-                  <span
-                    className="size-6 rounded-full bg-paper-bright"
-                    style={f.color ? { boxShadow: `inset 0 0 0 2px ${f.color}` } : { boxShadow: "inset 0 0 0 1px var(--color-line)" }}
-                  />
-                  {!unlocked && (
-                    <span className="absolute inset-0 grid place-items-center text-ink">
-                      <LockIcon />
-                    </span>
-                  )}
-                </button>
+                  {inner}
+                </Swatch>
               );
             })}
           </div>
@@ -114,28 +118,23 @@ export default function Loadout({
         <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-faint">Accent</span>
         <div className="mt-2.5 flex flex-wrap gap-2.5">
           {ACCENTS.map((a) => {
-            const unlocked = accentUnlocked(a, level);
+            const unlocked = accentUnlocked(a, level, isPro);
+            const proLocked = Boolean(a.pro) && !isPro;
             const selected = a.id === accent;
+            const inner = <span className="size-6 rounded-full" style={{ backgroundColor: a.color }} />;
+            if (proLocked) return <ProSwatch key={a.id} label={a.label}>{inner}</ProSwatch>;
             return (
-              <button
+              <Swatch
                 key={a.id}
-                type="button"
-                disabled={!unlocked}
+                unlocked={unlocked}
+                selected={selected}
+                label={a.label}
+                hint={accentHint(a)}
+                kind="accent"
                 onClick={() => pickAccent(a.id)}
-                title={unlocked ? a.label : `${a.label} — ${accentHint(a)}`}
-                aria-label={unlocked ? `Equip ${a.label} accent` : `${a.label}, locked: ${accentHint(a)}`}
-                className={`relative grid size-9 place-items-center rounded-full border-2 transition-[transform,border-color] ${
-                  unlocked ? "cursor-pointer hover:scale-105" : "cursor-not-allowed opacity-40"
-                }`}
-                style={{ borderColor: selected ? "var(--color-ink)" : "transparent" }}
               >
-                <span className="size-6 rounded-full" style={{ backgroundColor: a.color }} />
-                {!unlocked && (
-                  <span className="absolute inset-0 grid place-items-center text-ink">
-                    <LockIcon />
-                  </span>
-                )}
-              </button>
+                {inner}
+              </Swatch>
             );
           })}
         </div>
@@ -147,7 +146,9 @@ export default function Loadout({
         <div className="mt-2.5 flex flex-wrap gap-2">
           <Chip label="No title" selected={title === "none"} unlocked onClick={() => pickTitle("none")} />
           {TITLES.map((t) => {
-            const unlocked = titleUnlocked(t, level, earned);
+            const unlocked = titleUnlocked(t, level, earned, isPro);
+            const proLocked = Boolean(t.pro) && !isPro;
+            if (proLocked) return <ProChip key={t.id} label={t.label} />;
             return (
               <Chip
                 key={t.id}
@@ -162,6 +163,62 @@ export default function Loadout({
         </div>
       </div>
     </div>
+  );
+}
+
+function Swatch({
+  unlocked,
+  selected,
+  label,
+  hint,
+  kind,
+  onClick,
+  children,
+}: {
+  unlocked: boolean;
+  selected: boolean;
+  label: string;
+  hint: string;
+  kind: "frame" | "accent";
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={!unlocked}
+      onClick={onClick}
+      title={unlocked ? label : `${label} — ${hint}`}
+      aria-label={unlocked ? `Equip ${label} ${kind}` : `${label}, locked: ${hint}`}
+      className={`relative grid size-9 place-items-center rounded-full border-2 transition-[transform,border-color] ${
+        unlocked ? "cursor-pointer hover:scale-105" : "cursor-not-allowed opacity-40"
+      }`}
+      style={{ borderColor: selected ? "var(--color-ink)" : "transparent" }}
+    >
+      {children}
+      {!unlocked && (
+        <span className="absolute inset-0 grid place-items-center text-ink">
+          <LockIcon />
+        </span>
+      )}
+    </button>
+  );
+}
+
+// A Pro-locked swatch routes to the upgrade page and wears a sparkle.
+function ProSwatch({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href="/app/upgrade"
+      title={`${label} — ${PRO_HINT}`}
+      aria-label={`${label}, Pro-only — upgrade to unlock`}
+      className="relative grid size-9 cursor-pointer place-items-center rounded-full border-2 border-transparent opacity-60 transition-opacity hover:opacity-100"
+    >
+      {children}
+      <span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-ember text-paper">
+        <SparkIcon />
+      </span>
+    </Link>
   );
 }
 
@@ -198,11 +255,33 @@ function Chip({
   );
 }
 
+// A Pro-locked title chip — links to upgrade, sparkle instead of a lock.
+function ProChip({ label }: { label: string }) {
+  return (
+    <Link
+      href="/app/upgrade"
+      title={`${label} — ${PRO_HINT}`}
+      className="flex cursor-pointer items-center gap-1.5 rounded-full border border-ember/30 bg-ember/5 px-3 py-1.5 text-sm text-ember/90 transition-colors hover:border-ember/60"
+    >
+      <SparkIcon />
+      {label}
+    </Link>
+  );
+}
+
 function LockIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  );
+}
+
+function SparkIcon() {
+  return (
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 3c.4 3.6 1.4 4.6 5 5-3.6.4-4.6 1.4-5 5-.4-3.6-1.4-4.6-5-5 3.6-.4 4.6-1.4 5-5Z" />
     </svg>
   );
 }

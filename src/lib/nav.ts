@@ -21,4 +21,5 @@ export const navItems: NavItem[] = [
   { label: "Progress", href: "/app/progress", icon: "trophy" },
   { label: "Friends", href: "/app/friends", icon: "user" },
   { label: "Chat", href: "/app/chat", icon: "message" },
+  { label: "Upgrade", href: "/app/upgrade", icon: "sparkle" },
 ];

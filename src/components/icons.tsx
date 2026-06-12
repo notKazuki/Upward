@@ -23,7 +23,8 @@ export type IconName =
   | "check"
   | "journal"
   | "trophy"
-  | "message";
+  | "message"
+  | "sparkle";
 
 const paths: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -138,6 +139,9 @@ const paths: Record<IconName, React.ReactNode> = {
   ),
   message: (
     <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.6 8.6 0 0 1-4-1L3 21l2-5.5A8.5 8.5 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5Z" />
+  ),
+  sparkle: (
+    <path d="M12 3c.4 3.6 1.4 4.6 5 5-3.6.4-4.6 1.4-5 5-.4-3.6-1.4-4.6-5-5 3.6-.4 4.6-1.4 5-5ZM19 14c.2 1.7.7 2.2 2.4 2.4-1.7.2-2.2.7-2.4 2.4-.2-1.7-.7-2.2-2.4-2.4 1.7-.2 2.2-.7 2.4-2.4Z" />
   ),
 };
 

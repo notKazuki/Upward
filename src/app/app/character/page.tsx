@@ -17,6 +17,7 @@ import { buildSkillTrees } from "@/lib/skill-trees";
 import { buildSherpa } from "@/lib/sherpa";
 import { resolveCosmetics, type Cosmetics } from "@/lib/cosmetics";
 import { getSeasonCore } from "@/lib/season-data";
+import { getProStatus } from "@/lib/pro-data";
 import { buildSeason } from "@/lib/seasons";
 import { serverToday } from "@/lib/server-today";
 import { createClient } from "@/lib/supabase/server";
@@ -38,11 +39,12 @@ function Header() {
 export default async function CharacterPage() {
   const supabase = await createClient();
   const user = await currentUser();
-  const [character, progress, seasonCore, today, cosmeticsRow] = await Promise.all([
+  const [character, progress, seasonCore, today, proStatus, cosmeticsRow] = await Promise.all([
     getCharacter(),
     getOwnProgress(),
     getSeasonCore(),
     serverToday(),
+    getProStatus(),
     user
       ? supabase
           .from("profiles")
@@ -87,7 +89,7 @@ export default async function CharacterPage() {
     display_name?: string | null;
     username?: string | null;
   } | null;
-  const resolved = resolveCosmetics(profileRow?.cosmetics ?? null, progress.level.level, new Set(earnedIds));
+  const resolved = resolveCosmetics(profileRow?.cosmetics ?? null, progress.level.level, new Set(earnedIds), proStatus.pro);
   // Only override the class-coloured crest when a non-default accent is equipped.
   const accentColor = resolved.accentId === "ember" ? undefined : resolved.accentColor;
   const name = profileRow?.display_name || profileRow?.username || "You";
@@ -128,6 +130,7 @@ export default async function CharacterPage() {
       <Loadout
         level={progress.level.level}
         earnedIds={earnedIds}
+        isPro={proStatus.pro}
         accentId={resolved.accentId}
         titleId={resolved.title?.id ?? null}
         frameId={resolved.frameId}

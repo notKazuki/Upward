@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import { getOwnProgress } from "@/lib/progress-data";
+import { getProStatus } from "@/lib/pro-data";
 import { canEquip, type Cosmetics } from "@/lib/cosmetics";
 
 /** Equip a title and/or accent. Server-validates that it's actually unlocked. */
@@ -14,7 +15,8 @@ export async function saveCosmetics(next: Cosmetics): Promise<{ ok: boolean; err
   const progress = await getOwnProgress();
   const level = progress?.level.level ?? 1;
   const earned = new Set((progress?.earned ?? []).map((e) => e.id));
-  if (!canEquip(next, level, earned)) return { ok: false, error: "That isn't unlocked yet." };
+  const { pro } = await getProStatus(); // tolerant: false if the column isn't there yet
+  if (!canEquip(next, level, earned, pro)) return { ok: false, error: "That isn't unlocked yet." };
 
   const supabase = await createClient();
   // Merge onto existing so a partial update doesn't wipe the other field.
