@@ -3,8 +3,10 @@ import DashboardCard from "@/components/dashboard/card";
 import CharacterSheet from "@/components/character/character-sheet";
 import SkillTrees from "@/components/character/skill-trees";
 import SherpaCard from "@/components/character/sherpa-card";
+import SherpaChat from "@/components/character/sherpa-chat";
 import Ascent from "@/components/character/ascent";
 import Loadout from "@/components/character/loadout";
+import { isAiSherpaConfigured } from "@/lib/sherpa-ai";
 import { getCharacter } from "@/lib/character-data";
 import { getOwnProgress } from "@/lib/progress-data";
 import { buildSkillTrees } from "@/lib/skill-trees";
@@ -75,6 +77,7 @@ export default async function CharacterPage() {
       <Header />
       <Ascent level={progress.level} />
       <SherpaCard brief={sherpa} />
+      <SherpaChat configured={isAiSherpaConfigured} />
       <CharacterSheet
         character={character}
         level={progress.level}
