@@ -6,7 +6,10 @@ import SherpaCard from "@/components/character/sherpa-card";
 import SherpaChat from "@/components/character/sherpa-chat";
 import Ascent from "@/components/character/ascent";
 import Loadout from "@/components/character/loadout";
+import CharacterCard from "@/components/character/character-card";
 import { isAiSherpaConfigured } from "@/lib/sherpa-ai";
+import { ATTR_ACCENT } from "@/lib/character";
+import type { CardData } from "@/lib/character-card";
 import { getCharacter } from "@/lib/character-data";
 import { getOwnProgress } from "@/lib/progress-data";
 import { buildSkillTrees } from "@/lib/skill-trees";
@@ -72,6 +75,24 @@ export default async function CharacterPage() {
   const accentColor = resolved.accentId === "ember" ? undefined : resolved.accentColor;
   const name = profileRow?.display_name || profileRow?.username || "You";
 
+  const cardData: CardData = {
+    name,
+    username: profileRow?.username ?? null,
+    className: character.klass.name,
+    tagline: character.klass.tagline,
+    level: progress.level.level,
+    rankName: progress.rank.name,
+    rankColor: progress.rank.color,
+    power: character.power,
+    title: resolved.title?.label ?? null,
+    attributes: character.attributes.map((a) => ({
+      abbr: a.abbr,
+      label: a.label,
+      score: a.score,
+      color: ATTR_ACCENT[a.id],
+    })),
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <Header />
@@ -95,6 +116,7 @@ export default async function CharacterPage() {
         avatarUrl={profileRow?.avatar_url ?? null}
         name={name}
       />
+      <CharacterCard data={cardData} />
     </div>
   );
 }
