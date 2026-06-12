@@ -6,6 +6,16 @@ import { cardSvg, type CardData } from "@/lib/character-card";
 export default function CharacterCard({ data }: { data: CardData }) {
   const svg = useMemo(() => cardSvg(data), [data]);
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  function copyLink() {
+    if (!data.username) return;
+    const link = `${window.location.origin}/card/${data.username}`;
+    void navigator.clipboard?.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  }
 
   function download() {
     setBusy(true);
@@ -51,17 +61,31 @@ export default function CharacterCard({ data }: { data: CardData }) {
           <h3 className="font-display text-lg text-ink">Your card</h3>
           <p className="text-sm text-muted">A shareable snapshot of your climb — post it anywhere.</p>
         </div>
-        <button
-          type="button"
-          onClick={download}
-          disabled={busy}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ember px-4 py-2.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
-          </svg>
-          {busy ? "Preparing…" : "Download card"}
-        </button>
+        <div className="flex items-center gap-2">
+          {data.username && (
+            <button
+              type="button"
+              onClick={copyLink}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line bg-paper-bright px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:border-ember/50"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
+              </svg>
+              {copied ? "Copied!" : "Copy link"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={download}
+            disabled={busy}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ember px-4 py-2.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+            </svg>
+            {busy ? "Preparing…" : "Download card"}
+          </button>
+        </div>
       </div>
       <div
         className="mx-auto max-w-md overflow-hidden rounded-2xl [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
