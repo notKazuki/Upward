@@ -11,15 +11,19 @@ export default function CharacterSheet({
   character,
   level,
   rank,
+  accentColor,
+  title,
 }: {
   character: Character;
   level: LevelInfo;
   rank: Rank;
+  accentColor?: string;
+  title?: string | null;
 }) {
   const { attributes, power, klass, dominant } = character;
   const byId = new Map(attributes.map((a) => [a.id, a]));
   const ordered = ORDER.map((id) => byId.get(id)!).filter(Boolean);
-  const crestColor = dominant ? ATTR_ACCENT[dominant.id] : rank.color;
+  const crestColor = accentColor ?? (dominant ? ATTR_ACCENT[dominant.id] : rank.color);
 
   return (
     <div className="space-y-5">
@@ -43,6 +47,11 @@ export default function CharacterSheet({
               <h2 className="u-gradient-text mt-1.5 font-display text-[2.1rem] leading-none">
                 {klass.name}
               </h2>
+              {title && (
+                <p className="mt-1 font-display text-base" style={{ color: crestColor }}>
+                  {title}
+                </p>
+              )}
               <p className="mt-1.5 text-sm text-muted">{klass.tagline}</p>
             </div>
           </div>

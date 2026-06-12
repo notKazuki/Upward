@@ -4,10 +4,14 @@ import CharacterSheet from "@/components/character/character-sheet";
 import SkillTrees from "@/components/character/skill-trees";
 import SherpaCard from "@/components/character/sherpa-card";
 import Ascent from "@/components/character/ascent";
+import Loadout from "@/components/character/loadout";
 import { getCharacter } from "@/lib/character-data";
 import { getOwnProgress } from "@/lib/progress-data";
 import { buildSkillTrees } from "@/lib/skill-trees";
 import { buildSherpa } from "@/lib/sherpa";
+import { resolveCosmetics, type Cosmetics } from "@/lib/cosmetics";
+import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Character — Upward" };
 
@@ -23,7 +27,15 @@ function Header() {
 }
 
 export default async function CharacterPage() {
-  const [character, progress] = await Promise.all([getCharacter(), getOwnProgress()]);
+  const supabase = await createClient();
+  const user = await currentUser();
+  const [character, progress, cosmeticsRow] = await Promise.all([
+    getCharacter(),
+    getOwnProgress(),
+    user
+      ? supabase.from("profiles").select("cosmetics").eq("id", user.id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
 
   if (!character || !progress) {
     return (
@@ -42,13 +54,31 @@ export default async function CharacterPage() {
   const trees = buildSkillTrees(progress.stats, new Set(progress.earned.map((e) => e.id)));
   const sherpa = buildSherpa(character, trees);
 
+  const earnedIds = progress.earned.map((e) => e.id);
+  const cosmetics = (cosmeticsRow?.data?.cosmetics as Cosmetics | null) ?? null;
+  const resolved = resolveCosmetics(cosmetics, progress.level.level, new Set(earnedIds));
+  // Only override the class-coloured crest when a non-default accent is equipped.
+  const accentColor = resolved.accentId === "ember" ? undefined : resolved.accentColor;
+
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <Header />
       <Ascent level={progress.level} />
       <SherpaCard brief={sherpa} />
-      <CharacterSheet character={character} level={progress.level} rank={progress.rank} />
+      <CharacterSheet
+        character={character}
+        level={progress.level}
+        rank={progress.rank}
+        accentColor={accentColor}
+        title={resolved.title?.label ?? null}
+      />
       <SkillTrees paths={trees} />
+      <Loadout
+        level={progress.level.level}
+        earnedIds={earnedIds}
+        accentId={resolved.accentId}
+        titleId={resolved.title?.id ?? null}
+      />
     </div>
   );
 }
