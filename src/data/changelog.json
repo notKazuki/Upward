@@ -1,6 +1,16 @@
 [
   {
     "date": "2026-06-12",
+    "title": "Quick Log — talk or type your day",
+    "items": [
+      "New Quick Log (in the sidebar): instead of tapping through six forms, just say or type what you did — “benched, ate a chicken bowl, won 2 ranked.” Voice uses your browser’s built-in speech recognition, so it’s free and private; typing always works as a fallback.",
+      "Free: your brain-dump saves straight to today’s journal in one tap.",
+      "Coming with Pro: Smart Log — the Sherpa reads your brain-dump and turns it into structured workout, meal, gaming and supplement entries for you to review and save.",
+      "On iPhone, open Upward from your home screen for the best voice support."
+    ]
+  },
+  {
+    "date": "2026-06-12",
     "title": "Test your notifications instantly",
     "items": [
       "New 'Send a test' button in Settings → Notifications — fire a push to your device on demand to confirm everything works, instead of waiting for a scheduled reminder.",
