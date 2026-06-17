@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   savePushSubscription,
   deletePushSubscription,
+  sendTestNotification,
 } from "@/app/app/push/actions";
 
 type Status = "loading" | "unsupported" | "denied" | "off" | "on";
@@ -21,6 +22,8 @@ export default function PushSettings({ vapidPublicKey }: { vapidPublicKey: strin
   const [status, setStatus] = useState<Status>("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +90,23 @@ export default function PushSettings({ vapidPublicKey }: { vapidPublicKey: strin
     }
   }
 
+  async function sendTest() {
+    setTesting(true);
+    setTestMsg(null);
+    try {
+      const r = await sendTestNotification();
+      setTestMsg(
+        r.error
+          ? r.error
+          : `Sent to ${r.sent} device${r.sent === 1 ? "" : "s"} — check your phone in a moment.`,
+      );
+    } catch {
+      setTestMsg("Couldn't send the test. Try again.");
+    } finally {
+      setTesting(false);
+    }
+  }
+
   async function disable() {
     setBusy(true);
     setError(null);
@@ -148,12 +168,34 @@ export default function PushSettings({ vapidPublicKey }: { vapidPublicKey: strin
                 : "Enable notifications"}
           </button>
           {status === "on" && (
-            <span className="inline-flex items-center gap-1.5 text-sm text-ember">
-              <span className="inline-block size-2 rounded-full bg-ember" />
-              Active on this device
-            </span>
+            <>
+              <button
+                type="button"
+                disabled={testing}
+                onClick={sendTest}
+                className="cursor-pointer rounded-full border border-line bg-paper-bright px-4 py-2 text-sm font-medium text-ink-soft transition-colors hover:border-ember/50 hover:text-ink disabled:opacity-60"
+              >
+                {testing ? "Sending…" : "Send a test"}
+              </button>
+              <span className="inline-flex items-center gap-1.5 text-sm text-ember">
+                <span className="inline-block size-2 rounded-full bg-ember" />
+                Active on this device
+              </span>
+            </>
           )}
         </div>
+      )}
+
+      {testMsg && status === "on" && <p className="text-sm text-ink-soft">{testMsg}</p>}
+
+      {/* Why you might not be seeing them — the scheduled reminders only fire at
+          set local hours, so a test is the quickest way to confirm delivery. */}
+      {status === "on" && (
+        <p className="text-xs leading-relaxed text-faint">
+          Not seeing reminders? They only fire at set times — supplements at their timing windows,
+          a streak nudge at 9pm, and a Sunday-evening summary. Use “Send a test” to confirm delivery
+          any time.
+        </p>
       )}
 
       {error && <p className="text-sm text-danger">{error}</p>}

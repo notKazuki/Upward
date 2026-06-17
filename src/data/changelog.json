@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-12",
+    "title": "Test your notifications instantly",
+    "items": [
+      "New 'Send a test' button in Settings → Notifications — fire a push to your device on demand to confirm everything works, instead of waiting for a scheduled reminder.",
+      "A reminder of when reminders actually fire: supplements at their timing windows, a streak nudge at 9pm, and a Sunday-evening summary — so silence between those isn't a bug."
+    ]
+  },
+  {
+    "date": "2026-06-12",
     "title": "Meet Upward Pro",
     "items": [
       "Upward Pro is here in preview — one subscription that unlocks the AI Sherpa, the full depth of your cross-domain insights, premium cosmetics, and your complete history with export. $6/mo, or $4/mo billed annually.",

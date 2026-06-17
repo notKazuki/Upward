@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
+import { sendPushToUser, isPushConfigured } from "@/lib/push";
 
 /** Register this device's push subscription (idempotent on endpoint). */
 export async function savePushSubscription(sub: {
@@ -38,6 +39,27 @@ export async function deletePushSubscription(endpoint: string): Promise<{ ok?: b
     .eq("endpoint", endpoint)
     .eq("user_id", me.id);
   return { ok: true };
+}
+
+/** Send an immediate test push to all of this user's registered devices, so
+ * they can confirm notifications actually arrive (the scheduled reminders only
+ * fire at specific local hours). */
+export async function sendTestNotification(): Promise<{ sent?: number; error?: string }> {
+  const me = await currentUser();
+  if (!me) return { error: "Session expired." };
+  if (!isPushConfigured) {
+    return { error: "Push isn't configured on the server yet (missing VAPID keys)." };
+  }
+  const sent = await sendPushToUser(me.id, {
+    title: "Notifications are on",
+    body: "This is a test — your reminders will arrive just like this.",
+    href: "/app/settings",
+    tag: "test",
+  });
+  if (sent === 0) {
+    return { error: "No active device received it. Try disabling and re-enabling on this device." };
+  }
+  return { sent };
 }
 
 /** Persist the user's IANA timezone so reminders fire in local time. */
