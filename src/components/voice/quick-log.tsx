@@ -76,12 +76,17 @@ export default function QuickLog({ isPro, aiConfigured }: { isPro: boolean; aiCo
   function onReviewed(r: SmartSaveResult) {
     setEntries(null);
     if (r.saved) {
+      const s = r.saved;
+      const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
       const parts = [
-        r.saved.meals ? `${r.saved.meals} meal${r.saved.meals === 1 ? "" : "s"}` : null,
-        r.saved.workouts ? `${r.saved.workouts} workout${r.saved.workouts === 1 ? "" : "s"}` : null,
-        r.saved.notes ? "a journal note" : null,
+        s.meals ? plural(s.meals, "meal") : null,
+        s.workouts ? plural(s.workouts, "workout") : null,
+        s.gaming ? plural(s.gaming, "session") : null,
+        s.supplements ? plural(s.supplements, "supplement") : null,
+        s.goals ? plural(s.goals, "goal check-in") : null,
+        s.notes ? "a journal note" : null,
       ].filter(Boolean);
-      setDone(parts.length ? `Logged ${parts.join(" · ")}.` : "Nothing to log.");
+      setDone(parts.length ? `Logged ${parts.join(" · ")}.` : "Nothing new to log.");
     }
     reset();
   }

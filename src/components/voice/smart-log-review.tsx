@@ -1,15 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import Icon from "@/components/icons";
+import Icon, { type IconName } from "@/components/icons";
 import { saveSmartLog, type SmartSaveResult } from "@/app/app/log/smart-actions";
 import type { SmartEntry } from "@/lib/smart-log";
 
-const TYPE_META: Record<SmartEntry["type"], { label: string; icon: "meal" | "workout" | "journal" }> = {
+const TYPE_META: Record<SmartEntry["type"], { label: string; icon: IconName }> = {
   meal: { label: "Meal", icon: "meal" },
   workout: { label: "Workout", icon: "workout" },
+  gaming: { label: "Gaming", icon: "gaming" },
+  supplement: { label: "Supplement", icon: "supplement" },
+  goal: { label: "Goal", icon: "goals" },
   note: { label: "Note", icon: "journal" },
 };
+
+/** FK-backed entry that didn't map to one of the user's tracked rows. */
+function isUnmatched(e: SmartEntry): boolean {
+  return (
+    (e.type === "gaming" || e.type === "supplement" || e.type === "goal") && e.matched === false
+  );
+}
 
 export default function SmartLogReview({
   entries,
@@ -20,13 +30,17 @@ export default function SmartLogReview({
   onDone: (r: SmartSaveResult) => void;
   onCancel: () => void;
 }) {
-  const [excluded, setExcluded] = useState<Set<number>>(new Set());
+  // Unmatched FK entries can't be saved — start them excluded.
+  const [excluded, setExcluded] = useState<Set<number>>(
+    () => new Set(entries.map((e, i) => (isUnmatched(e) ? i : -1)).filter((i) => i >= 0)),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const included = entries.filter((_, i) => !excluded.has(i));
 
   function toggle(i: number) {
+    if (isUnmatched(entries[i])) return; // not selectable
     setExcluded((prev) => {
       const n = new Set(prev);
       if (n.has(i)) n.delete(i);
@@ -70,7 +84,13 @@ export default function SmartLogReview({
       ) : (
         <ul className="mt-4 space-y-2">
           {entries.map((e, i) => (
-            <EntryRow key={i} entry={e} included={!excluded.has(i)} onToggle={() => toggle(i)} />
+            <EntryRow
+              key={i}
+              entry={e}
+              included={!excluded.has(i)}
+              unmatched={isUnmatched(e)}
+              onToggle={() => toggle(i)}
+            />
           ))}
         </ul>
       )}
@@ -102,10 +122,12 @@ export default function SmartLogReview({
 function EntryRow({
   entry,
   included,
+  unmatched,
   onToggle,
 }: {
   entry: SmartEntry;
   included: boolean;
+  unmatched: boolean;
   onToggle: () => void;
 }) {
   const meta = TYPE_META[entry.type];
@@ -114,14 +136,19 @@ function EntryRow({
       <button
         type="button"
         onClick={onToggle}
+        disabled={unmatched}
         aria-pressed={included}
         className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
-          included ? "border-ember/40 bg-ember/5" : "border-line bg-paper-bright/40 opacity-60"
+          unmatched
+            ? "cursor-not-allowed border-line bg-paper-bright/30 opacity-50"
+            : included
+              ? "cursor-pointer border-ember/40 bg-ember/5"
+              : "cursor-pointer border-line bg-paper-bright/40 opacity-60"
         }`}
       >
         <span
           className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border ${
-            included ? "border-ember bg-ember text-paper" : "border-line text-transparent"
+            included && !unmatched ? "border-ember bg-ember text-paper" : "border-line text-transparent"
           }`}
         >
           <Icon name="check" size={13} />
@@ -134,6 +161,11 @@ function EntryRow({
             </span>
           </span>
           <span className="mt-0.5 block">{summarize(entry)}</span>
+          {unmatched && (
+            <span className="mt-0.5 block text-xs text-muted">
+              Not in your trackers yet — will be skipped.
+            </span>
+          )}
         </span>
       </button>
     </li>
@@ -167,6 +199,38 @@ function summarize(e: SmartEntry) {
           {e.durationMin ? ` · ${e.durationMin} min` : ""}
         </span>
         {e.notes && <span className="mt-0.5 block text-xs text-muted">{e.notes}</span>}
+      </>
+    );
+  }
+  if (e.type === "gaming") {
+    const bits = [
+      e.matches !== null ? `${e.matches} match${e.matches === 1 ? "" : "es"}` : null,
+      e.wins !== null || e.losses !== null ? `${e.wins ?? 0}W–${e.losses ?? 0}L` : null,
+      e.minutes ? `${e.minutes} min` : null,
+    ].filter(Boolean);
+    return (
+      <>
+        <span className="text-sm text-ink">{e.game}</span>
+        {bits.length > 0 && <span className="text-sm text-muted"> · {bits.join(" · ")}</span>}
+      </>
+    );
+  }
+  if (e.type === "supplement") {
+    return (
+      <>
+        <span className="text-sm text-ink">{e.supplement}</span>
+        <span className="text-sm text-muted"> · taken today</span>
+      </>
+    );
+  }
+  if (e.type === "goal") {
+    return (
+      <>
+        <span className="text-sm text-ink">{e.goal}</span>
+        <span className="text-sm text-muted">
+          {" "}
+          · check-in{e.value !== null ? ` · +${e.value}` : ""}
+        </span>
       </>
     );
   }
