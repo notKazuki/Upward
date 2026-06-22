@@ -3,8 +3,10 @@ import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import { ActivityChart } from "@/components/dashboard/charts-lazy";
 import ReportView from "@/components/insights/report-view";
+import CorrelationsCard from "@/components/insights/correlations-card";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
+import { getProStatus } from "@/lib/pro-data";
 import { serverToday } from "@/lib/server-today";
 import type { SessionRow, WorkoutRow } from "@/lib/dashboard";
 import {
@@ -39,6 +41,7 @@ export default async function InsightsPage({
   const supabase = await createClient();
   const user = await currentUser();
   const today = await serverToday();
+  const { pro: isPro } = await getProStatus();
   const since = windowStart(today, 98); // cover the 12-week trend + buffer
 
   const [wRes, sRes, mRes, jRes, suppRes, suppLogRes, goalsRes, goalLogsRes, pRes] =
@@ -222,40 +225,9 @@ export default async function InsightsPage({
               <ActivityChart data={trend} />
             </DashboardCard>
 
-            {/* Correlations */}
+            {/* Correlations — the cross-domain depth is Pro; free sees a taste */}
             <DashboardCard title="What the data says">
-              <ul className="space-y-3">
-                {insights.map((ins) => (
-                  <li
-                    key={ins.id}
-                    className="rounded-xl border border-line bg-paper-bright p-3.5"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="inline-block size-2 rounded-full"
-                        style={{
-                          backgroundColor:
-                            ins.locked || ins.tone === "neutral"
-                              ? "var(--color-faint, #a89e8f)"
-                              : ins.tone === "good"
-                                ? "var(--color-ember)"
-                                : "var(--color-danger)",
-                        }}
-                      />
-                      <span className="text-xs font-semibold uppercase tracking-[0.1em] text-faint">
-                        {ins.title}
-                      </span>
-                    </div>
-                    <p
-                      className={`mt-1.5 text-sm leading-relaxed ${
-                        ins.locked ? "text-faint" : "text-ink-soft"
-                      }`}
-                    >
-                      {ins.locked ? ins.hint : ins.detail}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+              <CorrelationsCard insights={insights} isPro={isPro} />
             </DashboardCard>
           </div>
         </>
