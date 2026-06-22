@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import QuickLog from "@/components/voice/quick-log";
 import { getProStatus } from "@/lib/pro-data";
+import { isAiSherpaConfigured } from "@/lib/sherpa-ai";
 
 export const metadata: Metadata = { title: "Quick Log — Upward" };
 
@@ -15,7 +16,7 @@ export default async function QuickLogPage() {
           Talk or type your day in one go — no more tapping through six forms.
         </p>
       </div>
-      <QuickLog isPro={pro} />
+      <QuickLog isPro={pro} aiConfigured={isAiSherpaConfigured} />
     </div>
   );
 }
