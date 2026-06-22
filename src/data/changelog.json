@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-06-12",
+    "title": "A cleaner way around the app",
+    "items": [
+      "The sidebar is now organised into clear sections — Home, Play, Track and Social — so everything’s easier to find at a glance, with the active page marked by an ember accent.",
+      "Upgrade moved up top: a single tidy button in the header (a subtle ‘Pro’ badge once you’re subscribed) instead of sitting in the menu."
+    ]
+  },
+  {
+    "date": "2026-06-12",
     "title": "Deeper insights with Pro",
     "items": [
       "Your report card and overall score stay free for everyone. The full cross-domain correlations on the Insights page — how your training, sleep, nutrition and gaming actually move each other — are now part of Upward Pro, with a free taste so you can see what they reveal."

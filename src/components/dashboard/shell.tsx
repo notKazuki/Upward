@@ -10,10 +10,12 @@ import Topbar, { type SessionUser } from "./topbar";
 export default function DashboardShell({
   initialCollapsed,
   user,
+  isPro,
   children,
 }: {
   initialCollapsed: boolean;
   user: SessionUser;
+  isPro: boolean;
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
@@ -58,7 +60,7 @@ export default function DashboardShell({
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar user={user} onOpenMenu={() => setMobileOpen(true)} />
+        <Topbar user={user} isPro={isPro} onOpenMenu={() => setMobileOpen(true)} />
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
 

@@ -19,17 +19,19 @@ export type SessionUser = {
 
 export default function Topbar({
   user,
+  isPro,
   onOpenMenu,
 }: {
   user: SessionUser;
+  isPro: boolean;
   onOpenMenu: () => void;
 }) {
   return (
     <header
       style={{ paddingTop: "env(safe-area-inset-top)" }}
-      className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-4 border-b border-line bg-paper/85 px-4 backdrop-blur-sm sm:px-6"
+      className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-line bg-paper/85 px-4 backdrop-blur-sm sm:px-6"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onOpenMenu}
@@ -38,18 +40,45 @@ export default function Topbar({
         >
           <Icon name="menu" size={22} />
         </button>
-        <p className="text-sm text-muted">
+        <p className="hidden truncate text-sm text-muted sm:block">
           Welcome back,{" "}
           <span className="font-medium text-ink-soft">{user.name}</span>
         </p>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
+        <ProAction isPro={isPro} />
         <Changelog />
         <NotificationsBell />
         <ProfileMenu user={user} />
       </div>
     </header>
+  );
+}
+
+/** Pro status / upgrade entry point — the one Pro hook that lives top-right
+ * instead of in the left nav. */
+function ProAction({ isPro }: { isPro: boolean }) {
+  if (isPro) {
+    return (
+      <Link
+        href="/app/upgrade"
+        aria-label="Upward Pro"
+        className="mr-1 inline-flex items-center gap-1 rounded-full border border-ember/40 bg-ember/10 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.08em] text-ember transition-colors hover:bg-ember/15"
+      >
+        <Icon name="sparkle" size={12} />
+        Pro
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href="/app/upgrade"
+      className="mr-1 inline-flex items-center gap-1.5 rounded-full bg-ember px-3.5 py-1.5 text-xs font-semibold text-paper transition-opacity hover:opacity-90"
+    >
+      <Icon name="sparkle" size={14} />
+      Upgrade
+    </Link>
   );
 }
 
