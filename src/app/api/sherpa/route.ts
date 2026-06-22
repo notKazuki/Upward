@@ -5,6 +5,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
+import { getProStatus } from "@/lib/pro-data";
+import { serverToday } from "@/lib/server-today";
+import { FREE_SHERPA_DAILY } from "@/lib/pro";
 import { getCharacter } from "@/lib/character-data";
 import { getOwnProgress } from "@/lib/progress-data";
 import { buildSkillTrees } from "@/lib/skill-trees";
@@ -39,8 +42,29 @@ export async function POST(request: Request) {
     return Response.json({ error: "no message" }, { status: 400 });
   }
 
-  // Live character context for grounding.
   const supabase = await createClient();
+
+  // Free-taste gate: non-Pro users get FREE_SHERPA_DAILY messages per local day.
+  const { pro } = await getProStatus();
+  const today = await serverToday();
+  let used = 0;
+  if (!pro) {
+    const { data: usage } = await supabase
+      .from("sherpa_usage")
+      .select("count")
+      .eq("user_id", user.id)
+      .eq("used_on", today)
+      .maybeSingle();
+    used = (usage?.count as number | undefined) ?? 0;
+    if (used >= FREE_SHERPA_DAILY) {
+      return Response.json(
+        { error: "You’ve used today’s free Sherpa messages.", limit: true },
+        { status: 402 },
+      );
+    }
+  }
+
+  // Live character context for grounding.
   const [character, progress, profileRes] = await Promise.all([
     getCharacter(),
     getOwnProgress(),
@@ -59,6 +83,13 @@ export async function POST(request: Request) {
   const upstream = await fetchSherpaStream(system, messages).catch(() => null);
   if (!upstream || !upstream.ok || !upstream.body) {
     return Response.json({ error: "The Sherpa is unreachable right now." }, { status: 502 });
+  }
+
+  // Count this message against the free taste (only now that a reply is coming).
+  if (!pro) {
+    await supabase
+      .from("sherpa_usage")
+      .upsert({ user_id: user.id, used_on: today, count: used + 1 }, { onConflict: "user_id,used_on" });
   }
 
   // Parse the upstream SSE and re-emit only the text deltas.

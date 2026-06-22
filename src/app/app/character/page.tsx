@@ -9,6 +9,7 @@ import SeasonCard from "@/components/character/season-card";
 import Loadout from "@/components/character/loadout";
 import CharacterCard from "@/components/character/character-card";
 import { isAiSherpaConfigured } from "@/lib/sherpa-ai";
+import { FREE_SHERPA_DAILY } from "@/lib/pro";
 import { ATTR_ACCENT } from "@/lib/character";
 import type { CardData } from "@/lib/character-card";
 import { getCharacter } from "@/lib/character-data";
@@ -118,7 +119,7 @@ export default async function CharacterPage() {
       <Ascent level={progress.level} />
       {season && <SeasonCard season={season} />}
       <SherpaCard brief={sherpa} />
-      <SherpaChat configured={isAiSherpaConfigured} />
+      <SherpaChat configured={isAiSherpaConfigured} pro={proStatus.pro} freeLimit={FREE_SHERPA_DAILY} />
       <CharacterSheet
         character={character}
         level={progress.level}

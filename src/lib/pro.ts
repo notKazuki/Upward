@@ -13,6 +13,9 @@ export const ANNUAL_SAVING_PCT = Math.round((1 - PRO.annual / (PRO.monthly * 12)
 
 export type PlanInterval = "monthly" | "annual";
 
+// Free users get a daily taste of the AI Sherpa; Pro is unlimited.
+export const FREE_SHERPA_DAILY = 3;
+
 // Headline Pro features — the pricing page hero grid + upsell copy.
 export type ProFeature = { title: string; desc: string };
 export const PRO_FEATURES: ProFeature[] = [

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -10,10 +11,19 @@ const STARTERS = [
   "Give me one small win for today.",
 ];
 
-export default function SherpaChat({ configured }: { configured: boolean }) {
+export default function SherpaChat({
+  configured,
+  pro = true,
+  freeLimit = 0,
+}: {
+  configured: boolean;
+  pro?: boolean;
+  freeLimit?: number;
+}) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [walled, setWalled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (!configured) return <Dormant />;
@@ -31,6 +41,10 @@ export default function SherpaChat({ configured }: { configured: boolean }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ messages: next }),
       });
+      if (res.status === 402) {
+        setWalled(true); // free daily taste used up
+        return;
+      }
       if (!res.ok || !res.body) {
         setMessages((m) => [...m, { role: "assistant", content: "The mountain's quiet — I couldn't reach you just now. Try again in a moment." }]);
         return;
@@ -65,6 +79,15 @@ export default function SherpaChat({ configured }: { configured: boolean }) {
         </div>
       </div>
 
+      {!pro && !walled && (
+        <p className="mt-3 text-xs text-faint">
+          Free preview · {freeLimit} message{freeLimit === 1 ? "" : "s"} a day.{" "}
+          <Link href="/app/upgrade" className="font-medium text-ember hover:underline">
+            Upgrade for unlimited
+          </Link>
+        </p>
+      )}
+
       {messages.length === 0 ? (
         <div className="mt-4 flex flex-wrap gap-2">
           {STARTERS.map((s) => (
@@ -96,35 +119,51 @@ export default function SherpaChat({ configured }: { configured: boolean }) {
         </div>
       )}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void send(input);
-        }}
-        className="mt-4 flex items-center gap-2"
-      >
-        <label htmlFor="sherpa-input" className="sr-only">
-          Message the Sherpa
-        </label>
-        <input
-          id="sherpa-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask the Sherpa…"
-          disabled={sending}
-          className="min-w-0 flex-1 rounded-full border border-line bg-paper-bright px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-ember/60 disabled:opacity-60"
-        />
-        <button
-          type="submit"
-          disabled={sending || !input.trim()}
-          className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full bg-ember text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-          aria-label="Send"
+      {walled ? (
+        <div className="mt-4 rounded-2xl border border-ember/40 bg-ember/5 p-4 text-center">
+          <p className="text-sm font-medium text-ink">That’s today’s free preview.</p>
+          <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-muted">
+            Upgrade to Upward Pro for unlimited conversations with your Sherpa — or come back
+            tomorrow for {freeLimit} more.
+          </p>
+          <Link
+            href="/app/upgrade"
+            className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-paper transition-opacity hover:opacity-90"
+          >
+            Upgrade for unlimited
+          </Link>
+        </div>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void send(input);
+          }}
+          className="mt-4 flex items-center gap-2"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </button>
-      </form>
+          <label htmlFor="sherpa-input" className="sr-only">
+            Message the Sherpa
+          </label>
+          <input
+            id="sherpa-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask the Sherpa…"
+            disabled={sending}
+            className="min-w-0 flex-1 rounded-full border border-line bg-paper-bright px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-ember/60 disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={sending || !input.trim()}
+            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full bg-ember text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Send"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        </form>
+      )}
     </div>
   );
 }
