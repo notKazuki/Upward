@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import DashboardCard from "@/components/dashboard/card";
 import LevelStrip from "@/components/dashboard/level-strip";
 import Icon, { type IconName } from "@/components/icons";
 import { getOwnProgress } from "@/lib/progress-data";
+import { getExperience } from "@/lib/experience-data";
 
 export const metadata: Metadata = { title: "Stats — Upward" };
 
 // The classic-mode overview: real numbers and a level, no RPG framing. (The
 // gamified Character sheet lives at /app/character; this is its calm sibling.)
 export default async function StatsPage() {
+  // Gamified users have the richer Character sheet instead.
+  if ((await getExperience()) === "gamified") redirect("/app/character");
   const progress = await getOwnProgress();
 
   if (!progress) {

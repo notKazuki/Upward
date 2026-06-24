@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import DashboardCard from "@/components/dashboard/card";
 import RankHero from "@/components/social/rank-hero";
 import AchievementBadge from "@/components/social/achievement-badge";
 import { getOwnProgress } from "@/lib/progress-data";
+import { getExperience } from "@/lib/experience-data";
 import {
   ACHIEVEMENTS,
   achievementProgress,
@@ -30,6 +32,8 @@ export default async function ProgressPage({
   searchParams: Promise<{ cat?: string }>;
 }) {
   const sp = await searchParams;
+  // Achievements are a gamified surface — classic users go to Stats.
+  if ((await getExperience()) === "classic") redirect("/app/stats");
   const progress = await getOwnProgress();
 
   if (!progress) {

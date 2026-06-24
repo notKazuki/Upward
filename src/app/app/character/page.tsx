@@ -17,8 +17,10 @@ import { getOwnProgress } from "@/lib/progress-data";
 import { buildSkillTrees } from "@/lib/skill-trees";
 import { buildSherpa } from "@/lib/sherpa";
 import { resolveCosmetics, type Cosmetics } from "@/lib/cosmetics";
+import { redirect } from "next/navigation";
 import { getSeasonCore } from "@/lib/season-data";
 import { getProStatus } from "@/lib/pro-data";
+import { getExperience } from "@/lib/experience-data";
 import { buildSeason } from "@/lib/seasons";
 import { serverToday } from "@/lib/server-today";
 import { createClient } from "@/lib/supabase/server";
@@ -38,6 +40,9 @@ function Header() {
 }
 
 export default async function CharacterPage() {
+  // Classic mode has no RPG character sheet — send them to the plain Stats page.
+  if ((await getExperience()) === "classic") redirect("/app/stats");
+
   const supabase = await createClient();
   const user = await currentUser();
   const [character, progress, seasonCore, today, proStatus, cosmeticsRow] = await Promise.all([
