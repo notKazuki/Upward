@@ -6,16 +6,19 @@ import ChatDock from "@/components/social/chat-dock";
 import QuickAdd from "@/components/quick-add";
 import Sidebar from "./sidebar";
 import Topbar, { type SessionUser } from "./topbar";
+import type { Experience } from "@/lib/experience";
 
 export default function DashboardShell({
   initialCollapsed,
   user,
   isPro,
+  experience,
   children,
 }: {
   initialCollapsed: boolean;
   user: SessionUser;
   isPro: boolean;
+  experience: Experience;
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
@@ -32,11 +35,14 @@ export default function DashboardShell({
   }
 
   return (
-    <div className="flex min-h-dvh">
-      <Atmosphere />
+    <div
+      className={`flex min-h-dvh ${experience === "classic" ? "u-classic" : ""}`}
+      data-experience={experience}
+    >
+      <Atmosphere experience={experience} />
       {/* Desktop sidebar */}
       <div className="sticky top-0 hidden h-dvh shrink-0 md:block">
-        <Sidebar collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
+        <Sidebar collapsed={collapsed} experience={experience} onToggleCollapse={toggleCollapsed} />
       </div>
 
       {/* Mobile drawer */}
@@ -51,6 +57,7 @@ export default function DashboardShell({
           <div className="u-anim-drawer absolute inset-y-0 left-0 h-full">
             <Sidebar
               collapsed={false}
+              experience={experience}
               mobile
               onNavigate={() => setMobileOpen(false)}
             />

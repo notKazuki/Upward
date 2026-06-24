@@ -1,4 +1,5 @@
 import type { IconName } from "@/components/icons";
+import type { Experience } from "@/lib/experience";
 
 export type NavItem = {
   label: string;
@@ -50,7 +51,26 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
-/** Flat list (derived) for lookups. */
+// Classic mode swaps the RPG "Play" group for a plain "You" group: Quick Log +
+// a clean Stats page (no Character sheet, no Progress/achievements in nav).
+const classicGroups: NavGroup[] = navGroups.map((g) =>
+  g.label === "Play"
+    ? {
+        label: "You",
+        items: [
+          { label: "Quick Log", href: "/app/log", icon: "mic" },
+          { label: "Stats", href: "/app/stats", icon: "stats" },
+        ],
+      }
+    : g,
+);
+
+/** Navigation for the user's experience mode. */
+export function navGroupsFor(experience: Experience): NavGroup[] {
+  return experience === "classic" ? classicGroups : navGroups;
+}
+
+/** Flat list (derived, gamified superset) for lookups. */
 export const navItems: NavItem[] = navGroups.flatMap((g) => g.items);
 
 /** True when `pathname` is on (or under) this item's route. */

@@ -3,20 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "@/components/icons";
-import { navGroups, isNavActive } from "@/lib/nav";
+import { navGroupsFor, isNavActive } from "@/lib/nav";
+import type { Experience } from "@/lib/experience";
 
 export default function Sidebar({
   collapsed,
+  experience,
   onToggleCollapse,
   onNavigate,
   mobile = false,
 }: {
   collapsed: boolean;
+  experience: Experience;
   onToggleCollapse?: () => void;
   onNavigate?: () => void;
   mobile?: boolean;
 }) {
   const pathname = usePathname();
+  const navGroups = navGroupsFor(experience);
 
   return (
     <aside

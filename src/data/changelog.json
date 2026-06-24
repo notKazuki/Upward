@@ -1,6 +1,16 @@
 [
   {
     "date": "2026-06-12",
+    "title": "Choose your experience: Gamified or Classic",
+    "items": [
+      "Upward now comes two ways, and you pick during onboarding (or switch anytime in Settings → Experience).",
+      "Gamified: your life as an RPG — character, class, attributes, daily quests, seasons and the climb. The full experience you know.",
+      "Classic: a calm, minimal tracker that's easy on the eyes, with a softer slate-teal palette and a quieter backdrop. The same powerful logging and insights, a clean Stats page in place of the character sheet, and you still earn levels and keep streaks — just without the game framing.",
+      "Both keep smooth animations and everything you track; only the framing and feel change."
+    ]
+  },
+  {
+    "date": "2026-06-12",
     "title": "A cleaner way around the app",
     "items": [
       "The sidebar is now organised into clear sections — Home, Play, Track and Social — so everything’s easier to find at a glance, with the active page marked by an ember accent.",
