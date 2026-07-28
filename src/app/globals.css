@@ -38,10 +38,11 @@
   --faint: #a89e8f;
   --line: #e4dccd;
   --line-strong: #d6cab4;
-  --ember: #bc572f;
-  --ember-soft: #d4825a;
-  --ember-wash: #f0d8c4;
-  --ember-pale: #e8b48f;
+  /* Accent — a calm slate-teal (the app's premium, easy-on-the-eyes identity). */
+  --ember: #3f6f7e;
+  --ember-soft: #6a97a6;
+  --ember-wash: #dbe8ec;
+  --ember-pale: #b3cdd6;
   --danger: #a23a2c;
   color-scheme: light;
 }
@@ -57,10 +58,11 @@
   --faint: #6c6188;
   --line: #272031;
   --line-strong: #382f49;
-  --ember: #a78bfa;
-  --ember-soft: #c4b5fd;
-  --ember-wash: #241a38;
-  --ember-pale: #ddd2fb;
+  /* Accent — calm teal, lifted for contrast on the dark canvas. */
+  --ember: #86b4c6;
+  --ember-soft: #a9cad9;
+  --ember-wash: #16242b;
+  --ember-pale: #cfe5ee;
   --danger: #f17a72;
   color-scheme: dark;
 }
