@@ -1,16 +1,14 @@
 // Conversational Sherpa endpoint. POST a {messages:[{role,content}]} thread;
-// streams back the Sherpa's reply as plain text. Dormant (503) until an
-// ANTHROPIC_API_KEY is set. Auth-gated; grounds each reply in the caller's
-// live character context.
+// streams back the coach's reply as plain text. Dormant (503) until an
+// ANTHROPIC_API_KEY is set. Auth-gated; grounds each reply in the caller's live
+// cross-domain report (via getCoachContext).
 
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
 import { getProStatus } from "@/lib/pro-data";
 import { serverToday } from "@/lib/server-today";
 import { FREE_SHERPA_DAILY } from "@/lib/pro";
-import { getCharacter } from "@/lib/character-data";
-import { getOwnProgress } from "@/lib/progress-data";
-import { buildSkillTrees } from "@/lib/skill-trees";
+import { getCoachContext } from "@/lib/coach-data";
 import {
   isAiSherpaConfigured,
   buildSherpaSystem,
@@ -64,21 +62,12 @@ export async function POST(request: Request) {
     }
   }
 
-  // Live character context for grounding.
-  const [character, progress, profileRes] = await Promise.all([
-    getCharacter(),
-    getOwnProgress(),
-    supabase.from("profiles").select("display_name, username").eq("id", user.id).maybeSingle(),
-  ]);
-  if (!character || !progress) {
-    return Response.json({ error: "no character yet" }, { status: 503 });
+  // Live cross-domain context for grounding.
+  const ctx = await getCoachContext();
+  if (!ctx) {
+    return Response.json({ error: "no data yet" }, { status: 503 });
   }
-  const name =
-    (profileRes.data?.display_name as string | null) ||
-    (profileRes.data?.username as string | null) ||
-    "the climber";
-  const paths = buildSkillTrees(progress.stats, new Set(progress.earned.map((e) => e.id)));
-  const system = buildSherpaSystem({ name, character, level: progress.level, rank: progress.rank, paths });
+  const system = buildSherpaSystem({ name: ctx.name, report: ctx.report, streak: ctx.streak });
 
   const upstream = await fetchSherpaStream(system, messages).catch(() => null);
   if (!upstream || !upstream.ok || !upstream.body) {

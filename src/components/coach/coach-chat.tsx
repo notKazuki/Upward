@@ -2,16 +2,17 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { Mark } from "./coach-brief";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const STARTERS = [
   "What should I focus on this week?",
-  "Why is my Focus stronger than my Discipline?",
+  "How's my consistency been lately?",
   "Give me one small win for today.",
 ];
 
-export default function SherpaChat({
+export default function CoachChat({
   configured,
   pro = true,
   freeLimit = 0,
@@ -46,7 +47,7 @@ export default function SherpaChat({
         return;
       }
       if (!res.ok || !res.body) {
-        setMessages((m) => [...m, { role: "assistant", content: "The mountain's quiet — I couldn't reach you just now. Try again in a moment." }]);
+        setMessages((m) => [...m, { role: "assistant", content: "I couldn't reach you just now — try again in a moment." }]);
         return;
       }
       const reader = res.body.getReader();
@@ -72,10 +73,10 @@ export default function SherpaChat({
   return (
     <div className="u-rise rounded-2xl border border-line bg-card p-6">
       <div className="flex items-center gap-2.5">
-        <Sigil />
+        <Mark />
         <div>
-          <h3 className="font-display text-lg text-ink">Talk to the Sherpa</h3>
-          <p className="text-xs text-muted">Ask your guide anything about your climb.</p>
+          <h3 className="font-display text-lg text-ink">Talk to your coach</h3>
+          <p className="text-xs text-muted">Ask anything — it knows your whole picture.</p>
         </div>
       </div>
 
@@ -121,10 +122,9 @@ export default function SherpaChat({
 
       {walled ? (
         <div className="mt-4 rounded-2xl border border-ember/40 bg-ember/5 p-4 text-center">
-          <p className="text-sm font-medium text-ink">That’s today’s free preview.</p>
+          <p className="text-sm font-medium text-ink">That&rsquo;s today&rsquo;s free preview.</p>
           <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-muted">
-            Upgrade to Upward Pro for unlimited conversations with your Sherpa — or come back
-            tomorrow for {freeLimit} more.
+            Upgrade to Upward Pro for unlimited coaching — or come back tomorrow for {freeLimit} more.
           </p>
           <Link
             href="/app/upgrade"
@@ -141,14 +141,14 @@ export default function SherpaChat({
           }}
           className="mt-4 flex items-center gap-2"
         >
-          <label htmlFor="sherpa-input" className="sr-only">
-            Message the Sherpa
+          <label htmlFor="coach-input" className="sr-only">
+            Message your coach
           </label>
           <input
-            id="sherpa-input"
+            id="coach-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask the Sherpa…"
+            placeholder="Ask your coach…"
             disabled={sending}
             className="min-w-0 flex-1 rounded-full border border-line bg-paper-bright px-4 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-ember/60 disabled:opacity-60"
           />
@@ -172,32 +172,20 @@ function Dormant() {
   return (
     <div className="u-rise u-glow-border rounded-2xl border border-line bg-card p-6">
       <div className="flex items-start gap-4">
-        <Sigil />
+        <Mark />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-display text-lg text-ink">Talk to the Sherpa</h3>
+            <h3 className="font-display text-lg text-ink">Talk to your coach</h3>
             <span className="rounded-full bg-ember/15 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-ember">
-              Pro · soon
+              Soon
             </span>
           </div>
           <p className="mt-1.5 text-sm leading-relaxed text-muted">
-            Conversation with your guide is on the way — ask the Sherpa anything about your climb and
-            get coaching grounded in your real character. Coming as part of Upward Pro.
+            Open-ended coaching is on the way — ask anything and get guidance grounded in your real,
+            cross-domain data.
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Sigil() {
-  return (
-    <div className="grid size-11 shrink-0 place-items-center rounded-full border border-ember/40 bg-ember/10">
-      <svg width="24" height="24" viewBox="0 0 48 48" fill="none" aria-hidden>
-        <path d="M7 37 L19 17 L26 27 L31 20 L41 37 Z" fill="var(--color-ember)" fillOpacity="0.18" stroke="var(--color-ember)" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M19 17 V9" stroke="var(--color-ember)" strokeWidth="2" strokeLinecap="round" />
-        <path d="M19 9 L27 11 L19 13 Z" fill="var(--color-ember)" />
-      </svg>
     </div>
   );
 }
