@@ -38,9 +38,6 @@ import type { Gender } from "@/lib/onboarding";
 import { buildQuests, type QuestKey, type QuestSignal } from "@/lib/quests";
 import DailyQuests from "@/components/quests/daily-quests";
 import StreakNudge from "@/components/quests/streak-nudge";
-import LevelStrip from "@/components/dashboard/level-strip";
-import { getExperience } from "@/lib/experience-data";
-import { getOwnProgress } from "@/lib/progress-data";
 
 export const metadata: Metadata = { title: "Dashboard — Upward" };
 
@@ -74,9 +71,6 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const since = isoDaysAgo(56);
   const today = await serverToday();
-  const experience = await getExperience();
-  // Classic mode keeps levels/XP but drops the quest/streak game layer.
-  const ownProgress = experience === "classic" ? await getOwnProgress() : null;
 
   const [wRes, sRes, gRes, pRes, mRes, goalsRes, goalLogsRes, suppRes, suppLogRes, jRes] =
     await Promise.all([
@@ -325,18 +319,11 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {experience === "classic" ? (
-        /* Classic: a clean level/XP strip in place of the quest game layer */
-        ownProgress && <LevelStrip level={ownProgress.level} />
-      ) : (
-        <>
-          {/* Streak at-risk nudge — only when a live streak hasn't been kept today */}
-          {a.streakDays > 0 && !a.loggedToday && <StreakNudge days={a.streakDays} />}
+      {/* Streak at-risk nudge — only when a live streak hasn't been kept today */}
+      {a.streakDays > 0 && !a.loggedToday && <StreakNudge days={a.streakDays} />}
 
-          {/* Daily quests */}
-          <DailyQuests board={questBoard} />
-        </>
-      )}
+      {/* Daily quests */}
+      <DailyQuests board={questBoard} />
 
       {/* Main grid */}
       <div className="u-rise u-d3 grid gap-5 lg:grid-cols-3">

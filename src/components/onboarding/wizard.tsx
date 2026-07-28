@@ -13,7 +13,6 @@ import {
   type UnitPref,
 } from "@/lib/onboarding";
 import { completeOnboarding } from "@/app/onboarding/actions";
-import { EXPERIENCES, type Experience } from "@/lib/experience";
 import DateField from "@/components/date-field";
 
 const STEPS = [
@@ -21,7 +20,6 @@ const STEPS = [
   { title: "How do you identify?", subtitle: "This tailors some of your feedback." },
   { title: "Your measurements", subtitle: "Optional — handy for fitness tracking." },
   { title: "What brings you to Upward?", subtitle: "Pick all that apply." },
-  { title: "How should Upward feel?", subtitle: "Choose your experience — you can switch anytime in Settings." },
 ];
 
 const GENDERS: { id: Gender; label: string; note?: string }[] = [
@@ -56,7 +54,6 @@ export default function OnboardingWizard({
   const [inch, setInch] = useState("");
   const [lb, setLb] = useState("");
   const [uses, setUses] = useState<string[]>([]);
-  const [experience, setExperience] = useState<Experience | "">("");
 
   const isLast = step === STEPS.length - 1;
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -83,7 +80,6 @@ export default function OnboardingWizard({
 
   async function finish() {
     if (uses.length === 0) return setError("Pick at least one thing to track.");
-    if (!experience) return setError("Pick how you'd like to use Upward.");
 
     let heightCm: number | null = null;
     let weightKg: number | null = null;
@@ -103,7 +99,6 @@ export default function OnboardingWizard({
       weightKg,
       unitPref: unit,
       uses,
-      experience,
     });
     // On success the server action redirects to /app; we only reach here on error.
     if (res?.error) {
@@ -286,56 +281,6 @@ export default function OnboardingWizard({
                   }`}
                 >
                   {uc.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Step 4 — Experience */}
-        {step === 4 && (
-          <div className="flex flex-col gap-3">
-            {EXPERIENCES.map((ex) => {
-              const active = experience === ex.id;
-              return (
-                <button
-                  key={ex.id}
-                  type="button"
-                  onClick={() => {
-                    setExperience(ex.id);
-                    setError(null);
-                  }}
-                  aria-pressed={active}
-                  className={`cursor-pointer rounded-2xl border p-4 text-left transition-colors duration-200 ${
-                    active
-                      ? "border-ember bg-ember-wash"
-                      : "border-line bg-paper-bright hover:border-line-strong"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <span className="font-display text-lg text-ink">{ex.name}</span>
-                      <span className="ml-2 text-sm text-muted">{ex.tagline}</span>
-                    </div>
-                    <span
-                      className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${
-                        active ? "border-ember bg-ember text-paper" : "border-line text-transparent"
-                      }`}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                        <path d="M20 6 9 17l-5-5" />
-                      </svg>
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{ex.blurb}</p>
-                  <ul className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1">
-                    {ex.bullets.map((b) => (
-                      <li key={b} className="flex items-center gap-1.5 text-xs text-ink-soft">
-                        <span className="size-1.5 rounded-full bg-ember" />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
                 </button>
               );
             })}

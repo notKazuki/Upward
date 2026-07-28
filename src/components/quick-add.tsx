@@ -18,8 +18,10 @@ import { logSession } from "@/app/app/workout/actions";
 import { addJournalEntry } from "@/app/app/journal/actions";
 
 const NAV: { label: string; href: string }[] = [
-  { label: "Dashboard", href: "/app" },
+  { label: "Today", href: "/app" },
+  { label: "Coach", href: "/app/coach" },
   { label: "Insights", href: "/app/insights" },
+  { label: "You", href: "/app/stats" },
   { label: "Workout", href: "/app/workout" },
   { label: "Meal", href: "/app/meal" },
   { label: "Supplement", href: "/app/supplement" },
@@ -27,10 +29,7 @@ const NAV: { label: string; href: string }[] = [
   { label: "Calendar", href: "/app/calendar" },
   { label: "Journal", href: "/app/journal" },
   { label: "Goals", href: "/app/goals" },
-  { label: "Progress", href: "/app/progress" },
-  { label: "Leaderboard", href: "/app/leaderboard" },
   { label: "Friends", href: "/app/friends" },
-  { label: "Chat", href: "/app/chat" },
   { label: "Settings", href: "/app/settings" },
 ];
 

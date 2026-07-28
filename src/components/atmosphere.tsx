@@ -1,15 +1,9 @@
-import type { Experience } from "@/lib/experience";
-
 /**
  * Atmosphere — the shared warm canvas behind every screen.
  * A soft dawn glow + paper grain over the parchment base.
  * Purely decorative, so it is hidden from assistive tech.
- *
- * Classic experience: the coloured aurora/glow is dimmed for a calmer, quieter
- * canvas (the paper + grain base stay). Motion is preserved.
  */
-export default function Atmosphere({ experience = "gamified" }: { experience?: Experience }) {
-  const calm = experience === "classic";
+export default function Atmosphere() {
   return (
     <div
       aria-hidden
@@ -21,9 +15,8 @@ export default function Atmosphere({ experience = "gamified" }: { experience?: E
           once. Kept BELOW the aurora so the animated layer never re-triggers a
           full-screen backdrop blend (the main GPU cost in Brave). */}
       <div className="u-grain absolute inset-0" />
-      {/* Coloured layers — dimmed in classic via a non-animated wrapper so the
-          dimming sticks (the layers themselves animate their own opacity). */}
-      <div className="absolute inset-0" style={calm ? { opacity: 0.38 } : undefined}>
+      {/* Coloured layers */}
+      <div className="absolute inset-0">
         <div className="u-aurora u-fade" />
         <div className="u-glow u-fade absolute inset-0" />
       </div>

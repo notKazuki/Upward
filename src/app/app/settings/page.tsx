@@ -4,10 +4,8 @@ import DashboardCard from "@/components/dashboard/card";
 import UnitSettings from "@/components/settings/unit-settings";
 import PushSettings from "@/components/settings/push-settings";
 import PrivacySettings from "@/components/social/privacy-settings";
-import ExperienceSettings from "@/components/settings/experience-settings";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import { getExperience } from "@/lib/experience-data";
 import type { UnitPref } from "@/lib/onboarding";
 import type { PrivacyMap } from "@/lib/social";
 
@@ -23,7 +21,6 @@ export default async function SettingsPage() {
     .maybeSingle();
   const pref = (data?.unit_pref as UnitPref | null) ?? "metric";
   const username = (data?.username as string | null) ?? null;
-  const experience = await getExperience();
 
   // Social columns live in a separate (newer) migration — query them
   // tolerantly so the page still works before supabase/social.sql is applied.
@@ -46,10 +43,6 @@ export default async function SettingsPage() {
           Preferences for how Upward shows things.
         </p>
       </div>
-
-      <DashboardCard title="Experience">
-        <ExperienceSettings current={experience} />
-      </DashboardCard>
 
       <DashboardCard title="Units">
         <UnitSettings current={pref} />
