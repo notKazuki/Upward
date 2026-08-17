@@ -3,24 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "@/components/icons";
-import { navGroupsFor, isNavActive } from "@/lib/nav";
-import type { Experience } from "@/lib/experience";
+import { navItems, isNavActive } from "@/lib/nav";
 
 export default function Sidebar({
   collapsed,
-  experience,
   onToggleCollapse,
   onNavigate,
   mobile = false,
 }: {
   collapsed: boolean;
-  experience: Experience;
   onToggleCollapse?: () => void;
   onNavigate?: () => void;
   mobile?: boolean;
 }) {
   const pathname = usePathname();
-  const navGroups = navGroupsFor(experience);
 
   return (
     <aside
@@ -33,7 +29,7 @@ export default function Sidebar({
         <Link
           href="/app"
           onClick={onNavigate}
-          aria-label="Upward — dashboard"
+          aria-label="Upward — Today"
           className="flex items-center gap-2.5"
         >
           <span className="grid size-7 shrink-0 place-items-center text-ember">
@@ -60,51 +56,38 @@ export default function Sidebar({
         </Link>
       </div>
 
-      {/* Nav — grouped into scannable sections */}
+      {/* Nav — one calm spine */}
       <nav className="flex-1 overflow-y-auto px-3 py-2">
-        {navGroups.map((group, gi) => (
-          <div key={group.label} className={gi > 0 ? "mt-4" : ""}>
-            {collapsed
-              ? gi > 0 && <div className="mx-2 mb-3 border-t border-line" />
-              : (
-                <p className="px-3 pb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.13em] text-faint">
-                  {group.label}
-                </p>
-              )}
-            <div className="space-y-0.5">
-              {group.items.map((item) => {
-                const active = isNavActive(item.href, pathname);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={onNavigate}
-                    title={collapsed ? item.label : undefined}
-                    aria-current={active ? "page" : undefined}
-                    className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                      collapsed ? "justify-center" : ""
-                    } ${
-                      active
-                        ? "bg-ember-wash text-ink"
-                        : "text-muted hover:bg-paper hover:text-ink"
-                    }`}
-                  >
-                    {active && (
-                      <span
-                        className={`absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-ember ${
-                          collapsed ? "left-0" : ""
-                        }`}
-                        aria-hidden
-                      />
-                    )}
-                    <Icon name={item.icon} size={20} className={active ? "text-ember" : undefined} />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        <div className="space-y-0.5">
+          {navItems.map((item) => {
+            const active = isNavActive(item.href, pathname);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                title={collapsed ? item.label : undefined}
+                aria-current={active ? "page" : undefined}
+                className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                  collapsed ? "justify-center" : ""
+                } ${
+                  active
+                    ? "bg-ember-wash text-ink"
+                    : "text-muted hover:bg-paper hover:text-ink"
+                }`}
+              >
+                {active && (
+                  <span
+                    className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-ember"
+                    aria-hidden
+                  />
+                )}
+                <Icon name={item.icon} size={20} className={active ? "text-ember" : undefined} />
+                {!collapsed && <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Collapse toggle (desktop only) */}

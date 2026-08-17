@@ -18,6 +18,7 @@ const TIMING_HOURS: Record<string, number> = {
   postworkout: 18,
   evening: 20,
 };
+const BRIEF_HOUR = 9; // the daily brief from your coach
 const STREAK_HOUR = 21;
 const DIGEST_HOUR = 18; // Sundays
 
@@ -58,6 +59,41 @@ async function claim(admin: Admin, userId: string, kind: string, day: string): P
     )
     .select();
   return (data ?? []).length > 0;
+}
+
+/** Every active day (any tracked action) per user, since `since`. */
+async function activityByUser(
+  admin: Admin,
+  ids: string[],
+  since: string,
+): Promise<Map<string, Set<string>>> {
+  const [w, g, m, j, sl, gl] = await Promise.all([
+    admin.from("workouts").select("user_id, performed_on").in("user_id", ids).gte("performed_on", since),
+    admin.from("game_sessions").select("user_id, played_on").in("user_id", ids).gte("played_on", since),
+    admin.from("meals").select("user_id, eaten_on").in("user_id", ids).gte("eaten_on", since),
+    admin.from("journal_entries").select("user_id, entry_date").in("user_id", ids).gte("entry_date", since),
+    admin.from("supplement_logs").select("user_id, taken_on").in("user_id", ids).gte("taken_on", since),
+    admin.from("goal_logs").select("user_id, logged_on").in("user_id", ids).gte("logged_on", since),
+  ]);
+
+  const activity = new Map<string, Set<string>>();
+  const add = (rows: unknown, key: string) => {
+    for (const r of (rows ?? []) as Record<string, string>[]) {
+      const uid = r.user_id;
+      const date = r[key];
+      if (!uid || !date) continue;
+      const set = activity.get(uid) ?? new Set<string>();
+      set.add(date);
+      activity.set(uid, set);
+    }
+  };
+  add(w.data, "performed_on");
+  add(g.data, "played_on");
+  add(m.data, "eaten_on");
+  add(j.data, "entry_date");
+  add(sl.data, "taken_on");
+  add(gl.data, "logged_on");
+  return activity;
 }
 
 async function bell(admin: Admin, userId: string, title: string, body: string, href: string) {
@@ -143,31 +179,45 @@ export async function GET(request: Request) {
     }
   }
 
+  // ---- Daily brief (every morning) --------------------------------------
+  // The one reminder that always arrives: without it, a user with no
+  // supplements and no live streak would never hear from the app at all.
+  const briefUsers = users.filter((u) => u.hour === BRIEF_HOUR && u.date);
+  if (briefUsers.length > 0) {
+    const ids = briefUsers.map((u) => u.id);
+    const since = shiftYmd(briefUsers[0].date, -60);
+    const activity = await activityByUser(admin, ids, since);
+
+    for (const u of briefUsers) {
+      const days = activity.get(u.id) ?? new Set<string>();
+      // Streak ending yesterday (today has barely started).
+      let streak = 0;
+      let cursor = shiftYmd(u.date, -1);
+      while (days.has(cursor)) {
+        streak++;
+        cursor = shiftYmd(cursor, -1);
+      }
+      if (!(await claim(admin, u.id, "brief", u.date))) continue;
+
+      const title = "Your day, in one look";
+      const body =
+        streak >= 2
+          ? `You're on a ${streak}-day streak — one log keeps it alive.`
+          : streak === 1
+            ? "You logged yesterday. Keep it rolling today."
+            : "A fresh start — log one thing and your coach picks it up from there.";
+      await sendPushToUser(u.id, { title, body, href: "/app", tag: "brief" });
+      await bell(admin, u.id, title, body, "/app");
+      sent++;
+    }
+  }
+
   // ---- Streak at risk ---------------------------------------------------
   const streakUsers = users.filter((u) => u.hour === STREAK_HOUR && u.date);
   if (streakUsers.length > 0) {
     const ids = streakUsers.map((u) => u.id);
     const since = shiftYmd(streakUsers[0].date, -60);
-    const [w, g, m, j, sl, gl] = await Promise.all([
-      admin.from("workouts").select("user_id, performed_on").in("user_id", ids).gte("performed_on", since),
-      admin.from("game_sessions").select("user_id, played_on").in("user_id", ids).gte("played_on", since),
-      admin.from("meals").select("user_id, eaten_on").in("user_id", ids).gte("eaten_on", since),
-      admin.from("journal_entries").select("user_id, entry_date").in("user_id", ids).gte("entry_date", since),
-      admin.from("supplement_logs").select("user_id, taken_on").in("user_id", ids).gte("taken_on", since),
-      admin.from("goal_logs").select("user_id, logged_on").in("user_id", ids).gte("logged_on", since),
-    ]);
-    const activity = new Map<string, Set<string>>();
-    const add = (uid: string, d: string) => {
-      const set = activity.get(uid) ?? new Set<string>();
-      set.add(d);
-      activity.set(uid, set);
-    };
-    for (const r of (w.data ?? []) as { user_id: string; performed_on: string }[]) add(r.user_id, r.performed_on);
-    for (const r of (g.data ?? []) as { user_id: string; played_on: string }[]) add(r.user_id, r.played_on);
-    for (const r of (m.data ?? []) as { user_id: string; eaten_on: string }[]) add(r.user_id, r.eaten_on);
-    for (const r of (j.data ?? []) as { user_id: string; entry_date: string }[]) add(r.user_id, r.entry_date);
-    for (const r of (sl.data ?? []) as { user_id: string; taken_on: string }[]) add(r.user_id, r.taken_on);
-    for (const r of (gl.data ?? []) as { user_id: string; logged_on: string }[]) add(r.user_id, r.logged_on);
+    const activity = await activityByUser(admin, ids, since);
 
     for (const u of streakUsers) {
       const days = activity.get(u.id) ?? new Set<string>();

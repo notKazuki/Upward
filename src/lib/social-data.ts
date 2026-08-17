@@ -21,7 +21,7 @@ export type ProfileRow = PublicProfile & {
   created_at: string;
 };
 
-const PROFILE_COLS = "id, username, display_name, avatar_url, bio, privacy, created_at, cosmetics";
+const PROFILE_COLS = "id, username, display_name, avatar_url, bio, privacy, created_at";
 
 export async function profileByUsername(username: string): Promise<ProfileRow | null> {
   const db = admin();
@@ -356,4 +356,81 @@ export async function buildSharedDetails(
   }
 
   return out;
+}
+
+// --- accountability feed ---------------------------------------------------
+
+export type FeedEntry = {
+  profile: ProfileRow;
+  streak: number;
+  activeDays7: number;
+  lastActive: string | null;
+};
+
+/**
+ * The friends accountability feed: who's showing up lately. Only includes
+ * friends who share their "stats" section, and counts any logged activity as an
+ * active day (the same definition the owner's own streak uses). Batched — a
+ * fixed number of queries regardless of how many friends there are.
+ */
+export async function friendsFeed(friends: ProfileRow[]): Promise<FeedEntry[]> {
+  const db = admin();
+  const visible = friends.filter((f) => canView(f.privacy ?? {}, "stats", "friend"));
+  if (!db || visible.length === 0) return [];
+
+  const ids = visible.map((f) => f.id);
+  const since = ymd(new Date(Date.now() - 29 * 86_400_000));
+
+  const [wRes, sRes, mRes, jRes, suppRes, goalRes] = await Promise.all([
+    db.from("workouts").select("user_id, performed_on").in("user_id", ids).gte("performed_on", since),
+    db.from("game_sessions").select("user_id, played_on").in("user_id", ids).gte("played_on", since),
+    db.from("meals").select("user_id, eaten_on").in("user_id", ids).gte("eaten_on", since),
+    db.from("journal_entries").select("user_id, entry_date").in("user_id", ids).gte("entry_date", since),
+    db.from("supplement_logs").select("user_id, taken_on").in("user_id", ids).gte("taken_on", since),
+    db.from("goal_logs").select("user_id, logged_on").in("user_id", ids).gte("logged_on", since),
+  ]);
+
+  // Collect every active day per user.
+  const days = new Map<string, Set<string>>();
+  const add = (rows: unknown, key: string) => {
+    for (const r of (rows ?? []) as Record<string, string>[]) {
+      const uid = r.user_id;
+      const date = r[key];
+      if (!uid || !date) continue;
+      const set = days.get(uid) ?? new Set<string>();
+      set.add(date);
+      days.set(uid, set);
+    }
+  };
+  add(wRes.data, "performed_on");
+  add(sRes.data, "played_on");
+  add(mRes.data, "eaten_on");
+  add(jRes.data, "entry_date");
+  add(suppRes.data, "taken_on");
+  add(goalRes.data, "logged_on");
+
+  const since7 = ymd(new Date(Date.now() - 6 * 86_400_000));
+
+  return visible
+    .map((profile) => {
+      const active = days.get(profile.id) ?? new Set<string>();
+
+      // Streak ending today (or yesterday — grace for a day not yet logged).
+      let streak = 0;
+      const d = new Date();
+      if (!active.has(ymd(d))) d.setDate(d.getDate() - 1);
+      while (active.has(ymd(d))) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      }
+
+      const sorted = [...active].sort();
+      return {
+        profile,
+        streak,
+        activeDays7: sorted.filter((x) => x >= since7).length,
+        lastActive: sorted[sorted.length - 1] ?? null,
+      };
+    })
+    .sort((a, b) => b.streak - a.streak || b.activeDays7 - a.activeDays7);
 }

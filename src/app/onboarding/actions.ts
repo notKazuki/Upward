@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ageFromDob, MIN_AGE } from "@/lib/onboarding";
-import { asExperience } from "@/lib/experience";
 
 export type OnboardingInput = {
   dob: string;
@@ -13,7 +12,6 @@ export type OnboardingInput = {
   weightKg: number | null;
   unitPref: "metric" | "imperial";
   uses: string[];
-  experience: string;
 };
 
 export async function completeOnboarding(
@@ -41,7 +39,6 @@ export async function completeOnboarding(
       weight_kg: input.weightKg,
       unit_pref: input.unitPref,
       uses: input.uses,
-      experience: asExperience(input.experience),
       onboarded: true,
       updated_at: new Date().toISOString(),
     },

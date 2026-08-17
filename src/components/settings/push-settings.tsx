@@ -128,8 +128,8 @@ export default function PushSettings({ vapidPublicKey }: { vapidPublicKey: strin
   return (
     <div className="space-y-3">
       <p className="text-sm leading-relaxed text-muted">
-        Get supplement reminders, a streak-at-risk nudge, your weekly summary,
-        and new chat messages as real notifications on this device.
+        Get your morning brief, supplement reminders, a streak-at-risk nudge and
+        your weekly summary as real notifications on this device.
       </p>
 
       {status === "loading" && <p className="text-sm text-faint">Checking this device…</p>}
@@ -192,9 +192,9 @@ export default function PushSettings({ vapidPublicKey }: { vapidPublicKey: strin
           set local hours, so a test is the quickest way to confirm delivery. */}
       {status === "on" && (
         <p className="text-xs leading-relaxed text-faint">
-          Not seeing reminders? They only fire at set times — supplements at their timing windows,
-          a streak nudge at 9pm, and a Sunday-evening summary. Use “Send a test” to confirm delivery
-          any time.
+          Reminders fire at set local times — your brief at 9am, supplements at their timing
+          windows, a streak nudge at 9pm, and a Sunday-evening summary. Use “Send a test” to
+          confirm delivery any time.
         </p>
       )}
 

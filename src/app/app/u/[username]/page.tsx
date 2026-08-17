@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Avatar from "@/components/social/avatar";
 import ProfileActions from "@/components/social/profile-actions";
-import RankHero from "@/components/social/rank-hero";
+import ProfileLevel from "@/components/social/profile-level";
 import AchievementBadge from "@/components/social/achievement-badge";
 import { currentUser } from "@/lib/auth";
 import { canView, profileName } from "@/lib/social";
@@ -17,7 +17,6 @@ import { moodMeta } from "@/lib/journal";
 import { dayColor, displayDay } from "@/lib/workouts";
 import { getProfileProgress } from "@/lib/progress-data";
 import { ACHIEVEMENTS } from "@/lib/achievements";
-import { titleLabelOf, accentColorOf } from "@/lib/cosmetics";
 
 export const metadata: Metadata = { title: "Profile — Upward" };
 
@@ -126,21 +125,12 @@ export default async function ProfilePage({
             <Avatar profile={profile} size={72} />
             <div className="min-w-0">
               <h1 className="font-display text-2xl text-ink">{name}</h1>
-              {titleLabelOf(profile.cosmetics?.title) && (
-                <p
-                  className="font-display text-sm"
-                  style={{ color: accentColorOf(profile.cosmetics?.accent) ?? "var(--color-ember)" }}
-                >
-                  {titleLabelOf(profile.cosmetics?.title)}
-                </p>
-              )}
               {profile.username && <p className="text-sm text-muted">@{profile.username}</p>}
               {memberSince && <p className="mt-0.5 text-xs text-faint">Member since {memberSince}</p>}
             </div>
           </div>
           <ProfileActions
             targetId={profile.id}
-            username={profile.username}
             rel={rel}
             outgoingPending={info.outgoingPending}
             incomingPending={info.incomingPending}
@@ -154,8 +144,8 @@ export default async function ProfilePage({
         )}
       </div>
 
-      {/* Rank & level */}
-      {hasRankShown && progress && <RankHero progress={progress} />}
+      {/* Level & streaks */}
+      {hasRankShown && progress && <ProfileLevel progress={progress} />}
 
       {/* Shared stat sections */}
       {cards.length > 0 && (
@@ -289,7 +279,7 @@ export default async function ProfilePage({
       {hasAchShown && (
         <div className="rounded-2xl border border-line bg-card p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="font-display text-lg text-ink">Achievements</h2>
+            <h2 className="font-display text-lg text-ink">Milestones</h2>
             <span className="text-sm text-muted">{earnedAchievements.length} earned</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">

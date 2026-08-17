@@ -5,7 +5,6 @@ import TimezoneCookie from "@/components/tz-cookie";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import { asExperience } from "@/lib/experience";
 
 function initialsFrom(name: string, email: string): string {
   const source = name.trim() || email;
@@ -54,16 +53,12 @@ export default async function AppLayout({
 
   // Display name + admin flag are fetched separately (and in parallel) so a
   // missing column from a not-yet-run migration doesn't break the layout.
-  const [dn, adminRes, proRes, expRes] = await Promise.all([
+  const [dn, proRes] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
-    supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
     supabase.from("profiles").select("is_pro").eq("id", user.id).maybeSingle(),
-    supabase.from("profiles").select("experience").eq("id", user.id).maybeSingle(),
   ]);
   const displayName = ((dn.data?.display_name as string | null) ?? "").trim();
-  const isAdmin = !adminRes.error && Boolean(adminRes.data?.is_admin);
   const isPro = !proRes.error && Boolean(proRes.data?.is_pro);
-  const experience = asExperience(expRes.error ? null : expRes.data?.experience);
 
   // Prefer the display name, then the username, then first name / email.
   const name =
@@ -80,14 +75,12 @@ export default async function AppLayout({
       <DashboardShell
         initialCollapsed={initialCollapsed}
         isPro={isPro}
-        experience={experience}
         user={{
           name,
           email,
           initials: initialsFrom(displayName || username || fullName, email),
           avatarUrl: (profile?.avatar_url as string | null) ?? null,
           username: username || null,
-          isAdmin,
         }}
       >
         {children}

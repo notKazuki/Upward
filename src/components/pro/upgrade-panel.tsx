@@ -46,7 +46,7 @@ export default function UpgradePanel() {
 
       <UpgradeButton interval={interval} className="mt-5" label="Get Upward Pro" />
       <p className="mt-3 text-center text-xs text-faint">
-        Cancel anytime · Cosmetics are identity-only — never pay-to-win.
+        Cancel anytime · Your data is always yours to export.
       </p>
     </div>
   );

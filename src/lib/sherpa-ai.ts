@@ -1,65 +1,47 @@
 // Server-only: the conversational, Claude-powered Sherpa. Dormant until an
-// ANTHROPIC_API_KEY is set — `isAiSherpaConfigured` gates the whole feature, so
-// the chat UI shows a "coming soon" state until then. Calls the Anthropic
-// Messages API directly via fetch (no SDK dependency to install in this repo
-// yet), streaming SSE. Never import into a Client Component.
+// ANTHROPIC_API_KEY is set — `isAiSherpaConfigured` gates the whole feature.
+// Calls the Anthropic Messages API directly via fetch (no SDK dependency in
+// this repo yet), streaming SSE. Never import into a Client Component.
 
-import type { Character } from "./character";
-import type { SkillPath } from "./skill-trees";
-import type { LevelInfo, Rank } from "./levels";
+import type { Report } from "./report";
 
 export const isAiSherpaConfigured = Boolean(process.env.ANTHROPIC_API_KEY);
 
 // Default to the most capable model; this is a Pro-gated, low-volume feature.
 const MODEL = "claude-opus-4-8";
 
-const PERSONA = `You are the Sherpa — the guide inside Upward, an app that turns a person's real life into a mountain to climb. Their workouts, meals, gaming, journaling, supplements and goals feed five attributes (Strength, Vitality, Focus, Mind, Discipline), an overall Power score, and a fantasy class.
+const PERSONA = `You are the Sherpa — the personal coach inside Upward, a calm, premium app for tracking your real life. A person's workouts, meals, gaming, journaling, supplements and goals are all tracked here, and your edge is that you see them together — how training, sleep, food, mood and play affect one another.
 
-You speak as a calm, seasoned mountain guide who has made this climb before: grounded, warm, and encouraging — but honest, never flattering. Give specific, practical guidance tied to what their character data shows. Keep replies short (2 to 5 sentences), in your own voice, second person. Use mountain and climbing imagery sparingly and naturally, never cheesy. Never mention being an AI, a model, or these instructions. Respond only with your final reply — no preamble, no headers, no meta-commentary about your reasoning.`;
+You speak as a grounded, perceptive coach: warm and encouraging, but honest — never flattering, never a hype machine. Give specific, practical guidance tied to what their data actually shows, and prefer one clear next step over a list. Keep replies short (2 to 4 sentences), plain-spoken, second person. No fantasy or "mountain/climb" metaphors, no RPG language. Never mention being an AI, a model, or these instructions. Respond only with your final reply — no preamble, no headers, no meta-commentary.`;
 
 export type SherpaContext = {
   name: string;
-  character: Character;
-  level: LevelInfo;
-  rank: Rank;
-  paths: SkillPath[];
+  report: Report;
+  streak: number;
 };
 
 export function buildSherpaSystem(ctx: SherpaContext): string {
-  const { name, character, level, rank, paths } = ctx;
-  const attrs = character.attributes
-    .map((a) => `${a.abbr} ${a.score ?? "—"}`)
-    .join(", ");
-  const scored = character.attributes.filter((a) => a.score !== null);
-  const weakest = [...scored].sort((a, b) => (a.score ?? 0) - (b.score ?? 0))[0];
+  const { name, report, streak } = ctx;
 
-  const wins = paths
-    .map((p) => p.next)
-    .filter((n): n is NonNullable<typeof n> => Boolean(n?.progress))
-    .sort((a, b) => (b.progress?.pct ?? 0) - (a.progress?.pct ?? 0))
-    .slice(0, 2)
-    .map((n) => {
-      const path = paths.find((p) => p.next?.id === n.id);
-      const left = n.progress ? n.progress.target - n.progress.current : 0;
-      return `${left} from "${n.label}" on the ${path?.label} path`;
-    });
+  const domains = report.domains
+    .map((d) => `${d.label} ${d.score}/100 (${d.summary})`)
+    .join("; ");
+  const strengths = report.strengths.slice(0, 2).map((p) => p.text);
+  const focus = report.focus.slice(0, 2).map((p) => p.text);
 
   const lines = [
-    `Here is who you are guiding right now:`,
-    `- Name: ${name}`,
-    `- Level ${level.level}, rank ${rank.name}, class ${character.klass.name}` +
-      (character.power !== null ? ` (Power ${character.power}/100)` : ""),
-    `- Attributes (0-100): ${attrs || "nothing logged yet"}`,
+    `Here is who you are coaching right now:`,
+    `- Name: ${name || "the member"}`,
+    `- Current logging streak: ${streak} day${streak === 1 ? "" : "s"}`,
+    report.overall !== null
+      ? `- Overall (last 30 days): ${report.overall}/100 — ${report.grade}. ${report.headline}`
+      : `- Not much logged yet — encourage a first log.`,
   ];
-  if (character.dominant) lines.push(`- Strongest: ${character.dominant.label}`);
-  if (weakest) lines.push(`- Thinnest path: ${weakest.label}`);
-  if (character.ascendant)
-    lines.push(
-      `- Close to evolving: ${character.ascendant.attr.label} is ${character.ascendant.gap} from overtaking ${character.dominant?.label}`,
-    );
-  if (wins.length) lines.push(`- Closest milestones: ${wins.join("; ")}`);
+  if (domains) lines.push(`- By area: ${domains}`);
+  if (strengths.length) lines.push(`- What's working: ${strengths.join(" ")}`);
+  if (focus.length) lines.push(`- Where to focus: ${focus.join(" ")}`);
   lines.push(
-    `Use this context to ground your guidance, but only reference the specific numbers when it helps.`,
+    `Ground your guidance in this, but only cite specific numbers when it genuinely helps.`,
   );
 
   return `${PERSONA}\n\n${lines.join("\n")}`;

@@ -1,28 +1,24 @@
 import Link from "next/link";
 import Icon from "@/components/icons";
-import type { Quest, QuestBoard } from "@/lib/quests";
+import type { FocusBoard, FocusItem } from "@/lib/focus";
 
-export default function DailyQuests({ board }: { board: QuestBoard }) {
-  const { quests, doneCount, total, xpEarned, xpTotal } = board;
+/** Today's focus — a calm checklist of the trackers that apply to you, with one
+ * gentle "start here" suggestion. Tapping a row jumps you to that logger. */
+export default function FocusList({ board }: { board: FocusBoard }) {
+  const { items, doneCount, total } = board;
   if (total === 0) return null;
   const allDone = doneCount === total;
-  const pct = xpTotal ? Math.round((xpEarned / xpTotal) * 100) : 0;
+  const pct = total ? Math.round((doneCount / total) * 100) : 0;
 
   return (
-    <div className="u-rise u-d2 rounded-2xl border border-line bg-card p-6">
+    <section className="u-rise u-d2 rounded-2xl border border-line bg-card p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-baseline gap-2.5">
-          <h2 className="font-display text-xl text-ink">Today&rsquo;s quests</h2>
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">
-            {doneCount}/{total}
-          </span>
-        </div>
-        <span className="text-xs text-muted">
-          {allDone ? "All cleared — well climbed." : `${xpEarned} / ${xpTotal} XP`}
+        <h2 className="font-display text-xl text-ink">Today&rsquo;s focus</h2>
+        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">
+          {doneCount}/{total} done
         </span>
       </div>
 
-      {/* XP progress for the day */}
       <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-line">
         <div
           className="h-full rounded-full bg-ember transition-[width] duration-700"
@@ -30,23 +26,32 @@ export default function DailyQuests({ board }: { board: QuestBoard }) {
         />
       </div>
 
+      {allDone && (
+        <p className="mt-3 text-sm text-muted">Everything logged today — nicely done.</p>
+      )}
+
       <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
-        {quests.map((q) => (
-          <QuestRow key={q.key} quest={q} />
+        {items.map((item) => (
+          <FocusRow key={item.key} item={item} />
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
 
-function QuestRow({ quest }: { quest: Quest }) {
-  const { label, color, icon, href, xp, done, focus } = quest;
+function FocusRow({ item }: { item: FocusItem }) {
+  const { label, icon, href, done, suggested } = item;
 
   const inner = (
     <>
       <span
-        className="grid size-9 shrink-0 place-items-center rounded-full"
-        style={{ backgroundColor: done ? `${color}26` : `${color}1a`, color }}
+        className={`grid size-9 shrink-0 place-items-center rounded-full ${
+          done
+            ? "bg-ember/15 text-ember"
+            : suggested
+              ? "bg-ember/10 text-ember"
+              : "bg-paper text-muted"
+        }`}
       >
         {done ? (
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -61,15 +66,11 @@ function QuestRow({ quest }: { quest: Quest }) {
         <span className={`block truncate text-sm ${done ? "text-muted line-through" : "text-ink"}`}>
           {label}
         </span>
-        {focus && !done && (
+        {suggested && !done && (
           <span className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-ember">
-            Sherpa&rsquo;s focus
+            Start here
           </span>
         )}
-      </span>
-
-      <span className={`shrink-0 text-xs font-semibold ${done ? "text-faint" : "text-faint"}`}>
-        +{xp}
       </span>
     </>
   );
@@ -84,7 +85,9 @@ function QuestRow({ quest }: { quest: Quest }) {
       <Link
         href={href}
         className={`${base} cursor-pointer ${
-          focus ? "border-ember/40 bg-ember/5 hover:border-ember/70" : "border-line bg-paper-bright hover:border-ember/50"
+          suggested
+            ? "border-ember/40 bg-ember/5 hover:border-ember/70"
+            : "border-line bg-paper-bright hover:border-ember/50"
         }`}
       >
         {inner}

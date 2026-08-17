@@ -2,8 +2,8 @@
 
 /* ------------------------------------------------------------------ *
  * Upward — design tokens
- * Warm, editorial, calm. A "dawn / ascent" identity:
- * parchment canvas, soft sunrise glow, deep warm ink, ember accent.
+ * Warm, editorial, calm: parchment canvas, soft dawn glow, deep warm ink,
+ * and a quiet slate-teal accent.
  * ------------------------------------------------------------------ */
 /* Tailwind tokens map to CSS variables so the theme can switch at runtime. */
 @theme inline {
@@ -38,10 +38,11 @@
   --faint: #a89e8f;
   --line: #e4dccd;
   --line-strong: #d6cab4;
-  --ember: #bc572f;
-  --ember-soft: #d4825a;
-  --ember-wash: #f0d8c4;
-  --ember-pale: #e8b48f;
+  /* Accent — a calm slate-teal (the app's premium, easy-on-the-eyes identity). */
+  --ember: #3f6f7e;
+  --ember-soft: #6a97a6;
+  --ember-wash: #dbe8ec;
+  --ember-pale: #b3cdd6;
   --danger: #a23a2c;
   color-scheme: light;
 }
@@ -57,30 +58,29 @@
   --faint: #6c6188;
   --line: #272031;
   --line-strong: #382f49;
-  --ember: #a78bfa;
-  --ember-soft: #c4b5fd;
-  --ember-wash: #241a38;
-  --ember-pale: #ddd2fb;
+  /* Accent — calm teal, lifted for contrast on the dark canvas. */
+  --ember: #86b4c6;
+  --ember-soft: #a9cad9;
+  --ember-wash: #16242b;
+  --ember-pale: #cfe5ee;
   --danger: #f17a72;
   color-scheme: dark;
 }
 
-/* Classic experience — a calmer, neutral slate-teal accent replaces the warm
- * ember/violet. Keyed on the .dark class (like the base theme) so it re-resolves
- * instantly on a live theme toggle. Wrapped in @layer base so Tailwind v4 keeps
- * the rule (bare custom-property rules get pruned by the `@theme inline` pass). */
+/* Capture FAB — clears the mobile tab bar, then drops to the corner on desktop
+ * where the bar is gone. Kept in @layer base because a bare class rule here
+ * gets pruned by Tailwind v4's `@theme inline` + Lightning CSS pass (verified:
+ * it was absent from the compiled bundle). Also can't be an inline style —
+ * inline styles can't carry a breakpoint. */
 @layer base {
-  .u-classic {
-    --ember: #4e7d8c;
-    --ember-soft: #76a2b1;
-    --ember-wash: #dde9ec;
-    --ember-pale: #b9d2da;
+  .u-fab {
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    right: calc(1.25rem + env(safe-area-inset-right));
   }
-  .dark .u-classic {
-    --ember: #86b4c6;
-    --ember-soft: #a9cad9;
-    --ember-wash: #16242b;
-    --ember-pale: #cfe5ee;
+  @media (min-width: 768px) {
+    .u-fab {
+      bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    }
   }
 }
 

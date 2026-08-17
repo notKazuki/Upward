@@ -9,6 +9,8 @@ import DangerZone from "@/components/account/danger-zone";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminConfigured } from "@/lib/supabase/admin";
 import { currentUser } from "@/lib/auth";
+import { getProStatus } from "@/lib/pro-data";
+import { FREE_HISTORY_DAYS } from "@/lib/pro";
 import { usernameUnlockDate } from "@/lib/username";
 
 export const metadata: Metadata = { title: "Account — Upward" };
@@ -25,6 +27,7 @@ export default async function AccountPage() {
   if (!user) redirect("/signin");
 
   const supabase = await createClient();
+  const { pro: isPro } = await getProStatus();
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("username, avatar_url, full_name")
@@ -110,7 +113,11 @@ export default async function AccountPage() {
           </DashboardCard>
 
           <DashboardCard title="Data & account">
-            <DangerZone deletionEnabled={isAdminConfigured} />
+            <DangerZone
+              deletionEnabled={isAdminConfigured}
+              isPro={isPro}
+              freeHistoryDays={FREE_HISTORY_DAYS}
+            />
           </DashboardCard>
         </>
       )}

@@ -5,8 +5,12 @@ import { deleteAccount } from "@/app/app/account/actions";
 
 export default function DangerZone({
   deletionEnabled,
+  isPro = false,
+  freeHistoryDays = 60,
 }: {
   deletionEnabled: boolean;
+  isPro?: boolean;
+  freeHistoryDays?: number;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [value, setValue] = useState("");
@@ -29,7 +33,9 @@ export default function DangerZone({
         <div className="min-w-0">
           <p className="font-medium text-ink">Export your data</p>
           <p className="text-sm text-muted">
-            Download everything you&rsquo;ve logged as a JSON file.
+            {isPro
+              ? "Download everything you’ve logged as a JSON file."
+              : `Download your last ${freeHistoryDays} days as a JSON file — Pro exports your full history.`}
           </p>
         </div>
         <a

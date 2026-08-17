@@ -36,11 +36,11 @@ export default function UpgradeView() {
           <Eyebrow />
         </div>
         <h1 className="mt-4 font-display text-[2.5rem] leading-tight tracking-tight text-ink">
-          Climb further.
+          Go deeper.
         </h1>
         <p className="mx-auto mt-2 max-w-xl text-base leading-relaxed text-muted">
-          Upward is free forever — track everything, build your character, climb the mountain. Pro
-          adds the coach, the depth, and the flair for those who want the full ascent.
+          Upward is free forever — track everything, keep your streak, get a daily brief. Pro adds
+          the coach who knows your whole picture, and the depth behind it.
         </p>
       </div>
 

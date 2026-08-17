@@ -46,7 +46,7 @@ export default async function OnboardingPage() {
             Welcome{firstName ? `, ${firstName}` : ""}
           </p>
           <div className="u-rise u-d3 rounded-2xl border border-line bg-card p-6 shadow-[0_18px_50px_-24px_rgba(34,31,26,0.35)] sm:p-8">
-            <OnboardingWizard firstName={firstName} />
+            <OnboardingWizard />
           </div>
         </main>
       </div>
