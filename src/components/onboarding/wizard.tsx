@@ -34,11 +34,7 @@ const GENDERS: { id: Gender; label: string; note?: string }[] = [
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
-export default function OnboardingWizard({
-  firstName,
-}: {
-  firstName: string;
-}) {
+export default function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [tooYoung, setTooYoung] = useState(false);

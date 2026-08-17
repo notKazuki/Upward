@@ -16,6 +16,9 @@ export type PlanInterval = "monthly" | "annual";
 // Free users get a daily taste of the AI Sherpa; Pro is unlimited.
 export const FREE_SHERPA_DAILY = 3;
 
+// How far back free accounts can export their history; Pro exports everything.
+export const FREE_HISTORY_DAYS = 60;
+
 // Headline Pro features — the pricing page hero grid + upsell copy.
 export type ProFeature = { title: string; desc: string };
 export const PRO_FEATURES: ProFeature[] = [
