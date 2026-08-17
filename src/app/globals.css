@@ -2,8 +2,8 @@
 
 /* ------------------------------------------------------------------ *
  * Upward — design tokens
- * Warm, editorial, calm. A "dawn / ascent" identity:
- * parchment canvas, soft sunrise glow, deep warm ink, ember accent.
+ * Warm, editorial, calm: parchment canvas, soft dawn glow, deep warm ink,
+ * and a quiet slate-teal accent.
  * ------------------------------------------------------------------ */
 /* Tailwind tokens map to CSS variables so the theme can switch at runtime. */
 @theme inline {
