@@ -1,21 +1,19 @@
+/** Route-level fallback. Mirrors the Today layout (a narrow single column) so
+ * the jump from skeleton to content is as small as possible. */
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-7xl animate-pulse space-y-5">
+    <div className="mx-auto max-w-3xl space-y-5" aria-hidden>
+      {/* header */}
       <div className="space-y-2">
-        <div className="h-8 w-44 rounded-lg bg-line" />
-        <div className="h-4 w-64 rounded bg-line/60" />
+        <div className="h-3 w-40 rounded bg-line/60" />
+        <div className="h-8 w-52 rounded-lg bg-line" />
       </div>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 rounded-2xl border border-line bg-card" />
-        ))}
-      </div>
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="h-72 rounded-2xl border border-line bg-card lg:col-span-2" />
-        <div className="h-72 rounded-2xl border border-line bg-card" />
-        <div className="h-64 rounded-2xl border border-line bg-card lg:col-span-2" />
-        <div className="h-64 rounded-2xl border border-line bg-card" />
-      </div>
+      {/* capture */}
+      <div className="h-[232px] animate-pulse rounded-2xl border border-line bg-card" />
+      {/* feed */}
+      <div className="h-[124px] animate-pulse rounded-2xl border border-line bg-card" />
+      <div className="h-[188px] animate-pulse rounded-2xl border border-line bg-card" />
+      <div className="h-[292px] animate-pulse rounded-2xl border border-line bg-card" />
     </div>
   );
 }

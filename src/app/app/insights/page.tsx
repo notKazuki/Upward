@@ -155,7 +155,7 @@ export default async function InsightsPage({
   ];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">
@@ -207,7 +207,7 @@ export default async function InsightsPage({
           <ReportView report={report} />
 
           {/* Period stat cards */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {cards.map((c) => (
               <div key={c.label} className="rounded-2xl border border-line bg-card p-5">
                 <span className="text-xs font-semibold uppercase tracking-[0.12em] text-faint">

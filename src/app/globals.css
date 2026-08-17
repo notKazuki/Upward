@@ -67,6 +67,23 @@
   color-scheme: dark;
 }
 
+/* Capture FAB — clears the mobile tab bar, then drops to the corner on desktop
+ * where the bar is gone. Kept in @layer base because a bare class rule here
+ * gets pruned by Tailwind v4's `@theme inline` + Lightning CSS pass (verified:
+ * it was absent from the compiled bundle). Also can't be an inline style —
+ * inline styles can't carry a breakpoint. */
+@layer base {
+  .u-fab {
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    right: calc(1.25rem + env(safe-area-inset-right));
+  }
+  @media (min-width: 768px) {
+    .u-fab {
+      bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    }
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * Base
  * ------------------------------------------------------------------ */

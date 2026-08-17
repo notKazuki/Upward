@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import LevelStrip from "@/components/dashboard/level-strip";
@@ -9,25 +10,53 @@ import { getOwnProgress } from "@/lib/progress-data";
 
 export const metadata: Metadata = { title: "You — Upward" };
 
-// "You" — your level, your streaks, your real numbers and milestones.
-export default async function YouPage() {
+// "You" — your level, your streaks, your real numbers and milestones. The
+// header paints immediately; the derived progress (a wide read across every
+// tracker) streams in behind it.
+export default function YouPage() {
+  return (
+    <div className="mx-auto max-w-3xl space-y-5">
+      <Header />
+      <Suspense fallback={<YouSkeleton />}>
+        <YouBody />
+      </Suspense>
+    </div>
+  );
+}
+
+function YouSkeleton() {
+  return (
+    <div className="space-y-5" aria-hidden>
+      <div className="h-[104px] animate-pulse rounded-2xl border border-line bg-card" />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="h-[124px] animate-pulse rounded-2xl border border-line bg-card" />
+        <div className="h-[124px] animate-pulse rounded-2xl border border-line bg-card" />
+      </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-[124px] animate-pulse rounded-2xl border border-line bg-card" />
+        ))}
+      </div>
+      <div className="h-[220px] animate-pulse rounded-2xl border border-line bg-card" />
+    </div>
+  );
+}
+
+async function YouBody() {
   const progress = await getOwnProgress();
 
   if (!progress) {
     return (
-      <div className="mx-auto max-w-3xl space-y-5">
-        <Header />
-        <DashboardCard title="Nothing to show yet">
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
-            <p className="max-w-sm text-sm text-muted">
-              Log a workout, a meal or a match and your numbers will start to fill in here.
-            </p>
-            <Link href="/app" className="text-sm font-medium text-ember transition-colors hover:text-ink">
-              Log your day →
-            </Link>
-          </div>
-        </DashboardCard>
-      </div>
+      <DashboardCard title="Nothing to show yet">
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <p className="max-w-sm text-sm text-muted">
+            Log a workout, a meal or a match and your numbers will start to fill in here.
+          </p>
+          <Link href="/app" className="text-sm font-medium text-ember transition-colors hover:text-ink">
+            Log your day →
+          </Link>
+        </div>
+      </DashboardCard>
     );
   }
 
@@ -47,9 +76,7 @@ export default async function YouPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
-      <Header />
-
+    <div className="space-y-5">
       <LevelStrip level={progress.level} />
 
       {/* Streaks */}

@@ -14,17 +14,14 @@ export type SessionUser = {
   initials: string;
   avatarUrl: string | null;
   username: string | null;
-  isAdmin: boolean;
 };
 
 export default function Topbar({
   user,
   isPro,
-  onOpenMenu,
 }: {
   user: SessionUser;
   isPro: boolean;
-  onOpenMenu: () => void;
 }) {
   return (
     <header
@@ -32,14 +29,16 @@ export default function Topbar({
       className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-line bg-paper/85 px-4 backdrop-blur-sm sm:px-6"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <button
-          type="button"
-          onClick={onOpenMenu}
-          aria-label="Open menu"
-          className="grid size-9 cursor-pointer place-items-center rounded-lg text-ink-soft transition-colors hover:bg-card md:hidden"
-        >
-          <Icon name="menu" size={22} />
-        </button>
+        {/* Mobile keeps the brand here; navigation lives in the bottom tabs. */}
+        <Link href="/app" aria-label="Upward — Today" className="flex items-center gap-2 md:hidden">
+          <span className="grid size-7 shrink-0 place-items-center text-ember">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 19V6" />
+              <path d="M5.5 12.5 12 5.5l6.5 7" />
+            </svg>
+          </span>
+          <span className="font-display text-lg font-medium tracking-tight text-ink">Upward</span>
+        </Link>
         <p className="hidden truncate text-sm text-muted sm:block">
           Welcome back,{" "}
           <span className="font-medium text-ink-soft">{user.name}</span>
@@ -176,17 +175,6 @@ function ProfileMenu({ user }: { user: SessionUser }) {
               <Icon name="settings" size={18} />
               Settings
             </Link>
-            {user.isAdmin && (
-              <Link
-                href="/app/dev"
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ember transition-colors hover:bg-paper"
-              >
-                <Icon name="dashboard" size={18} />
-                Dev panel
-              </Link>
-            )}
           </div>
 
           <div className="border-t border-line p-1.5">

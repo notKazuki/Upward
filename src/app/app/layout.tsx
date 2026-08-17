@@ -53,13 +53,11 @@ export default async function AppLayout({
 
   // Display name + admin flag are fetched separately (and in parallel) so a
   // missing column from a not-yet-run migration doesn't break the layout.
-  const [dn, adminRes, proRes] = await Promise.all([
+  const [dn, proRes] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
-    supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle(),
     supabase.from("profiles").select("is_pro").eq("id", user.id).maybeSingle(),
   ]);
   const displayName = ((dn.data?.display_name as string | null) ?? "").trim();
-  const isAdmin = !adminRes.error && Boolean(adminRes.data?.is_admin);
   const isPro = !proRes.error && Boolean(proRes.data?.is_pro);
 
   // Prefer the display name, then the username, then first name / email.
@@ -83,7 +81,6 @@ export default async function AppLayout({
           initials: initialsFrom(displayName || username || fullName, email),
           avatarUrl: (profile?.avatar_url as string | null) ?? null,
           username: username || null,
-          isAdmin,
         }}
       >
         {children}

@@ -133,11 +133,7 @@ export default function QuickAdd() {
         aria-label="Quick add (Ctrl+K)"
         aria-expanded={open}
         title="Quick add — Ctrl+K"
-        style={{
-          bottom: "calc(1.25rem + env(safe-area-inset-bottom))",
-          right: "calc(7.75rem + env(safe-area-inset-right))",
-        }}
-        className="fixed z-40 grid size-11 cursor-pointer place-items-center rounded-full border border-line bg-card/90 text-ink-soft shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:border-ember hover:text-ember"
+        className="u-fab fixed z-40 grid size-14 cursor-pointer place-items-center rounded-full bg-ember text-paper shadow-[0_10px_30px_-8px_rgba(0,0,0,0.45)] transition-transform duration-200 hover:opacity-90 active:scale-95 md:size-11 md:border md:border-line md:bg-card/90 md:text-ink-soft md:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)] md:backdrop-blur-md md:hover:border-ember md:hover:text-ember"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
           <path d="M12 5v14M5 12h14" />
