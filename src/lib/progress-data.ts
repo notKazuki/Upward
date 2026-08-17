@@ -35,6 +35,8 @@ export type Progress = {
   stats: AchievementStats;
   earned: { id: string; earned_on: string }[];
   streak: { current: number; best: number };
+  /** Every day (YYYY-MM-DD) with any logged activity — powers history views. */
+  activeDates: string[];
 };
 
 /** Consecutive active days ending today (or yesterday — grace for today). */
@@ -218,6 +220,7 @@ async function loadProgress(db: Db, userId: string): Promise<Progress> {
     stats: { ...baseStats, level: level.level },
     earned: ids.map((id) => ({ id, earned_on: "" })),
     streak: { current: currentStreak(activeDays, todayStr), best: baseStats.longestStreak },
+    activeDates: [...activeDays],
   };
 }
 
@@ -258,7 +261,7 @@ export async function getOwnProgress(): Promise<Progress | null> {
           type: "achievement",
           title: `Achievement unlocked: ${a.label}`,
           body: a.description,
-          href: "/app/progress",
+          href: "/app/stats",
         }));
       if (rows.length > 0) {
         try {

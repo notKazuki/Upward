@@ -28,7 +28,7 @@ export type AchievementStats = {
 };
 
 export type AchievementCategory =
-  | "Training" | "Nutrition" | "Mind" | "Gaming" | "Goals" | "Supplements" | "Social" | "Rank";
+  | "Training" | "Nutrition" | "Mind" | "Gaming" | "Goals" | "Supplements" | "Social" | "Levels";
 
 export type Achievement = {
   id: string;
@@ -131,12 +131,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   A("friends_10", "Connected", "Reach 10 friends", "Social", "gold", "friends", 10),
 
   // Rank
-  A("level_5", "Warming Up", "Reach level 5", "Rank", "bronze", "level", 5),
-  A("level_10", "Foothills", "Reach level 10", "Rank", "silver", "level", 10),
-  A("level_25", "Climbing", "Reach level 25", "Rank", "gold", "level", 25),
-  A("level_50", "Alpine Air", "Reach level 50", "Rank", "gold", "level", 50),
-  A("rank_summit", "Summit Seeker", "Reach the Summit rank", "Rank", "platinum", "level", 70),
-  A("rank_peak", "Peak", "Reach the Peak rank", "Rank", "platinum", "level", 90),
+  A("level_5", "Warming Up", "Reach level 5", "Levels", "bronze", "level", 5),
+  A("level_10", "Finding Rhythm", "Reach level 10", "Levels", "silver", "level", 10),
+  A("level_25", "Committed", "Reach level 25", "Levels", "gold", "level", 25),
+  A("level_50", "Halfway There", "Reach level 50", "Levels", "gold", "level", 50),
+  A("level_70", "Relentless", "Reach level 70", "Levels", "platinum", "level", 70),
+  A("level_90", "Mastery", "Reach level 90", "Levels", "platinum", "level", 90),
 ];
 
 /** Progress toward a locked badge — null for compound badges. */
