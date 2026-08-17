@@ -1,9 +1,7 @@
 import { initialsOf, type PublicProfile } from "@/lib/social";
-import { frameColorOf } from "@/lib/cosmetics";
 
-/** Round avatar with an initials fallback and an optional earned frame ring.
- * The frame is read from the profile's equipped cosmetics, or overridden via
- * `frameColor` (for live previews). Presentational (no client needed). */
+/** Round avatar with an initials fallback and an optional ring colour.
+ * Presentational (no client needed). */
 export default function Avatar({
   profile,
   size = 40,
@@ -14,7 +12,7 @@ export default function Avatar({
   frameColor?: string | null;
 }) {
   const initials = initialsOf(profile);
-  const color = frameColor ?? frameColorOf(profile.cosmetics?.frame);
+  const color = frameColor ?? null;
   const gap = Math.max(2, Math.round(size * 0.03));
   const ring = Math.max(2, Math.round(size * 0.045));
   // box-shadow ring keeps the layout footprint unchanged (no shift).

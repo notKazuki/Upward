@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import DashboardCard from "@/components/dashboard/card";
 import FriendsClient from "@/components/social/friends-client";
+import AccountabilityFeed from "@/components/social/accountability-feed";
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@/lib/auth";
-import { profilesByIds } from "@/lib/social-data";
+import { profilesByIds, friendsFeed } from "@/lib/social-data";
 import type { PublicProfile } from "@/lib/social";
 
 export const metadata: Metadata = { title: "Friends — Upward" };
@@ -61,9 +61,19 @@ export default async function FriendsPage() {
     .map(pack)
     .filter(notNull);
 
+  // The accountability feed — friends who share their stats, most consistent first.
+  const feed = await friendsFeed(
+    rows
+      .filter((r) => r.status === "accepted")
+      .map(otherId)
+      .map((id) => profiles.get(id))
+      .filter((p): p is NonNullable<typeof p> => p !== undefined),
+  );
+
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <Header />
+      <AccountabilityFeed entries={feed} />
       <FriendsClient friends={friends} incoming={incoming} outgoing={outgoing} />
     </div>
   );
@@ -71,19 +81,11 @@ export default async function FriendsPage() {
 
 function Header() {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">Friends</h1>
-        <p className="mt-1 text-sm text-muted">
-          Find people by username, send requests, and see who you&rsquo;re connected with.
-        </p>
-      </div>
-      <Link
-        href="/app/leaderboard"
-        className="cursor-pointer rounded-full border border-line bg-paper-bright px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-ember hover:text-ember"
-      >
-        Leaderboard →
-      </Link>
+    <div>
+      <h1 className="font-display text-[2rem] font-normal tracking-tight text-ink">Friends</h1>
+      <p className="mt-1 text-sm text-muted">
+        Find people by username, send requests, and see who you&rsquo;re connected with.
+      </p>
     </div>
   );
 }

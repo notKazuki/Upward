@@ -17,14 +17,12 @@ const danger = "cursor-pointer text-sm font-medium text-muted transition-colors 
 
 export default function ProfileActions({
   targetId,
-  username,
   rel,
   outgoingPending,
   incomingPending,
   viewerBlockedTarget,
 }: {
   targetId: string;
-  username: string | null;
   rel: Relationship;
   outgoingPending: boolean;
   incomingPending: boolean;
@@ -64,11 +62,6 @@ export default function ProfileActions({
     <div className="flex flex-wrap items-center gap-2.5">
       {rel === "friend" ? (
         <>
-          {username && (
-            <Link href={`/app/chat/${username}`} className={solid}>
-              Message
-            </Link>
-          )}
           {confirmUnfriend ? (
             <span className="flex items-center gap-2 text-sm">
               <span className="text-muted">Remove friend?</span>

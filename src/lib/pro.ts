@@ -20,16 +20,16 @@ export const FREE_SHERPA_DAILY = 3;
 export type ProFeature = { title: string; desc: string };
 export const PRO_FEATURES: ProFeature[] = [
   {
-    title: "The AI Sherpa",
+    title: "Your AI coach",
     desc: "Unlimited conversations with your Claude-powered coach, grounded in everything you track.",
   },
   {
-    title: "Deep insights",
-    desc: "The full cross-domain engine — what your sleep does to your aim, your training to your mood, and more.",
+    title: "Smart Log",
+    desc: "Talk or type your whole day in one go — your coach files it into the right trackers for you.",
   },
   {
-    title: "Premium cosmetics",
-    desc: "Exclusive titles, avatar frames and accents — plus every season's Pro reward tier.",
+    title: "Deep insights",
+    desc: "The full cross-domain engine — what your training does to your mood, your sleep to your aim, and more.",
   },
   {
     title: "Full history & export",
@@ -41,12 +41,12 @@ export const PRO_FEATURES: ProFeature[] = [
 // a boolean renders as a check / dash.
 export type CompareRow = { label: string; free: string | boolean; pro: string | boolean };
 export const COMPARE: CompareRow[] = [
-  { label: "Tracking, dashboard & calendar", free: true, pro: true },
-  { label: "Character, attributes & the Ascent", free: true, pro: true },
-  { label: "Daily quests & streaks", free: true, pro: true },
-  { label: "Seasons", free: "Free tiers", pro: "All tiers" },
-  { label: "AI Sherpa coaching", free: "A taste", pro: "Unlimited" },
+  { label: "Tracking, Today & calendar", free: true, pro: true },
+  { label: "Levels, streaks & milestones", free: true, pro: true },
+  { label: "Daily brief from your coach", free: true, pro: true },
+  { label: "Friends & profiles", free: true, pro: true },
+  { label: "Coach conversations", free: "A taste", pro: "Unlimited" },
+  { label: "Smart Log (voice → entries)", free: false, pro: true },
   { label: "Cross-domain insights", free: "Overall score", pro: "Full depth" },
-  { label: "Cosmetics", free: "Earned", pro: "Earned + Pro-only" },
   { label: "History & export", free: "60 days", pro: "Unlimited + export" },
 ];
